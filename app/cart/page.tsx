@@ -1,3 +1,5 @@
+// [file name]: page.tsx
+// [file content begin]
 "use client";
 
 import Link from "next/link";
@@ -925,7 +927,7 @@ const StickerForm = forwardRef(function StickerForm(
 		onOptionsChange,
 	]);
 
-	// ✅ Prefill (stable deps)
+	// ✅ Prefill (stable deps) - معدل ليدعم الـ children بشكل صحيح
 	useEffect(() => {
 		setApiError(null);
 		setFormLoading(true);
@@ -937,11 +939,12 @@ const StickerForm = forwardRef(function StickerForm(
 			let out: Record<string, string> = {};
 			let childrenOut: Record<string, string> = {};
 			
+			// ✅ تهيئة جميع المجموعات بـ "اختر"
 			if (Array.isArray(productData?.options)) {
 				productData.options.forEach((o: any) => {
 					const k = String(o.name || "").trim();
 					if (!k) return;
-					if (!out[k]) out[k] = "اختر";
+					out[k] = "اختر";
 				});
 			}
 
@@ -1010,55 +1013,74 @@ const StickerForm = forwardRef(function StickerForm(
 
 			setPrintLocations(Array.from(new Set(namesByIds)));
 
-			// ✅ product option groups and children prefill
+			// ✅ **FIXED: استرجاع الـ children من selected_options بشكل صحيح**
 			selected.forEach((opt) => {
 				const name = String(opt.option_name || "").trim();
 				const value = String(opt.option_value || "").trim();
 				if (!name || !value) return;
-				
-				// تجنب إضافة الحقول النظامية
-				const systemFields = [
-					"المقاس", "اللون", "الخامة", "طريقة الطباعة", 
-					"مكان الطباعة", "كمية المقاس", "سعر المقاس الإجمالي", "سعر الوحدة"
-				];
-				
-				if (systemFields.includes(name)) return;
-				
-				// البحث في المجموعات للعثور على الأصل
+
+				// ✅ البحث في المجموعات للعثور على المجموعة الأصلية
 				if (Array.isArray(productData?.options)) {
 					for (const group of productData.options) {
 						const groupName = String(group.name || "").trim();
 						
-						// إذا كان الاسم يتطابق مع اسم المجموعة
-						if (name === groupName) {
-							out[groupName] = value;
-							break;
-						}
-						
-						// البحث في items
+						// ✅ المحاولة الأولى: البحث في الـ items الرئيسية
 						for (const item of group.items || []) {
 							const itemValue = String(item.value || "").trim();
 							
-							// إذا كانت القيمة تتطابق مع قيمة item
+							// إذا تطابقت القيمة مع item رئيسي
 							if (value === itemValue) {
 								out[groupName] = value;
 								
-								// التحقق من وجود children
+								// ✅ البحث عن children لهذا الـ item في الـ selected_options
+								// نبحث عن خيارات children التي قد تكون مخزنة بشكل منفصل
 								if (item.children && item.children.length > 0) {
-									// البحث في الـ selected_options عن child لهذه القيمة
-									const childOption = selected.find((selOpt) => {
-										const childName = String(selOpt.option_name || "").trim();
-										return childName !== name && 
-										       childName.includes(groupName) && 
-										       childName !== "اختر";
-									});
-									
-									if (childOption) {
-										const childKey = `${groupName}::${value}`;
-										childrenOut[childKey] = String(childOption.option_value).trim();
+									// نبحث في الـ selected_options عن child يحمل نفس الاسم أو اسم مشتق
+									for (const childOpt of selected) {
+										const childName = String(childOpt.option_name || "").trim();
+										const childValue = String(childOpt.option_value || "").trim();
+										
+										// التحقق إذا كان هذا child للـ item الحالي
+										const childItem = item.children.find((c: any) => 
+											c.value === childValue || 
+											String(c.name).trim() === childName
+										);
+										
+										if (childItem) {
+											const childKey = `${groupName}::${value}`;
+											childrenOut[childKey] = childValue;
+											break;
+										}
 									}
 								}
 								break;
+							}
+						}
+						
+						// ✅ المحاولة الثانية: التحقق إذا كان الاسم يتطابق مع اسم المجموعة مباشرة
+						if (name === groupName) {
+							out[groupName] = value;
+							
+							// البحث عن child لهذه المجموعة
+							const item = group.items?.find((i: any) => i.value === value);
+							if (item?.children && item.children.length > 0) {
+								// البحث عن child في الـ selected_options
+								for (const childOpt of selected) {
+									const childName = String(childOpt.option_name || "").trim();
+									const childValue = String(childOpt.option_value || "").trim();
+									
+									// التحقق إذا كان هذا child للـ item الحالي
+									const childItem = item.children.find((c: any) => 
+										c.value === childValue || 
+										String(c.name).trim() === childName
+									);
+									
+									if (childItem) {
+										const childKey = `${groupName}::${value}`;
+										childrenOut[childKey] = childValue;
+										break;
+									}
+								}
 							}
 						}
 					}
@@ -1087,7 +1109,17 @@ const StickerForm = forwardRef(function StickerForm(
 			setHasUnsavedChanges(false);
 			setShowSaveButton(false);
 			setSavedSuccessfully(false);
+			
+			console.log('✅ تم استرجاع البيانات بنجاح:', {
+				optionGroups: out,
+				optionChildren: childrenOut,
+				size,
+				color,
+				material,
+				printingMethod
+			});
 		} catch (err: any) {
+			console.error('❌ خطأ في تحميل الخيارات:', err);
 			setApiError(err?.message || "حدث خطأ أثناء تحميل الخيارات");
 			setApiData(null);
 		} finally {
@@ -1222,23 +1254,41 @@ const StickerForm = forwardRef(function StickerForm(
 
 	// ✅ دالة لمعالجة تغيير الخيار الرئيسي
 	const handleGroupChange = (groupName: string, value: string) => {
+		const oldValue = optionGroups[groupName];
+		
+		// تحديث الخيار الرئيسي
 		setOptionGroups((prev) => ({ ...prev, [groupName]: value }));
 		
 		// ✅ مسح children القديم لهذا الخيار
-		const oldChildKey = `${groupName}::${optionGroups[groupName]}`;
-		if (optionChildren[oldChildKey]) {
-			setOptionChildren((prev) => {
-				const newChildren = { ...prev };
-				delete newChildren[oldChildKey];
-				return newChildren;
-			});
+		if (oldValue && oldValue !== value) {
+			const oldChildKey = `${groupName}::${oldValue}`;
+			if (optionChildren[oldChildKey]) {
+				setOptionChildren((prev) => {
+					const newChildren = { ...prev };
+					delete newChildren[oldChildKey];
+					return newChildren;
+				});
+			}
 		}
 		
 		// ✅ إذا كان الخيار الجديد يحتوي على children، نضيف خانة اختيار لهم
 		const newChildren = getChildrenForOption(groupName, value);
 		if (newChildren && newChildren.length > 0) {
 			const newChildKey = `${groupName}::${value}`;
-			setOptionChildren((prev) => ({ ...prev, [newChildKey]: "اختر" }));
+			setOptionChildren((prev) => ({ 
+				...prev, 
+				[newChildKey]: optionChildren[newChildKey] || "اختر" 
+			}));
+		} else {
+			// ✅ إذا لم يكن هناك children، نزيل الخيار إذا كان موجودًا
+			const newChildKey = `${groupName}::${value}`;
+			if (optionChildren[newChildKey]) {
+				setOptionChildren((prev) => {
+					const newChildren = { ...prev };
+					delete newChildren[newChildKey];
+					return newChildren;
+				});
+			}
 		}
 
 		markDirty();
@@ -1308,30 +1358,41 @@ const StickerForm = forwardRef(function StickerForm(
 		else print_location_ids.push(id);
 	}
 
-	// ✅ بناء selected_options مع دعم الـ children
+	// ✅ بناء selected_options مع دعم الـ children بشكل صحيح
 	const selected_options: any[] = [];
 	
-	// ✅ دالة للحصول على السعر الإجمالي للخيار مع children
-	const getOptionPriceWithChildren = (groupName: string, optionValue: string) => {
+	// ✅ دالة للحصول على جميع خيارات الـ child مع الأسعار
+	const getAllChildrenOptions = (groupName: string, optionValue: string) => {
+		const options: any[] = [];
 		const optionGroup = apiData.options?.find((o: any) => o.name === groupName);
-		if (!optionGroup) return 0;
+		if (!optionGroup) return options;
 		
 		const optionItem = optionGroup.items?.find((item: any) => item.value === optionValue);
-		if (!optionItem) return 0;
+		if (!optionItem) return options;
 		
-		let totalPrice = n(optionItem.base_price);
+		// ✅ إضافة الخيار الرئيسي
+		options.push({
+			option_name: groupName,
+			option_value: optionValue,
+			additional_price: n(optionItem.base_price),
+		});
 		
-		// ✅ إضافة سعر الـ child إذا تم اختياره
+		// ✅ إضافة الـ child إذا تم اختياره
 		const childKey = `${groupName}::${optionValue}`;
 		const childValue = optionChildren?.[childKey];
 		if (childValue && childValue !== "اختر") {
 			const childItem = optionItem.children?.find((child: any) => child.value === childValue);
 			if (childItem) {
-				totalPrice += n(childItem.base_price);
+				// ✅ **FIXED: إضافة child كخيار منفصل في selected_options**
+				options.push({
+					option_name: childItem.name || `${groupName} - تفاصيل`,
+					option_value: childValue,
+					additional_price: n(childItem.base_price),
+				});
 			}
 		}
 		
-		return totalPrice;
+		return options;
 	};
 
 	// ✅ **LOG: عرض الخيارات المختارة في الكونسول**
@@ -1345,37 +1406,20 @@ const StickerForm = forwardRef(function StickerForm(
 	console.log('📌 طريقة الطباعة:', printingMethod);
 	console.log('📌 أماكن الطباعة:', printLocations);
 	
+	// ✅ **FIXED: بناء selected_options مع الـ children**
 	Object.entries(optionGroups || {}).forEach(([group, value]) => {
 		if (!value || value === "اختر") return;
 
-		const totalPrice = getOptionPriceWithChildren(group, value);
+		// ✅ الحصول على جميع الخيارات (الرئيسي + children)
+		const groupOptions = getAllChildrenOptions(group, value);
 		
-		// ✅ **LOG: عرض كل خيار رئيسي**
-		console.log(`📦 الخيار الرئيسي: "${group}" = "${value}" (السعر: ${totalPrice})`);
-		
-		// ✅ إضافة الخيار الرئيسي
-		selected_options.push({
-			option_name: group,
-			option_value: value,
-			additional_price: totalPrice,
+		// ✅ إضافة جميع الخيارات إلى selected_options
+		groupOptions.forEach(opt => {
+			selected_options.push(opt);
+			
+			// ✅ **LOG: عرض كل خيار**
+			console.log(`📦 ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price})`);
 		});
-		
-		// ✅ إضافة الـ child إذا تم اختياره
-		const childKey = `${group}::${value}`;
-		const childValue = optionChildren?.[childKey];
-		if (childValue && childValue !== "اختر") {
-			const childItem = getChildrenForOption(group, value)?.find((child: any) => child.value === childValue);
-			if (childItem) {
-				// ✅ **LOG: عرض الـ child**
-				console.log(`   └── Child: "${childItem.name || 'تفاصيل'}" = "${childValue}" (السعر: ${n(childItem.base_price)})`);
-				
-				selected_options.push({
-					option_name: childItem.name || `${group} - تفاصيل`,
-					option_value: childValue,
-					additional_price: n(childItem.base_price),
-				});
-			}
-		}
 	});
 
 	// ✅ **FIX: إضافة طريقة الطباعة إلى selected_options إذا لم تكن موجودة بالفعل**
@@ -1432,7 +1476,9 @@ const StickerForm = forwardRef(function StickerForm(
 
 	// ✅ **LOG: عرض selected_options النهائية**
 	console.log('📄 ============ selected_options النهائية ============');
-	console.log(JSON.stringify(selected_options, null, 2));
+	selected_options.forEach((opt, idx) => {
+		console.log(`${idx + 1}. ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price || 0})`);
+	});
 	console.log('======================================================');
 
 	const payload: any = {
@@ -2161,3 +2207,4 @@ function TotalOrder({
 		</div>
 	);
 }
+// [file content end]

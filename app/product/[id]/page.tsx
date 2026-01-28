@@ -715,22 +715,86 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 				setSizeTierTotal(backendTotal > 0 ? backendTotal : t && t > 0 ? t : computed > 0 ? computed : null);
 			}
 
-			// restore option groups (only real groups, skip "system" ones)
+			// restore option groups AND children
 			const out: Record<string, string> = {};
 			const childrenOut: Record<string, string> = {};
+			
+			// تهيئة جميع الـ groups بـ "اختر"
 			Object.keys(groupedOptions).forEach((g) => (out[g] = "اختر"));
 
 			if (Array.isArray(saved.selected_options)) {
+				// فحص العلاقة بين الـ parent و children في الـ API data
+				const parentChildMap = new Map(); // لتخزين العلاقات بين parent و children
+				
+				apiData.options?.forEach((optionGroup: any) => {
+					optionGroup.items?.forEach((item: any) => {
+						if (item.children && item.children.length > 0) {
+							parentChildMap.set(`${optionGroup.name}::${item.value}`, item.children);
+						}
+					});
+				});
+
+				// حل أبسط للبيانات النموذجية:
 				saved.selected_options.forEach((opt: any) => {
 					const name = String(opt.option_name || "").trim();
 					const value = String(opt.option_value || "").trim();
 					if (!name || !value) return;
 
-					// skip system fields (should not be in new version anyway)
+					// تخطي الحقول النظامية
 					if (["المقاس", "اللون", "الخامة", "طريقة الطباعة", "مكان الطباعة", "كمية المقاس", "سعر المقاس الإجمالي", "سعر الوحدة"].includes(name)) return;
 
-					if (Object.prototype.hasOwnProperty.call(out, name)) out[name] = value;
-					// TODO: يمكن إضافة منطق لاستعادة الـ children إذا لزم الأمر
+					// تحقق إذا كان الاسم موجودًا في الـ groups
+					if (Object.prototype.hasOwnProperty.call(out, name)) {
+						out[name] = value;
+						
+						// إذا كان للخيار المختار children، نبحث عن child له
+						const group = apiData.options?.find((o: any) => o.name === name);
+						if (group) {
+							const item = group.items?.find((i: any) => i.value === value);
+							if (item?.children && item.children.length > 0) {
+								// نبحث في saved options عن child ينتمي لهذا parent
+								saved.selected_options.forEach((childOpt: any) => {
+									const childName = String(childOpt.option_name || "").trim();
+									const childValue = String(childOpt.option_value || "").trim();
+									
+									// تحقق إذا كان child ينتمي لهذا parent
+									// يمكننا التحقق بناءً على البنية الهرمية
+									if (childName && childValue && childName !== name) {
+										// تحقق إذا كانت القيمة مطابقة لأحد children
+										const isChild = item.children.some((child: any) => 
+											child.value === childValue || child.name === childName
+										);
+										
+										if (isChild) {
+											const childKey = `${name}::${value}`;
+											childrenOut[childKey] = childValue;
+										}
+									}
+								});
+							}
+						}
+					} else {
+						// قد يكون child option
+						// نبحث في جميع groups للعثور على parent مناسب
+						apiData.options?.forEach((group: any) => {
+							group.items?.forEach((item: any) => {
+								if (item.children && item.children.length > 0) {
+									const isChild = item.children.some((child: any) => 
+										child.value === value || child.name === name
+									);
+									
+									if (isChild) {
+										// نضبط الـ parent أولاً
+										if (!out[group.name] || out[group.name] === "اختر") {
+											out[group.name] = item.value;
+										}
+										const childKey = `${group.name}::${item.value}`;
+										childrenOut[childKey] = value;
+									}
+								}
+							});
+						});
+					}
 				});
 			}
 
@@ -1665,6 +1729,19 @@ export default function ProductPageClient() {
 						isValid = false;
 						missingOptions.push(groupName);
 					}
+
+					// ✅ التحقق من children إذا كانت مطلوبة
+					if (v && v !== "اختر") {
+						const item = items.find((i: any) => i.value === v);
+						if (item?.children && item.children.length > 0) {
+							const childKey = `${groupName}::${v}`;
+							const childValue = options.optionChildren?.[childKey];
+							if (!childValue || childValue === "اختر") {
+								isValid = false;
+								missingOptions.push(`${groupName} - تفاصيل`);
+							}
+						}
+					}
 				});
 			}
 
@@ -1940,7 +2017,8 @@ export default function ProductPageClient() {
 		selectedOptions.material !== "اختر" ||
 		selectedOptions.printing_method !== "اختر" ||
 		(selectedOptions.print_locations?.length ?? 0) > 0 ||
-		Object.values(selectedOptions.optionGroups || {}).some((v) => v !== "اختر");
+		Object.values(selectedOptions.optionGroups || {}).some((v) => v !== "اختر") ||
+		Object.values(selectedOptions.optionChildren || {}).some((v) => v !== "اختر");
 
 	return (
 		<>
@@ -2402,11 +2480,11 @@ export default function ProductPageClient() {
 															<AccordionSummary expandIcon={<ExpandMore />}>
 																<Typography className="font-extrabold">Printing Methods ({apiData?.printing_methods?.length || 0})</Typography>
 															</AccordionSummary>
-															<AccordionDetails>
-																<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
-																	{JSON.stringify(apiData?.printing_methods || [], null, 2)}
-																</pre>
-															</AccordionDetails>
+														<AccordionDetails>
+															<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
+																{JSON.stringify(apiData?.printing_methods || [], null, 2)}
+															</pre>
+														</AccordionDetails>
 														</Accordion>
 													)}
 
@@ -2414,7 +2492,7 @@ export default function ProductPageClient() {
 													{apiData?.print_locations?.length > 0 && (
 														<Accordion>
 															<AccordionSummary expandIcon={<ExpandMore />}>
-																<Typography className="font-extrabold">Print Locations ({apiData?.print_locations?.length || 0})</Typography>
+																	<Typography className="font-extrabold">Print Locations ({apiData?.print_locations?.length || 0})</Typography>
 															</AccordionSummary>
 															<AccordionDetails>
 																<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
