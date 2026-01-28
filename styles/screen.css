@@ -1,0 +1,252 @@
+.container {
+  max-width: 1400px !important;
+  width: 100%;
+  margin: auto !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.MuiFormLabel-root *,
+.MuiBox-root *,
+.MuiFormLabel-root.MuiInputLabel-root.MuiInputLabel-formControl.MuiInputLabel-animated.MuiInputLabel-shrink.MuiInputLabel-sizeSmall.MuiInputLabel-outlined.MuiFormLabel-colorPrimary.MuiFormLabel-filled.MuiInputLabel-root.MuiInputLabel-formControl.MuiInputLabel-animated.MuiInputLabel-shrink.MuiInputLabel-sizeSmall.MuiInputLabel-outlined.css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root,
+.MuiFormLabel-root.MuiInputLabel-root.MuiInputLabel-formControl.MuiInputLabel-animated.MuiInputLabel-shrink.MuiInputLabel-sizeSmall.MuiInputLabel-outlined.MuiFormLabel-colorPrimary.MuiFormLabel-filled.Mui-required.MuiInputLabel-root.MuiInputLabel-formControl.MuiInputLabel-animated.MuiInputLabel-shrink.MuiInputLabel-sizeSmall.MuiInputLabel-outlined.css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root,
+body * {
+  font-family: Cairo, Cairo Fallback !important;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+.hidden1 {
+  display: flex;
+}
+.flex1 {
+  display: none;
+}
+.hidden2 {
+  display: flex;
+}
+.flex2 {
+  display: none;
+}
+.hidden3 {
+  display: flex;
+}
+.flex3 {
+  display: none;
+}
+.swiper-button-prev,
+.swiper-button-next {
+  background: #ffffff;
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  padding: 1rem;
+  color: #424242 !important;
+
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15);
+}
+
+.swiper-button-prev:after,
+.swiper-button-next:after {
+  font-size: 7px !important;
+  color: #00000080 !important;
+}
+
+@media (max-width: 1210px) and (min-width: 0) {
+  .hidden2 {
+    display: none;
+  }
+  .flex2 {
+    display: flex;
+  }
+}
+
+@media (max-width: 1022px) and (min-width: 0) {
+  .hidden1 {
+    display: none;
+  }
+  .flex1 {
+    display: flex;
+  }
+}
+@media (max-width: 620px) and (min-width: 0) {
+  .hidden3 {
+    display: none;
+  }
+  .flex3 {
+    display: flex;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* IMPORTANT: this targets the pseudo element */
+.sk-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  animation: shimmer 1.4s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+}
+
+/* ===== Swiper Arrows (Global) ===== */
+.swiper-button-prev,
+.swiper-button-next {
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid #cccccc60;
+  transition: all 0.25s ease;
+}
+@media (max-width: 700px) {
+  .swiper-button-prev,
+  .swiper-button-next {
+    width: 30px !important;
+    height: 30px !important;
+    padding: 8px !important;
+  }
+  .swiper-button-prev svg,
+  .swiper-button-next svg {
+    scale: 1 !important;
+  }
+}
+.swiper-button-prev svg,
+.swiper-button-next svg {
+  scale: 1.5;
+}
+/* Icon size & color */
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 18px;
+  font-weight: bold;
+  color: #111;
+}
+
+/* Hover */
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background: #fff;
+  transform: scale(1.08);
+}
+
+/* Active (click) */
+.swiper-button-prev:active,
+.swiper-button-next:active {
+  transform: scale(0.95);
+}
+
+/* Disabled */
+.swiper-button-disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ===== Swiper Pagination (Global Premium Style) ===== */
+.swiper-pagination-bullet {
+  width: 15px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.28) !important;
+  opacity: 1;
+  margin: 0 4px !important;
+  cursor: pointer;
+
+  transition: width 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
+}
+
+/* Active bullet */
+.swiper-pagination-bullet-active {
+  width: 26px !important; /* gives a nice “active” emphasis */
+  background-color: #2563eb !important; /* 🔵 CHANGE to your brand color */
+  border-radius: 5px !important ;
+}
+
+.bottom-unset {
+  bottom: unset !important;
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #14213d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #14213d;
+}
+
+.scroll *::-webkit-scrollbar {
+  width: 4px;
+  height: 2px !important;
+}
+
+.cateogries .swiper-wrapper {
+  align-items: center !important;
+}
+
+/* English system font */
+.font-en {
+  font-family: sans-serif !important;
+  letter-spacing: 0.04em;
+}
+
+.swiper-pagination-bullets {
+  left: unset;
+  position: absolute;
+  right: 0;
+  translate: none;
+  gap: 0 !important;
+}
+
+.swiper-pagination-bullet {
+  background: #2563eb !important;
+  opacity: 0.6;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 1.5s linear infinite;
+}
