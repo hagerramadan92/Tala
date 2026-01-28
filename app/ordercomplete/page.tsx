@@ -7,7 +7,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
 import { TbCopy } from "react-icons/tb";
-import { MdKeyboardArrowLeft } from "react-icons/md";
+import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { FiCheckCircle } from "react-icons/fi";
 
 import OrderProgress from "@/components/OrderProgress";
@@ -362,7 +362,7 @@ export default function OrderCompletePage() {
 						onClick={() => router.back()}
 						className="text-pro-max font-extrabold flex items-center gap-1 hover:opacity-80"
 					>
-						<MdKeyboardArrowLeft size={18} />
+						<MdKeyboardArrowRight size={18} />
 						رجوع
 					</button>
 
