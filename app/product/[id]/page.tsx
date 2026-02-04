@@ -940,7 +940,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 
 	// design service (show only if "خدمة تصميم" === "لدى تصميم")
 	const designServiceValue = String(optionGroups?.["خدمة تصميم"] ?? optionGroups?.["خدمة التصميم"] ?? "اختر").trim();
-	const showDesignBoxes = designServiceValue === "لدى تصميم";
+	const showDesignBoxes = ["رفع تصميم خاص", "رفع تصميمي الخاص", "لدي تصميم يحتاج تعديل"].includes(designServiceValue);
 
 	const whatsappFromSocial = getSocialValue(socialMedia, "whatsapp");
 	const emailFromSocial = getSocialValue(socialMedia, "email");
@@ -2104,6 +2104,7 @@ export default function ProductPageClient() {
 						)}
 
 						{/* Design Choice (RULE 3) */}
+                        {/* 
 						<div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
 							<p className="font-extrabold text-slate-900 mb-3">ملف التصميم</p>
 
@@ -2175,7 +2176,7 @@ export default function ProductPageClient() {
 								</div>
 							)}
 						</div>
-
+                        */}
 						{/* Tabs */}
 						<div className="mt-6 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
 							<div className="grid grid-cols-3 border-b border-slate-200">

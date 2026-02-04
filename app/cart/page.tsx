@@ -519,7 +519,7 @@ ${errors.join("\n")}
 										<div className="md:flex justify-between items-start md:flex-row flex-col gap-3">
 											<div className="flex gap-3 w-full md:w-fit">
 												<div className="w-24 h-20 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200">
-													<Link href={`/product/${item.product.id}`}>
+													<Link href={`/product/${item.product.slug || item.product.id}`}>
 														<Image
 															src={item.product.image || "/images/not.jpg"}
 															alt={item.product.name}

@@ -179,18 +179,30 @@ function mapPaymentLabel(method: string) {
 	return map[method] || method || "طريقة دفع";
 }
 
-function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
-	if (!summary) return null;
+function SummaryBlock({ summary, orderData }: { summary: CheckoutSummaryV1 | null; orderData?: AnyObj | null }) {
+	// Prioritize API data if available
+	const subtotal = orderData ? n(orderData.subtotal) : n(summary?.subtotal);
+	const shippingFee = orderData ? n(orderData.shipping_amount) : n(summary?.shipping_fee);
+	const taxAmount = orderData ? n(orderData.tax_amount) : n(summary?.tax_amount);
+	const discountAmount = orderData ? n(orderData.discount_amount) : n(summary?.coupon_discount);
+	const totalItems = orderData ? (Array.isArray(orderData.items) ? orderData.items.length : 0) : n(summary?.items_length);
 
-	const shippingFree = n(summary.shipping_fee) <= 0;
-	const hasCoupon = n(summary.coupon_discount) > 0 || summary.coupon_new_total !== null;
+	const shippingFree = shippingFee <= 0;
+	const hasCoupon = discountAmount > 0;
+
+	// Total including tax and shipping
+	const finalTotal = subtotal + shippingFee - discountAmount;
+	
+	const TAX_RATE = 0.15;
+	const calculatedTax = finalTotal * (TAX_RATE / (1 + TAX_RATE));
+	const totalWithoutTax = finalTotal - calculatedTax;
 
 	return (
 		<div className="my-2 gap-2 flex flex-col">
 			<div className="flex text-sm items-center justify-between text-black">
-				<p className="font-semibold">المجموع ({n(summary.items_length)} عناصر)</p>
+				<p className="font-semibold">المجموع ({totalItems} عناصر)</p>
 				<p>
-					{money(n(summary.subtotal))}
+					{money(subtotal)}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -201,7 +213,7 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 					<p className="font-semibold text-green-600">مجانا</p>
 				) : (
 					<p className="text-md">
-						{money(n(summary.shipping_fee))} <span className="text-sm ms-1">ريال</span>
+						{money(shippingFee)} <span className="text-sm ms-1">ريال</span>
 					</p>
 				)}
 			</div>
@@ -210,16 +222,16 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 				<div className="flex items-center justify-between text-sm">
 					<p className="text-emerald-800 font-semibold">خصم الكوبون</p>
 					<p className="font-extrabold text-emerald-700">
-						- {money(n(summary.coupon_discount))}
+						- {money(discountAmount)}
 						<span className="text-sm ms-1">ريال</span>
 					</p>
 				</div>
 			)}
 
 			<div className="flex items-center justify-between text-sm">
-				<p>ضريبة القيمة المضافة ({Math.round(n(summary.tax_rate) * 100) || 15}%)</p>
+				<p>ضريبة القيمة المضافة (15%)</p>
 				<p className="font-semibold">
-					{money(n(summary.tax_amount))}
+					{money(calculatedTax)}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -227,7 +239,7 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 			<div className="flex items-center justify-between text-sm">
 				<p>الإجمالي بدون الضريبة</p>
 				<p className="font-semibold">
-					{money(n(summary.total_without_tax))}
+					{money(totalWithoutTax)}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -237,7 +249,7 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 					<p className=" text-nowrap text-md text-pro font-semibold">الإجمالي :</p>
 				</div>
 				<p className="text-[15px] text-pro font-bold">
-					{money(n(summary.total_with_shipping))}
+					{money(finalTotal)}
 					<span> ريال</span>
 				</p>
 			</div>
@@ -473,24 +485,47 @@ export default function OrderCompletePage() {
 								</div>
 							</div>
 
-							{/* Shipping Address */}
+							{/* Shipping Address & Carrier */}
 							<div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6">
-								<h5 className="font-extrabold text-xl text-slate-900 mb-3">عنوان الشحن</h5>
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<div>
+										<h5 className="font-extrabold text-xl text-slate-900 mb-3">عنوان الشحن</h5>
 
-								{order?.full_address ? (
-									<div className="text-slate-700 font-semibold space-y-1">
-										<p className="font-extrabold">{order.full_address.full_name}</p>
-										<p>
-											{order.full_address.city} - {order.full_address.area}
-										</p>
-										<p>{order.full_address.details}</p>
-										{order.full_address.phone && (
-											<p className="text-slate-600">{order.full_address.phone}</p>
+										{order?.full_address ? (
+											<div className="text-slate-700 font-semibold space-y-1">
+												<p className="font-extrabold">{order.full_address.full_name}</p>
+												<p>
+													{order.full_address.city} - {order.full_address.area}
+												</p>
+												<p>{order.full_address.details}</p>
+												{order.full_address.phone && (
+													<p className="text-slate-600">{order.full_address.phone}</p>
+												)}
+											</div>
+										) : (
+											<p className="text-slate-600 font-semibold">
+												{order?.shipping_address || "لا يوجد عنوان شحن محفوظ."}
+											</p>
 										)}
 									</div>
-								) : (
-									<p className="text-slate-600 font-semibold">لا يوجد عنوان شحن محفوظ.</p>
-								)}
+
+									{order?.shipping_method && (
+										<div>
+											<h5 className="font-extrabold text-xl text-slate-900 mb-3">شركة الشحن</h5>
+											<div className="p-4 rounded-3xl border border-slate-100 bg-slate-50 flex items-center gap-3">
+												<div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center font-bold text-pro-max text-xs">
+													OTO
+												</div>
+												<div className="text-right">
+													<p className="text-sm font-extrabold text-slate-900">{order.shipping_method}</p>
+													{order.oto_order_id && (
+														<p className="text-[10px] text-slate-500 font-semibold">رقم طلب الشحن: {order.oto_order_id}</p>
+													)}
+												</div>
+											</div>
+										</div>
+									)}
+								</div>
 							</div>
 
 							{/* Payment */}
@@ -611,14 +646,8 @@ export default function OrderCompletePage() {
 
 						{loading ? (
 							<SkeletonCard />
-						) : checkoutSummary ? (
-							<SummaryBlock summary={checkoutSummary} />
 						) : (
-							<div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-								<p className="font-extrabold text-amber-800 text-sm">
-									ملخص الطلب غير موجود (checkout_summary_v1). ارجع للسلة ثم ادخل صفحة الدفع/الإتمام مرة أخرى.
-								</p>
-							</div>
+							<SummaryBlock summary={checkoutSummary} orderData={order} />
 						)}
 					</div>
 				</div>

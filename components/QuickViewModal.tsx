@@ -10,6 +10,7 @@ import DOMPurify from "dompurify";
 
 type Product = {
 	id: number;
+	slug?: string;
 	name: string;
 	image: string | null;
 	price?: string;
@@ -274,7 +275,7 @@ export default function QuickViewModal({
 										</button>
 
 										<Link
-											href={`/product/${product?.id}`}
+											href={`/product/${product?.slug || product?.id}`}
 											className="px-4 py-2 rounded-xl font-extrabold bg-gray-100 hover:bg-gray-200 transition"
 											onClick={onClose}
 										>

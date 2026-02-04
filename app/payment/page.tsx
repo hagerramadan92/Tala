@@ -104,18 +104,28 @@ function BlockSkeleton() {
 	);
 }
 
-function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
-	const shippingFree = n(summary?.shipping_fee) <= 0;
-	const shippingFee = n(summary?.shipping_fee);
+function SummaryBlock({ summary, selectedShipping }: { summary: CheckoutSummaryV1 | null, selectedShipping: any }) {
+	const currentShippingFee = selectedShipping ? n(selectedShipping.price) : n(summary?.shipping_fee);
+	const shippingFree = currentShippingFee <= 0;
 
-	const hasCoupon = n(summary?.coupon_discount) > 0 || summary?.coupon_new_total !== null;
+	// Calculate inclusive tax and totals
+	const subtotal = n(summary?.subtotal);
+	const discount = n(summary?.coupon_discount);
+	const hasCoupon = discount > 0;
+	
+	// Total including tax and shipping
+	const finalTotal = subtotal + currentShippingFee - discount;
+	
+	const TAX_RATE = 0.15;
+	const taxAmount = finalTotal * (TAX_RATE / (1 + TAX_RATE));
+	const totalWithoutTax = finalTotal - taxAmount;
 
 	return (
 		<div className="my-2 gap-2 flex flex-col">
 			<div className="flex text-sm items-center justify-between text-black">
 				<p className="font-semibold">المجموع ({n(summary?.items_length)} عناصر)</p>
 				<p>
-					{money(summary?.subtotal)}
+					{money(subtotal)}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -126,7 +136,7 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 					<p className="font-semibold text-green-600">مجانا</p>
 				) : (
 					<p className="text-md">
-						{money(shippingFee)} <span className="text-sm ms-1">ريال</span>
+						{money(currentShippingFee)} <span className="text-sm ms-1">ريال</span>
 					</p>
 				)}
 			</div>
@@ -135,16 +145,16 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 				<div className="flex items-center justify-between text-sm">
 					<p className="text-emerald-800 font-semibold">خصم الكوبون</p>
 					<p className="font-extrabold text-emerald-700">
-						- {money(summary?.coupon_discount)}
+						- {money(discount)}
 						<span className="text-sm ms-1">ريال</span>
 					</p>
 				</div>
 			)}
 
 			<div className="flex items-center justify-between text-sm">
-				<p>ضريبة القيمة المضافة ({Math.round(n(summary?.tax_rate) * 100) || 15}%)</p>
+				<p>ضريبة القيمة المضافة (15%)</p>
 				<p className="font-semibold">
-					{money(summary?.tax_amount)}
+					{money(taxAmount)}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -152,7 +162,7 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 			<div className="flex items-center justify-between text-sm">
 				<p>الإجمالي بدون الضريبة</p>
 				<p className="font-semibold">
-					{money(summary?.total_without_tax)}
+					{money(totalWithoutTax)}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -162,7 +172,7 @@ function SummaryBlock({ summary }: { summary: CheckoutSummaryV1 | null }) {
 					<p className=" text-nowrap text-md text-pro font-semibold">الإجمالي :</p>
 				</div>
 				<p className="text-[15px] text-pro font-bold">
-					{money(summary?.total_with_shipping)}
+					{money(finalTotal)}
 					<span> ريال</span>
 				</p>
 			</div>
@@ -193,6 +203,12 @@ export default function PaymentPage() {
 
 	// ✅ coupon_code from sessionStorage
 	const [couponCode, setCouponCode] = useState<string>("");
+
+	// 🚚 Shipping states
+	const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+	const [selectedShipping, setSelectedShipping] = useState<any>(null);
+	const [otoOrderId, setOtoOrderId] = useState<string | null>(null);
+	const [loadingShipping, setLoadingShipping] = useState(false);
 
 	const router = useRouter();
 	const base_url = process.env.NEXT_PUBLIC_API_URL;
@@ -256,6 +272,43 @@ export default function PaymentPage() {
 
 		fetchAddresses();
 	}, [token, base_url]);
+
+	// 🚚 Fetch shipping options when address is available
+	useEffect(() => {
+		if (!token || !selectedAddress) return;
+
+		const fetchShippingOptions = async () => {
+			setLoadingShipping(true);
+			try {
+				const res = await fetch(`${base_url}/shippings-options`, {
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					cache: "no-store",
+				});
+
+				const result = await res.json();
+				if (res.ok && result?.status && result?.data) {
+					// OTO API structure: result.data.deliveryFees.deliveryCompany
+					const fees = result.data.deliveryFees?.deliveryCompany || [];
+					setShippingOptions(fees);
+					setOtoOrderId(result.data.orderId);
+
+					// Auto-select first if available
+					if (fees.length > 0) {
+						setSelectedShipping(fees[0]);
+					}
+				}
+			} catch (err) {
+				console.error("Error fetching shipping options:", err);
+			} finally {
+				setLoadingShipping(false);
+			}
+		};
+
+		fetchShippingOptions();
+	}, [token, selectedAddress, base_url]);
 
 	const handleNewAddress = (newAddress: AddressI) => {
 		setAddresses((prev) => [newAddress, ...prev]);
@@ -328,6 +381,12 @@ export default function PaymentPage() {
 
 				// ✅ send coupon code for discount
 				coupon_code: normalizedCoupon || "",
+
+				// ✅ Shipping fields requested
+				deliveryOptionId: String(selectedShipping?.deliveryOptionId || ""),
+				orderId: otoOrderId || "",
+				shippingPrice: n(selectedShipping?.price),
+				deliveryOptionName: selectedShipping?.deliveryOptionName || "",
 
 				// ✅ include if backend expects a value (you said: "and also if there copupon_value")
 				...(couponValue > 0 ? { coupon_value: couponValue } : {}),
@@ -498,6 +557,57 @@ export default function PaymentPage() {
 										</div>
 									)}
 
+									{/* Shipping Methods */}
+									<div className="mt-6 border-t border-slate-100 pt-5">
+										<h3 className="text-lg font-extrabold text-slate-900 mb-4">خيارات التوصيل</h3>
+										{loadingShipping ? (
+											<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+												<div className="h-20 bg-slate-50 rounded-3xl animate-pulse" />
+												<div className="h-20 bg-slate-50 rounded-3xl animate-pulse" />
+											</div>
+										) : shippingOptions.length > 0 ? (
+											<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+												{shippingOptions.map((option) => {
+													const active = selectedShipping?.deliveryOptionId === option.deliveryOptionId;
+													return (
+														<button
+															key={option.deliveryOptionId}
+															onClick={() => setSelectedShipping(option)}
+															className={`flex items-center justify-between p-4 rounded-3xl border transition-all ${
+																active
+																	? "border-pro-max bg-blue-50 shadow-sm"
+																	: "border-slate-100 hover:border-slate-200 bg-white"
+															}`}
+														>
+															<div className="flex items-center gap-3">
+																<div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-1 overflow-hidden">
+																	{option.logo ? (
+																		<img src={option.logo} alt={option.deliveryOptionName} className="w-full h-full object-contain" />
+																	) : (
+																		<span className="text-[10px] font-bold text-slate-400">OTO</span>
+																	)}
+																</div>
+																<div className="text-right">
+																	<p className="text-sm font-extrabold text-slate-900">{option.deliveryOptionName}</p>
+																	<p className="text-[10px] text-slate-500 font-semibold">{option.avgDeliveryTime || "توصيل سريع"}</p>
+																</div>
+															</div>
+															<div className="text-left">
+																<p className="text-sm font-bold text-pro">
+																	{n(option.price)} <span className="text-[10px]">ريال</span>
+																</p>
+															</div>
+														</button>
+													);
+												})}
+											</div>
+										) : (
+											<div className="p-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-center">
+												<p className="text-sm text-slate-500 font-semibold">لا توجد خيارات شحن متاحة لهذا العنوان حالياً</p>
+											</div>
+										)}
+									</div>
+
 									{/* Notes */}
 									<div className="mt-5">
 										<label className="text-sm font-extrabold text-slate-700">ملاحظات (اختياري)</label>
@@ -542,7 +652,7 @@ export default function PaymentPage() {
 							<h4 className="text-md font-extrabold text-pro mb-3">ملخص الطلب</h4>
 
 							{checkoutSummary ? (
-								<SummaryBlock summary={checkoutSummary} />
+								<SummaryBlock summary={checkoutSummary} selectedShipping={selectedShipping} />
 							) : (
 								<div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
 									<p className="font-extrabold text-amber-800 text-sm">
@@ -555,7 +665,7 @@ export default function PaymentPage() {
 						<div className="mt-4">
 							<Button
 								variant="contained"
-								disabled={loading || !paymentMethod || !checkoutSummary}
+								disabled={loading || !paymentMethod || !checkoutSummary || (shippingOptions.length > 0 && !selectedShipping)}
 								sx={{
 									fontSize: "1.1rem",
 									backgroundColor: loading ? "#9ca3af" : "#14213d",

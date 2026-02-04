@@ -107,7 +107,7 @@ export default function SearchComponent({ className = "", setMenuOpen }: any) {
 		if (e.key === "Enter") {
 			// if dropdown open and item selected -> go to product
 			if (open && activeIndex >= 0 && results[activeIndex]) {
-				router.push(`/product/${results[activeIndex].id}`);
+				router.push(`/product/${results[activeIndex].slug || results[activeIndex].id}`);
 				clear();
 				return;
 			}
