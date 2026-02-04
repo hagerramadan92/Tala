@@ -110,7 +110,7 @@ function CategorySlider({ items }: { items: CategoryI[] }) {
 					</SwiperSlide>
 
 					{items.map((cat) => {
-						const parentHref = `/category/${cat.id}`;
+						const parentHref = `/category/${cat.slug || cat.id}`;
 
 						return (
 							<SwiperSlide key={cat.id} className="!w-auto">

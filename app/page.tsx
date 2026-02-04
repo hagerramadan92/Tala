@@ -193,7 +193,7 @@ export default function Home() {
 											</h2>
 
 											<Link
-												href={`/category/${category.id}`}
+												href={`/category/${category.slug || category.id}`}
 												className="text-white/95 text-sm md:text-base font-semibold px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 transition"
 											>
 												الكل

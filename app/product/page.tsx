@@ -433,6 +433,7 @@ export default function AllProductsPage() {
 										product={product}
 											key={product.id}
 											id={product.id}
+											slug={product.slug}
 											name={product.name}
 											image={product.image || "/images/c1.png"}
 											images={

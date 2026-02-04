@@ -139,7 +139,7 @@ export default function CategoriesSlider({
 					{items.map((cat) => (
 						<SwiperSlide key={cat.id} className=" !h-auto">
 							<Link
-								href={`/category/${cat.id}`}
+								href={`/category/${cat.slug || cat.id}`}
 								aria-label={`Go to ${cat.name}`}
 								className="block"
 							>
@@ -168,7 +168,7 @@ export default function CategoriesSlider({
 										<div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
 									</div>
 
-									<p className="text-[12.5px] md:text-[14px] font-extrabold text-slate-700 text-center leading-tight line-clamp-1 group-hover:text-pro transition">
+									<p className="text-[12.5px] md:text-[14px] font-extrabold text-slate-700 text-center leading-tight group-hover:text-pro transition">
 										{cat.name}
 									</p>
 								</div>

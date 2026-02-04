@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Discount from "@/components/Discount";
@@ -418,8 +419,8 @@ export default function CategoryPage() {
 							>
 								<div className="flex gap-2 md:gap-3  overflow-x-auto pb-2">
 									{subCategories.map((sub) => (
-										<a
-											href={`/category/${sub.slug ?? sub.id}`}
+										<Link
+											href={`/category/${sub.slug || sub.id}`}
 											key={sub.id}
 											className="min-w-fit group"
 										>
@@ -436,7 +437,7 @@ export default function CategoryPage() {
 													{sub.name}
 												</p>
 											</div>
-										</a>
+										</Link>
 									))}
 								</div>
 							</motion.div>
@@ -468,6 +469,7 @@ export default function CategoryPage() {
 										>
 											<ProductCard
 												id={product.id}
+												slug={product.slug}
 												name={product.name}
 												product={product}
 												image={product.image || "/images/c1.png"}

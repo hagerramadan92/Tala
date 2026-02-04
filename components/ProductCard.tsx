@@ -16,10 +16,12 @@ import { useAuth } from '@/src/context/AuthContext';
 import { GoEye } from 'react-icons/go';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuickViewModal from './QuickViewModal';
+import { Tooltip } from '@mui/material';
 
 export default function ProductCard({
 	product,
 	id,
+    slug,
 	image,
 	name,
 	price,
@@ -192,7 +194,7 @@ export default function ProductCard({
 			>
 				{/* Image */}
 				<div className={`relative w-full h-[150px] md:h-[240px] bg-gray-50`}>
-					<Link href={`/product/${id}`} className="block h-full">
+					<Link href={`/product/${slug || id}`} className="block h-full">
 						<div className="relative h-full overflow-hidden">
 							<ImageComponent image={image || '/images/c1.png'} />
 							<div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
@@ -208,18 +210,17 @@ export default function ProductCard({
 							ClassNameP="!w-9 !h-9"
 						/>
 						{/* Discount / Stock */}
-						{showDiscountChip ? (
-							<span className="px-3 py-1 text-[11px] font-extrabold rounded-lg md:rounded-full bg-red-50 text-red-600 ring-1 ring-red-100">
-								-{discount?.value}%
-							</span>
-						) : (
-							<span
-								className={`px-3 py-1 text-[11px] font-extrabold rounded-lg md:rounded-full ring-1 ring-black/5 ${inStock ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
-									}`}
-							>
-								{inStock ? 'متوفر' : 'غير متوفر'}
-							</span>
-						)}
+						<div className="flex flex-col gap-1 items-start">
+							{product?.price_text && (<span className="px-3 py-1 text-[11px] font-extrabold rounded-lg md:rounded-full bg-emerald-500 text-white ring-1 ring-black/5 shadow-sm">
+								{product?.price_text}
+							</span>)}
+							{showDiscountChip && (
+								<span className="px-2 py-0.5 text-[10px] font-extrabold rounded bg-red-600 text-white shadow-sm">
+									-{discount?.value}%
+								</span>
+							)}
+							
+						</div>
 					</div>
 
 					<motion.button
@@ -274,18 +275,27 @@ export default function ProductCard({
 							)}
 						</div>
 					</motion.button>
+
+					{/* Rating on Image */}
+					<div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
+						<div className="bg-white/70 backdrop-blur-[2px] px-2 py-0.5 rounded-full shadow-sm scale-90">
+							<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} />
+						</div>
+					</div>
 				</div>
 
 				{/* Content */}
 				<div className="p-4 space-y-3">
-					<Link href={`/product/${id}`}>
-						<h3 className="text-sm md:text-[16px] font-extrabold text-gray-900 line-clamp-1 hover:text-pro transition">
-							{name}
-						</h3>
+					<Link href={`/product/${slug || id}`}>
+						<Tooltip title={name} arrow placement="top">
+							<h3 className="text-[13px] md:text-[14px] font-extrabold text-gray-900 line-clamp-1 hover:text-pro transition">
+								{name}
+							</h3>
+						</Tooltip>
 					</Link>
 
 					{/* Price */}
-					<div className={`flex items-center gap-2 max-md:!mb-1 ${classNameHome}`}>
+					{/* <div className={`flex items-center gap-2 max-md:!mb-1 ${classNameHome}`}>
 						{displayFinalPrice > 0 ? (
 							<div className='flex items-center gap-1 flex-wrap' >
 								<PriceComponent start price_text={product?.price_text} />
@@ -296,8 +306,7 @@ export default function ProductCard({
 						) : null}
 					</div>
 
-					{/* Rating */}
-					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} />
+					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} /> */}
 
 					{/* Divider */}
 					<div className="h-px bg-gray-200/70" />
