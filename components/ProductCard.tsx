@@ -277,11 +277,11 @@ export default function ProductCard({
 					</motion.button>
 
 					{/* Rating on Image */}
-					<div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
+					{/* <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
 						<div className="bg-white/70 backdrop-blur-[2px] px-2 py-0.5 rounded-full shadow-sm scale-90">
 							<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} />
 						</div>
-					</div>
+					</div> */}
 				</div>
 
 				{/* Content */}
@@ -304,9 +304,9 @@ export default function ProductCard({
 								)}
 							</div>
 						) : null}
-					</div>
+					</div> */}
 
-					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} /> */}
+					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} />
 
 					{/* Divider */}
 					<div className="h-px bg-gray-200/70" />

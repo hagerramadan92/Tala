@@ -9,10 +9,10 @@ export default function RatingStars({ average_ratingc , reviewsc}: { average_rat
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0); 
 
   return (
-    <div className="flex gap-1.5 items-center my-1">
+    <div className="flex gap-0.5 md:gap-1.5 items-center my-1">
       {/* <p className="text-[13px] text-gray-900 font-semibold">{average_ratingc}</p> */}
 
-      <div className="text-yellow-500 flex text-[1.2rem] gap-1">
+      <div className="text-yellow-500 flex text-[1.2rem] md:gap-1 gap-0.5">
    
         {Array.from({ length: fullStars }).map((_, i) => (
 

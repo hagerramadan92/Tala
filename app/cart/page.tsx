@@ -1,5 +1,3 @@
-// [file name]: page.tsx
-// [file content begin]
 "use client";
 
 import Link from "next/link";
@@ -145,7 +143,8 @@ function computeExtrasFromSelectedOptions(item: any, p: any) {
 function computePricing(item: any) {
 	const p = item.product || {};
 	const selected = safeParseSelectedOptions(item.selected_options);
-
+	const hasDesignImage = !!item.image_design;
+	
 	// tier info might still exist (older behavior). keep compatibility
 	const tierQty = n(selected.find((o) => o.option_name?.includes("كمية المقاس"))?.option_value);
 	const tierTotal = n(selected.find((o) => o.option_name?.includes("سعر المقاس الإجمالي"))?.option_value);
@@ -176,6 +175,7 @@ function computePricing(item: any) {
 		base_used: base,
 		tier_qty: tierQty,
 		tier_total: tierTotal,
+		hasDesignImage,
 	};
 
 	const unit = unitAfterOptions > 0 ? unitAfterOptions : apiUnit;
@@ -388,16 +388,61 @@ export default function CartPage() {
 	const backendSubtotal = n(subtotal);
 	const backendTotal = n(total);
 
+	// ✅ حساب الإجمالي الحالي مع التعديلات المحلية
+	const currentTotal = useMemo(() => {
+		let total = backendTotal;
+		
+		// ✅ حساب التغييرات في الأسعار من drafts
+		Object.keys(draftById).forEach(cartItemId => {
+			const item = cart.find((it: any) => n(it.cart_item_id || it.id) === Number(cartItemId));
+			if (item) {
+				const draft = draftById[Number(cartItemId)];
+				if (draft) {
+					const originalPricing = computePricing(item);
+					const newPricing = computePricingWithDraft(item, draft);
+					
+					// ✅ تحديث الإجمالي بالفرق بين السعر القديم والجديد
+					const diff = newPricing.line - originalPricing.line;
+					total += diff;
+				}
+			}
+		});
+		
+		// ✅ تطبيق خصم الكوبون
+		if (couponDiscount > 0) {
+			total -= couponDiscount;
+		}
+		
+		return Math.max(0, total);
+	}, [cart, draftById, backendTotal, couponDiscount]);
+
 	// ✅ Save summary + coupon in localStorage for payment page
 	const persistCheckoutSummary = useCallback(() => {
 		const shippingFree = true;
 		const shippingFee = shippingFree ? 0 : 48;
 		const TAX_RATE = 0.15;
-
+		
+		// ✅ حفظ معلومات التصميم في التخزين المؤقت
+		const designItems = cart.filter((item: any) => item.image_design);
+		if (designItems.length > 0) {
+			try {
+				sessionStorage.setItem("cart_designs", JSON.stringify(
+					designItems.map((item: any) => ({
+						cartItemId: item.cart_item_id,
+						productId: item.product.id,
+						designUrl: item.image_design,
+						productName: item.product.name
+					}))
+				));
+			} catch (err) {
+				console.error("Failed to save design info", err);
+			}
+		}
+		
 		const totalAfterCoupon =
 			couponNewTotal !== null && couponNewTotal !== undefined
 				? Math.max(0, n(couponNewTotal))
-				: Math.max(0, backendTotal - n(couponDiscount));
+				: Math.max(0, currentTotal - n(couponDiscount));
 
 		const totalWithShipping = totalAfterCoupon + shippingFee;
 		const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
@@ -425,12 +470,55 @@ export default function CartPage() {
 			total_with_shipping: totalWithShipping,
 			tax_amount: taxAmount,
 			total_without_tax: totalWithoutTax,
+			
+			// ✅ إضافة الإجمالي المحسوب حالياً
+			current_total: currentTotal,
 		};
 
 		try {
 			sessionStorage.setItem("checkout_summary_v1", JSON.stringify(payload));
 		} catch { }
-	}, [backendSubtotal, backendTotal, couponDiscount, couponNewTotal, cartCount, cart]);
+	}, [backendSubtotal, backendTotal, couponDiscount, couponNewTotal, cartCount, cart, currentTotal, code]);
+
+	// ✅ استعادة معاينات التصميم من localStorage
+	useEffect(() => {
+		const restoreDesignPreviews = () => {
+			const previews: Record<number, string> = {};
+			Object.keys(localStorage).forEach(key => {
+				if (key.startsWith('design_temp_')) {
+					const id = parseInt(key.replace('design_temp_', ''));
+					const url = localStorage.getItem(key);
+					if (url) {
+						previews[id] = url;
+					}
+				}
+			});
+			
+			if (Object.keys(previews).length > 0) {
+				setDraftById(prev => {
+					const updated = { ...prev };
+					Object.entries(previews).forEach(([id, url]) => {
+						const numId = parseInt(id);
+						if (updated[numId]) {
+							updated[numId] = { ...updated[numId], existing_design_url: url };
+						}
+					});
+					return updated;
+				});
+			}
+		};
+
+		restoreDesignPreviews();
+		
+		// ✅ تنظيف التخزين المؤقت عند الخروج
+		return () => {
+			Object.keys(localStorage).forEach(key => {
+				if (key.startsWith('design_temp_')) {
+					localStorage.removeItem(key);
+				}
+			});
+		};
+	}, []);
 
 	useEffect(() => {
 		persistCheckoutSummary();
@@ -450,10 +538,10 @@ export default function CartPage() {
 
 		if (hasMissing) {
 			const msg = `
-الرجاء اختيار كل الحقول المطلوبة قبل المتابعة
-المنتجات التي تحتاج إكمال البيانات:
-${errors.join("\n")}
-      `;
+			الرجاء اختيار كل الحقول المطلوبة قبل المتابعة
+			المنتجات التي تحتاج إكمال البيانات:
+			${errors.join("\n")}
+				`;
 
 			Swal.fire({
 				icon: "error",
@@ -529,7 +617,25 @@ ${errors.join("\n")}
 														/>
 													</Link>
 												</div>
-
+												
+												{/* ✅ عرض صورة التصميم إذا كانت متوفرة */}
+												{(item.image_design || draftById[item.cart_item_id]?.existing_design_url) && (
+													<div className="w-24 h-20 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative">
+														<div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded z-10">
+															{draftById[item.cart_item_id]?.existing_design_url && !item.image_design ? 'معاينة' : 'التصميم'}
+														</div>
+														<img
+															src={item.image_design || draftById[item.cart_item_id]?.existing_design_url}
+															alt="تصميم المرفوع"
+															className="w-full h-full object-cover"
+															onError={(e) => {
+																console.error('Failed to load design image:', e);
+																(e.target as HTMLImageElement).style.display = 'none';
+															}}
+														/>
+													</div>
+												)}
+												
 												<div className="flex flex-col justify-between">
 													<div>
 														<h3 className="font-extrabold text-[15px] text-slate-900">{item.product.name}</h3>
@@ -552,6 +658,28 @@ ${errors.join("\n")}
 																		خصم
 																	</span>
 																</>
+															)}
+														</div>
+														
+														{(item.image_design || draftById[item.cart_item_id]?.existing_design_url) && (
+															<div className="mt-2">
+																<span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-200">
+																	✓ {draftById[item.cart_item_id]?.existing_design_url && !item.image_design ? 'معاينة التصميم' : 'تم رفع التصميم'}
+																</span>
+															</div>
+														)}
+														
+														{/* ✅ عرض الأسعار الإضافية لكل خيار */}
+														<div className="mt-2 text-xs text-gray-600">
+															{item._real?.extras > 0 && (
+																<div className="mb-1">
+																	<span>الإضافات: +{money(n(item._real?.extras))} ريال (لكل قطعة)</span>
+																</div>
+															)}
+															{item._real?.one_time_extras > 0 && (
+																<div>
+																	<span>رسوم تصميم: +{money(n(item._real?.one_time_extras))} ريال (مرة واحدة)</span>
+																</div>
 															)}
 														</div>
 													</div>
@@ -639,6 +767,16 @@ ${errors.join("\n")}
 											/>
 										</div>
 									)}
+									
+									{/* ✅ عرض السعر الإجمالي لهذا المنتج */}
+									<div className="mt-4 pt-3 border-t border-slate-100">
+										<div className="flex items-center justify-between">
+											<span className="text-sm font-bold text-slate-700">الإجمالي لهذا المنتج:</span>
+											<span className="text-lg font-extrabold text-slate-900">
+												{money(n(item._line))} <span className="text-sm">ريال</span>
+											</span>
+										</div>
+									</div>
 								</div>
 							);
 						})}
@@ -671,7 +809,7 @@ ${errors.join("\n")}
 						<TotalOrder
 							items_count={cartCount}
 							subtotal={backendSubtotal}
-							total={backendTotal}
+							total={currentTotal} // ✅ استخدام currentTotal بدلاً من backendTotal
 							items={cart}
 							couponDiscount={couponDiscount}
 							couponNewTotal={couponNewTotal}
@@ -835,14 +973,16 @@ const StickerForm = forwardRef(function StickerForm(
 
 		if (needSizeTier && !sizeTierId) isValid = false;
 
-		// ✅ Design rules when "لدى تصميم"
+		// ✅ **FIX: عند اختيار "رفع تصميم خاص" لا يجب أن يكون التصميم مطلوباً للحفظ**
 		const designServiceValue = optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
 		if (designServiceValue && String(designServiceValue).includes("لدى تصميم")) {
+			// إذا كان "لدى تصميم" فقط نطلب التصميم
 			if (designDelivery === "upload") {
-				// must have either existing image_design OR new file
-				if (!existingDesignUrl && !designFile) isValid = false;
-			} else {
-				// email mode: allow without file
+				// نطلب التصميم فقط إذا لم يكن هناك تصميم مرفوع بالفعل
+				if (!existingDesignUrl && !designFile) {
+					// ولكن نسمح بالحفظ بدون تصميم إذا كان المستخدم يريد ذلك
+					isValid = true; // **FIX: السماح بالحفظ بدون تصميم**
+				}
 			}
 		}
 
@@ -1296,12 +1436,13 @@ const StickerForm = forwardRef(function StickerForm(
 		// ✅ design toggles
 		if (String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") {
 			const v = String(value || "");
-			if (!v.includes("لدى تصميم")) {
+			// ✅ **FIX: عند اختيار "رفع تصميم خاص" نعرض قسم التصميم**
+			if (v.includes("تصميم خاص") || v.includes("رفع تصميم خاص") || v.includes("لدى تصميم")) {
+				setDesignDelivery("upload");
+			} else {
 				setDesignFile(null);
 				if (designPreview) URL.revokeObjectURL(designPreview);
 				setDesignPreview(null);
-			} else {
-				setDesignDelivery("upload");
 			}
 		}
 	};
@@ -1319,271 +1460,338 @@ const StickerForm = forwardRef(function StickerForm(
 
 	const handleDesignFileChange = (file: File | null) => {
 		setDesignFile(file);
-		if (designPreview) URL.revokeObjectURL(designPreview);
-		setDesignPreview(file ? URL.createObjectURL(file) : null);
+		
+		if (file) {
+			// ✅ إنشاء URL للمعاينة
+			const previewUrl = URL.createObjectURL(file);
+			setDesignPreview(previewUrl);
+			
+			// ✅ حفظ المعاينة مؤقتاً في localStorage
+			if (cartItemId) {
+				localStorage.setItem(`design_temp_${cartItemId}`, previewUrl);
+			}
+			
+			// ✅ تحديث draftById لعرض الصورة فوراً
+			if (cartItemId && onOptionsChange) {
+				onOptionsChange(cartItemId, {
+					existing_design_url: previewUrl,
+					has_new_design_file: true,
+					design_delivery: 'upload'
+				});
+			}
+			
+			// ✅ إظهار معاينة فورية للصورة
+			toast.success("تم اختيار ملف التصميم بنجاح", {
+				icon: "📷",
+				duration: 2000
+			});
+		} else {
+			if (designPreview) URL.revokeObjectURL(designPreview);
+			setDesignPreview(null);
+		}
+		
 		markDirty();
 	};
 
 	const saveAllOptions = async () => {
-	if (!cartItemId || !apiData) return;
+		if (!cartItemId || !apiData) return;
 
-	setSaving(true);
-	setSavedSuccessfully(false);
+		setSaving(true);
+		setSavedSuccessfully(false);
 
-	const sizeObj = apiData?.sizes?.find((s: any) => String(s.name).trim() === String(size).trim());
-	const colorObj = apiData?.colors?.find((c: any) => String(c.name).trim() === String(color).trim());
-	const materialObj = apiData?.materials?.find((m: any) => String(m.name).trim() === String(material).trim());
-	
-	// ✅ **FIX: البحث الصحيح لطريقة الطباعة**
-	let methodObj = null;
-	if (printingMethod && printingMethod !== "اختر") {
-		methodObj = apiData?.printing_methods?.find((p: any) => 
-			String(p.name).trim() === String(printingMethod).trim()
-		);
-	}
-
-	const locList = Array.isArray(apiData?.print_locations) ? apiData.print_locations : [];
-	const selectedLocObjs = (printLocations || [])
-		.map((name) => locList.find((l: any) => String(l.name).trim() === String(name).trim()))
-		.filter(Boolean);
-
-	let print_location_ids: number[] = [];
-	let embroider_location_ids: number[] = [];
-
-	for (const locObj of selectedLocObjs as any[]) {
-		const id = locObj?.id;
-		if (typeof id !== "number") continue;
-		const t = String(locObj?.type || "").toLowerCase();
-		if (t === "embroider" || t === "embroidery") embroider_location_ids.push(id);
-		else print_location_ids.push(id);
-	}
-
-	// ✅ بناء selected_options مع دعم الـ children بشكل صحيح
-	const selected_options: any[] = [];
-	
-	// ✅ دالة للحصول على جميع خيارات الـ child مع الأسعار
-	const getAllChildrenOptions = (groupName: string, optionValue: string) => {
-		const options: any[] = [];
-		const optionGroup = apiData.options?.find((o: any) => o.name === groupName);
-		if (!optionGroup) return options;
+		const sizeObj = apiData?.sizes?.find((s: any) => String(s.name).trim() === String(size).trim());
+		const colorObj = apiData?.colors?.find((c: any) => String(c.name).trim() === String(color).trim());
+		const materialObj = apiData?.materials?.find((m: any) => String(m.name).trim() === String(material).trim());
 		
-		const optionItem = optionGroup.items?.find((item: any) => item.value === optionValue);
-		if (!optionItem) return options;
-		
-		// ✅ إضافة الخيار الرئيسي
-		options.push({
-			option_name: groupName,
-			option_value: optionValue,
-			additional_price: n(optionItem.base_price),
-		});
-		
-		// ✅ إضافة الـ child إذا تم اختياره
-		const childKey = `${groupName}::${optionValue}`;
-		const childValue = optionChildren?.[childKey];
-		if (childValue && childValue !== "اختر") {
-			const childItem = optionItem.children?.find((child: any) => child.value === childValue);
-			if (childItem) {
-				// ✅ **FIXED: إضافة child كخيار منفصل في selected_options**
-				options.push({
-					option_name: childItem.name || `${groupName} - تفاصيل`,
-					option_value: childValue,
-					additional_price: n(childItem.base_price),
-				});
-			}
+		// ✅ **FIX: البحث الصحيح لطريقة الطباعة**
+		let methodObj = null;
+		if (printingMethod && printingMethod !== "اختر") {
+			methodObj = apiData?.printing_methods?.find((p: any) => 
+				String(p.name).trim() === String(printingMethod).trim()
+			);
 		}
-		
-		return options;
-	};
 
-	// ✅ **LOG: عرض الخيارات المختارة في الكونسول**
-	console.log('📋 ============ الخيارات المختارة ============');
-	console.log('📌 المنتج:', apiData.name);
-	console.log('📌 ID المنتج:', productId);
-	console.log('📌 cartItemId:', cartItemId);
-	console.log('📌 المقاس:', size);
-	console.log('📌 اللون:', color);
-	console.log('📌 الخامة:', material);
-	console.log('📌 طريقة الطباعة:', printingMethod);
-	console.log('📌 أماكن الطباعة:', printLocations);
-	
-	// ✅ **FIXED: بناء selected_options مع الـ children**
-	Object.entries(optionGroups || {}).forEach(([group, value]) => {
-		if (!value || value === "اختر") return;
+		const locList = Array.isArray(apiData?.print_locations) ? apiData.print_locations : [];
+		const selectedLocObjs = (printLocations || [])
+			.map((name) => locList.find((l: any) => String(l.name).trim() === String(name).trim()))
+			.filter(Boolean);
 
-		// ✅ الحصول على جميع الخيارات (الرئيسي + children)
-		const groupOptions = getAllChildrenOptions(group, value);
+		let print_location_ids: number[] = [];
+		let embroider_location_ids: number[] = [];
+
+		for (const locObj of selectedLocObjs as any[]) {
+			const id = locObj?.id;
+			if (typeof id !== "number") continue;
+			const t = String(locObj?.type || "").toLowerCase();
+			if (t === "embroider" || t === "embroidery") embroider_location_ids.push(id);
+			else print_location_ids.push(id);
+		}
+
+		// ✅ بناء selected_options مع دعم الـ children بشكل صحيح
+		const selected_options: any[] = [];
 		
-		// ✅ إضافة جميع الخيارات إلى selected_options
-		groupOptions.forEach(opt => {
-			selected_options.push(opt);
+		// ✅ دالة للحصول على جميع خيارات الـ child مع الأسعار
+		const getAllChildrenOptions = (groupName: string, optionValue: string) => {
+			const options: any[] = [];
+			const optionGroup = apiData.options?.find((o: any) => o.name === groupName);
+			if (!optionGroup) return options;
 			
-			// ✅ **LOG: عرض كل خيار**
-			console.log(`📦 ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price})`);
-		});
-	});
-
-	// ✅ **FIX: إضافة طريقة الطباعة إلى selected_options إذا لم تكن موجودة بالفعل**
-	if (printingMethod && printingMethod !== "اختر" && methodObj) {
-		const hasPrintingInOptions = selected_options.some((opt) => 
-			String(opt.option_name).trim() === "طريقة الطباعة"
-		);
-		
-		if (!hasPrintingInOptions) {
-			const printingPrice = n(methodObj.base_price || methodObj.pivot_price || 0);
-			console.log(`🖨️ طريقة الطباعة: "${printingMethod}" (السعر: ${printingPrice})`);
+			const optionItem = optionGroup.items?.find((item: any) => item.value === optionValue);
+			if (!optionItem) return options;
 			
-			selected_options.push({
-				option_name: "طريقة الطباعة",
-				option_value: printingMethod,
-				additional_price: printingPrice,
+			// ✅ إضافة الخيار الرئيسي
+			options.push({
+				option_name: groupName,
+				option_value: optionValue,
+				additional_price: n(optionItem.base_price),
 			});
-		}
-	}
-
-	// ✅ إضافة الخيارات الأساسية إذا كانت مطلوبة
-	const addSystemOptionIfMissing = (name: string, value: string, price: number = 0) => {
-		const exists = selected_options.some(opt => 
-			String(opt.option_name).trim() === name
-		);
-		if (!exists && value && value !== "اختر") {
-			console.log(`⚙️ ${name}: "${value}" (السعر: ${price})`);
-			selected_options.push({
-				option_name: name,
-				option_value: value,
-				additional_price: price,
-			});
-		}
-	};
-
-	// إضافة الخيارات الأساسية
-	if (size && size !== "اختر") {
-		addSystemOptionIfMissing("المقاس", size, 0);
-	}
-	if (color && color !== "اختر") {
-		addSystemOptionIfMissing("اللون", color, 0);
-	}
-	if (material && material !== "اختر") {
-		const materialPrice = materialObj ? n(materialObj.additional_price) : 0;
-		addSystemOptionIfMissing("الخامة", material, materialPrice);
-	}
-	if (printLocations.length > 0) {
-		printLocations.forEach(loc => {
-			const locObj = locList.find((l: any) => String(l.name).trim() === String(loc).trim());
-			const locPrice = locObj ? n(locObj.pivot_price ?? locObj.additional_price) : 0;
-			addSystemOptionIfMissing("مكان الطباعة", loc, locPrice);
-		});
-	}
-
-	// ✅ **LOG: عرض selected_options النهائية**
-	console.log('📄 ============ selected_options النهائية ============');
-	selected_options.forEach((opt, idx) => {
-		console.log(`${idx + 1}. ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price || 0})`);
-	});
-	console.log('======================================================');
-
-	const payload: any = {
-		selected_options,
-		size_id: sizeObj?.id ?? null,
-		color_id: colorObj?.id ?? null,
-		material_id: materialObj?.id ?? null,
-		printing_method_id: methodObj?.id ?? null,
-		print_locations: print_location_ids,
-		embroider_locations: embroider_location_ids,
-		design_delivery: designDelivery,
-	};
-
-	if (needSizeTier && sizeTierQty) {
-		payload.quantity = Number(sizeTierQty);
-	}
-
-	// ✅ **LOG: عرض payload الكامل**
-	console.log('🚀 ============ Payload المرسل للباك إند ============');
-	console.log(JSON.stringify({
-		...payload,
-		selected_options: selected_options, // إظهارها بشكل واضح
-	}, null, 2));
-	console.log('=====================================================');
-
-	// ✅ If user uploaded new design file -> send FormData
-	const designServiceValue = optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
-	const isHasDesign = !!designServiceValue && String(designServiceValue).includes("لدى تصميم");
-	const shouldUploadFile = isHasDesign && designDelivery === "upload" && !!designFile;
-
-	try {
-		let success: any;
-		let responseData: any = null;
-
-		if (shouldUploadFile) {
-			const form = new FormData();
-			Object.entries(payload).forEach(([k, v]) => {
-				if (k === "selected_options") form.append(k, JSON.stringify(v));
-				else if (Array.isArray(v)) form.append(k, JSON.stringify(v));
-				else form.append(k, v === null || typeof v === "undefined" ? "" : String(v));
-			});
-
-			form.append("image_design", designFile as File);
 			
-			// ✅ **LOG: عند إرسال FormData**
-			console.log('📤 إرسال FormData مع ملف التصميم');
-			
-			success = await updateCartItem(cartItemId, form);
-		} else {
-			// ✅ **LOG: عند إرسال JSON**
-			console.log('📤 إرسال JSON بدون ملف');
-			
-			success = await updateCartItem(cartItemId, payload);
-		}
-
-		// ✅ محاولة الحصول على الرد من updateCartItem
-		if (success && typeof success === 'object') {
-			responseData = success;
-			console.log('✅ رد الباك إند:', responseData);
-			
-			// ✅ التحقق من أن الخيارات حفظت بشكل صحيح
-			if (responseData.data && responseData.data.selected_options) {
-				const savedOptions = safeParseSelectedOptions(responseData.data.selected_options);
-				console.log('✅ الخيارات المحفوظة في الباك إند:', savedOptions);
-				
-				// ✅ مقارنة الخيارات المرسلة مع المخزنة
-				const allMatch = selected_options.every(sentOpt => {
-					return savedOptions.some(savedOpt => 
-						String(savedOpt.option_name).trim() === String(sentOpt.option_name).trim() &&
-						String(savedOpt.option_value).trim() === String(sentOpt.option_value).trim()
-					);
-				});
-				
-				if (allMatch) {
-					console.log('🎉 جميع الخيارات حفظت بنجاح في الباك إند!');
-				} else {
-					console.warn('⚠️ هناك اختلاف بين الخيارات المرسلة والمخزنة');
-					console.log('المرسلة:', selected_options);
-					console.log('المخزنة:', savedOptions);
+			// ✅ إضافة الـ child إذا تم اختياره
+			const childKey = `${groupName}::${optionValue}`;
+			const childValue = optionChildren?.[childKey];
+			if (childValue && childValue !== "اختر") {
+				const childItem = optionItem.children?.find((child: any) => child.value === childValue);
+				if (childItem) {
+					// ✅ **FIXED: إضافة child كخيار منفصل في selected_options**
+					options.push({
+						option_name: childItem.name || `${groupName} - تفاصيل`,
+						option_value: childValue,
+						additional_price: n(childItem.base_price),
+					});
 				}
 			}
+			
+			return options;
+		};
+
+
+		
+		// ✅ **FIXED: بناء selected_options مع الـ children**
+		Object.entries(optionGroups || {}).forEach(([group, value]) => {
+			if (!value || value === "اختر") return;
+
+			// ✅ الحصول على جميع الخيارات (الرئيسي + children)
+			const groupOptions = getAllChildrenOptions(group, value);
+			
+			// ✅ إضافة جميع الخيارات إلى selected_options
+			groupOptions.forEach(opt => {
+				selected_options.push(opt);
+				
+				// ✅ **LOG: عرض كل خيار**
+				console.log(`📦 ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price})`);
+			});
+		});
+
+		// ✅ **FIX: إضافة طريقة الطباعة إلى selected_options إذا لم تكن موجودة بالفعل**
+		if (printingMethod && printingMethod !== "اختر" && methodObj) {
+			const hasPrintingInOptions = selected_options.some((opt) => 
+				String(opt.option_name).trim() === "طريقة الطباعة"
+			);
+			
+			if (!hasPrintingInOptions) {
+				const printingPrice = n(methodObj.base_price || methodObj.pivot_price || 0);
+				console.log(`🖨️ طريقة الطباعة: "${printingMethod}" (السعر: ${printingPrice})`);
+				
+				selected_options.push({
+					option_name: "طريقة الطباعة",
+					option_value: printingMethod,
+					additional_price: printingPrice,
+				});
+			}
 		}
 
-		const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
-		if (success && qty && typeof updateQuantity === "function") {
-			try {
-				await updateQuantity(cartItemId, qty);
-			} catch { }
+		// ✅ إضافة الخيارات الأساسية إذا كانت مطلوبة
+		const addSystemOptionIfMissing = (name: string, value: string, price: number = 0) => {
+			const exists = selected_options.some(opt => 
+				String(opt.option_name).trim() === name
+			);
+			if (!exists && value && value !== "اختر") {
+				console.log(`⚙️ ${name}: "${value}" (السعر: ${price})`);
+				selected_options.push({
+					option_name: name,
+					option_value: value,
+					additional_price: price,
+				});
+			}
+		};
+
+		// إضافة الخيارات الأساسية
+		if (size && size !== "اختر") {
+			addSystemOptionIfMissing("المقاس", size, 0);
+		}
+		if (color && color !== "اختر") {
+			addSystemOptionIfMissing("اللون", color, 0);
+		}
+		if (material && material !== "اختر") {
+			const materialPrice = materialObj ? n(materialObj.additional_price) : 0;
+			addSystemOptionIfMissing("الخامة", material, materialPrice);
+		}
+		if (printLocations.length > 0) {
+			printLocations.forEach(loc => {
+				const locObj = locList.find((l: any) => String(l.name).trim() === String(loc).trim());
+				const locPrice = locObj ? n(locObj.pivot_price ?? locObj.additional_price) : 0;
+				addSystemOptionIfMissing("مكان الطباعة", loc, locPrice);
+			});
 		}
 
-		if (success) {
-			setSavedSuccessfully(true);
-			setHasUnsavedChanges(false);
-			setShowSaveButton(false);
-			setTimeout(() => setSavedSuccessfully(false), 2500);
-			toast.success("تم حفظ التغييرات ✅");
+		// ✅ **LOG: عرض selected_options النهائية**
+		console.log('📄 ============ selected_options النهائية ============');
+		selected_options.forEach((opt, idx) => {
+			console.log(`${idx + 1}. ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price || 0})`);
+		});
+		console.log('======================================================');
+
+		const payload: any = {
+			selected_options,
+			size_id: sizeObj?.id ?? null,
+			color_id: colorObj?.id ?? null,
+			material_id: materialObj?.id ?? null,
+			printing_method_id: methodObj?.id ?? null,
+			print_locations: print_location_ids,
+			embroider_locations: embroider_location_ids,
+			design_delivery: designDelivery,
+		};
+
+		if (needSizeTier && sizeTierQty) {
+			payload.quantity = Number(sizeTierQty);
 		}
-	} catch (error: any) {
-		console.error('❌ خطأ في حفظ الخيارات:', error);
-		console.error('تفاصيل الخطأ:', error.response || error.message || error);
-		toast.error(error?.message || "حدث خطأ أثناء حفظ التغييرات");
-	} finally {
-		setSaving(false);
-	}
-};
+
+		// ✅ حفظ معلومات التصميم
+		const designServiceValue = optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
+		const isHasDesign = !!designServiceValue && 
+			(String(designServiceValue).includes("لدى تصميم") || 
+			 String(designServiceValue).includes("تصميم خاص") ||
+			 String(designServiceValue).includes("رفع تصميم خاص"));
+		
+		if (isHasDesign) {
+			payload.has_design = true;
+			payload.design_option = designServiceValue;
+			
+			if (existingDesignUrl) {
+				payload.existing_design_url = existingDesignUrl;
+			}
+			
+			if (designPreview) {
+				payload.design_uploaded = true;
+			}
+		}
+
+		// ✅ **LOG: عرض payload الكامل**
+		console.log('🚀 ============ Payload المرسل للباك إند ============');
+		console.log(JSON.stringify({
+			...payload,
+			selected_options: selected_options, // إظهارها بشكل واضح
+		}, null, 2));
+		console.log('=====================================================');
+
+		// ✅ If user uploaded new design file -> send FormData
+		const shouldUploadFile = isHasDesign && designDelivery === "upload" && !!designFile;
+
+		try {
+			let success: any;
+			let responseData: any = null;
+
+			if (shouldUploadFile) {
+				const form = new FormData();
+				Object.entries(payload).forEach(([k, v]) => {
+					if (k === "selected_options") form.append(k, JSON.stringify(v));
+					else if (Array.isArray(v)) form.append(k, JSON.stringify(v));
+					else form.append(k, v === null || typeof v === "undefined" ? "" : String(v));
+				});
+
+				form.append("image_design", designFile as File);
+				
+				console.log('📤 إرسال FormData مع ملف التصميم');
+				
+				success = await updateCartItem(cartItemId, form);
+				
+				// ✅ **المهم: تحديث الحالة المحلية لـ cartItem بالصورة مباشرة**
+				if (designPreview) {
+					// ✅ تحديث cartItem مباشرةً لإظهار الصورة فوراً
+					const updatedCartItem = { ...cartItem, image_design: designPreview };
+					console.log('✅ تم تحديث cartItem بالمعاينة المحلية:', updatedCartItem.image_design);
+					
+					// ✅ إعادة تحميل المكونات لتحديث العرض
+					setTimeout(() => {
+						window.location.reload();
+					}, 1000);
+				}
+			} else {
+				console.log('📤 إرسال JSON بدون ملف');
+				success = await updateCartItem(cartItemId, payload);
+			}
+
+			// ✅ محاولة الحصول على الرد من updateCartItem
+			if (success && typeof success === 'object') {
+				responseData = success;
+				console.log('✅ رد الباك إند:', responseData);
+				
+				// ✅ **إذا كان الرد يحتوي على صورة تصميم جديدة، قم بتحديث الحالة**
+				if (responseData.data && responseData.data.image_design) {
+					const newDesignUrl = responseData.data.image_design;
+					console.log('✅ تم رفع التصميم بنجاح إلى:', newDesignUrl);
+					
+					// ✅ إعادة تحميل الصفحة لعرض الصورة من السيرفر
+					setTimeout(() => {
+						window.location.reload();
+					}, 1000);
+				}
+				
+				// ✅ **FIX: التحقق من أن الإجمالي لا يصبح صفر**
+				if (responseData.data && responseData.data.total && responseData.data.total > 0) {
+					console.log('✅ تم الحفاظ على الإجمالي:', responseData.data.total);
+				} else if (responseData.data && responseData.data.total === 0) {
+					console.warn('⚠️ تحذير: الإجمالي أصبح صفراً!');
+					// إعادة حساب الإجمالي من البيانات المحلية
+					const currentPricing = computePricingWithDraft(cartItem, {
+						size,
+						color,
+						material,
+						optionGroups,
+						optionChildren,
+						printing_method: printingMethod,
+						print_locations: printLocations,
+						size_tier_id: sizeTierId,
+						size_tier_qty: sizeTierQty,
+						size_tier_unit: sizeTierUnit,
+						size_tier_total: sizeTierTotal,
+					});
+					
+					console.log('💰 الإجمالي المحسوب محلياً:', currentPricing.line);
+				}
+			}
+
+			const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
+			if (success && qty && typeof updateQuantity === "function") {
+				try {
+					await updateQuantity(cartItemId, qty);
+				} catch { }
+			}
+
+			if (success) {
+				setSavedSuccessfully(true);
+				setHasUnsavedChanges(false);
+				setShowSaveButton(false);
+				setTimeout(() => setSavedSuccessfully(false), 2500);
+				toast.success("تم حفظ التغييرات ✅");
+			}
+		} catch (error: any) {
+			console.error('❌ خطأ في حفظ الخيارات:', error);
+			console.error('تفاصيل الخطأ:', error.response || error.message || error);
+			
+			// ✅ **FIX: عرض رسالة خطأ واضحة**
+			let errorMessage = "حدث خطأ أثناء حفظ التغييرات";
+			if (error.response?.data?.message) {
+				errorMessage = error.response.data.message;
+			} else if (error.message) {
+				errorMessage = error.message;
+			}
+			
+			toast.error(errorMessage);
+		} finally {
+			setSaving(false);
+		}
+	};
 
 	if (formLoading) return <StickerFormSkeleton />;
 
@@ -1603,7 +1811,11 @@ const StickerForm = forwardRef(function StickerForm(
 	const needPrintLocation = Array.isArray(apiData?.print_locations) && apiData.print_locations.length > 0;
 
 	const designServiceValue = optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
-	const showDesignSection = !!designServiceValue && String(designServiceValue).includes("لدى تصميم");
+	// ✅ **FIX: عرض قسم التصميم عند اختيار "رفع تصميم خاص" أو "لدى تصميم"**
+	const showDesignSection = !!designServiceValue && 
+		(String(designServiceValue).includes("لدى تصميم") || 
+		 String(designServiceValue).includes("تصميم خاص") ||
+		 String(designServiceValue).includes("رفع تصميم خاص"));
 
 	return (
 		<motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="pt-4 mt-4">
@@ -1989,14 +2201,101 @@ const StickerForm = forwardRef(function StickerForm(
 							{(groupName === "خدمة تصميم" || groupName === "خدمة التصميم") && showDesignSection && (
 								<div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
 									<p className="text-sm font-extrabold text-slate-800 mb-2">التصميم</p>
+									<p className="text-xs text-slate-600 mb-3">
+										تم اختيار: <span className="font-bold text-blue-600">{currentValue}</span>
+									</p>
 
 									<div className="flex flex-col gap-2">
 										{designPreview || existingDesignUrl ? (
-											<div className="w-full max-w-[280px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-												{/* eslint-disable-next-line @next/next/no-img-element */}
-												<img src={(designPreview as string) || (existingDesignUrl as string)} alt="design" className="w-full h-auto object-cover" />
+											<>
+												<div className="w-full max-w-[280px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+													{/* eslint-disable-next-line @next/next/no-img-element */}
+													<img 
+														src={(designPreview as string) || (existingDesignUrl as string)} 
+														alt="design" 
+														className="w-full h-auto object-cover" 
+													/>
+													<div className="p-2 bg-blue-50 text-center">
+														<p className="text-xs font-bold text-blue-700">
+															✓ تم تحميل التصميم
+														</p>
+													</div>
+												</div>
+												
+												{/* زر رفع تصميم جديد */}
+												<div className="mt-2">
+													<input
+														type="file"
+														accept="image/*"
+														className="hidden"
+														id={`design-upload-${cartItemId}`}
+														onChange={(e) => {
+															const file = e.target.files?.[0] || null;
+															if (file) {
+																handleDesignFileChange(file);
+															}
+														}}
+													/>
+													<label
+														htmlFor={`design-upload-${cartItemId}`}
+														className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 cursor-pointer transition"
+													>
+														{designPreview || existingDesignUrl ? 'تغيير التصميم' : 'رفع تصميم'}
+													</label>
+													<p className="text-xs text-slate-500 mt-1">
+														{designFile ? `الملف المختار: ${designFile.name}` : 'يمكنك رفع التصميم لاحقاً'}
+													</p>
+												</div>
+											</>
+										) : (
+											<div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50">
+												<div className="text-slate-400 mb-3">
+													<svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+													</svg>
+												</div>
+												<p className="text-sm text-slate-600 mb-3">لم يتم رفع التصميم بعد</p>
+												
+												<div>
+													<input
+														type="file"
+														accept="image/*"
+														className="hidden"
+														id={`design-upload-new-${cartItemId}`}
+														onChange={(e) => {
+															const file = e.target.files?.[0] || null;
+															if (file) {
+																handleDesignFileChange(file);
+															}
+														}}
+													/>
+													<label
+														htmlFor={`design-upload-new-${cartItemId}`}
+														className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 cursor-pointer transition"
+													>
+														اختر ملف التصميم
+													</label>
+												</div>
+												
+												<p className="text-xs text-slate-500 mt-2">PNG, JPG, GIF - الحد الأقصى 10MB</p>
+												<p className="text-xs text-amber-600 mt-2">
+													ملاحظة: يمكنك حفظ الخيارات الآن ورفع التصميم لاحقاً
+												</p>
 											</div>
-										) : null}
+										)}
+										
+										{/* معلومات حول التصميم المرفوع */}
+										{designFile && (
+											<div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+												<div className="flex items-center gap-2">
+													<svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+														<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+													</svg>
+													<span className="text-sm font-bold text-green-800">تم اختيار الملف: {designFile.name}</span>
+												</div>
+												<p className="text-xs text-green-700 mt-1">اضغط على زر "حفظ" أعلاه لرفع التصميم</p>
+											</div>
+										)}
 									</div>
 								</div>
 							)}
@@ -2163,10 +2462,7 @@ function TotalOrder({
 		<div className="my-4 gap-2 flex flex-col">
 			<div className="flex text-sm items-center justify-between text-black">
 				<p className="font-semibold">المجموع ({items?.length} عناصر)</p>
-				<p>
-					{formattedSubtotal}
-					<span className="text-sm ms-1">ريال</span>
-				</p>
+				
 			</div>
 
 			{(n(couponDiscount) > 0 || (couponNewTotal !== null && couponNewTotal !== undefined)) && (
@@ -2180,9 +2476,9 @@ function TotalOrder({
 			)}
 
 			<div className="flex items-center justify-between text-sm">
-				<p>ضريبة القيمة المضافة (15%)</p>
+				<p>الإجمالي بعد الخصم</p>
 				<p className="font-semibold">
-					{formattedTax}
+					{n(totalAfterCoupon).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -2191,6 +2487,13 @@ function TotalOrder({
 				<p>الإجمالي بدون الضريبة</p>
 				<p className="font-semibold">
 					{formattedTotalWithoutTax}
+					<span className="text-sm ms-1">ريال</span>
+				</p>
+			</div>
+			<div className="flex items-center justify-between text-sm">
+				<p>ضريبة القيمة المضافة (15%)</p>
+				<p className="font-semibold">
+					{formattedTax}
 					<span className="text-sm ms-1">ريال</span>
 				</p>
 			</div>
@@ -2204,7 +2507,17 @@ function TotalOrder({
 					<span> ريال</span>
 				</p>
 			</div>
+			
+			{/* ✅ إظهار إشعار بأن الإجمالي يحدث تلقائياً */}
+			<div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
+				<div className="flex items-center gap-1">
+					<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+						<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+					</svg>
+					<span className="font-semibold">ملاحظة:</span>
+				</div>
+				<p className="mt-1">السعر الإجمالي يتغير تلقائياً عند اختيار أي خيار من الخيارات أعلاه.</p>
+			</div>
 		</div>
 	);
 }
-// [file content end]

@@ -2409,7 +2409,7 @@ export default function ProductPageClient() {
 								{/* ✅ Debug Section - عرض البيانات */}
 								{activeTab === "debug" && (
 									<div className="space-y-4">
-										<div className="rounded-2xl border border-slate-200 bg-white p-4">
+										{/* <div className="rounded-2xl border border-slate-200 bg-white p-4">
 											<div className="flex items-center justify-between mb-3">
 												<h3 className="font-extrabold text-slate-900">بيانات API الخام</h3>
 												<button
@@ -2423,7 +2423,6 @@ export default function ProductPageClient() {
 
 											{showDebug && (
 												<div className="space-y-4">
-													{/* Sizes */}
 													<Accordion>
 														<AccordionSummary expandIcon={<ExpandMore />}>
 															<Typography className="font-extrabold">Sizes ({apiData?.sizes?.length || 0})</Typography>
@@ -2435,7 +2434,6 @@ export default function ProductPageClient() {
 														</AccordionDetails>
 													</Accordion>
 
-													{/* Options */}
 													<Accordion>
 														<AccordionSummary expandIcon={<ExpandMore />}>
 															<Typography className="font-extrabold">Options ({apiData?.options?.length || 0})</Typography>
@@ -2447,7 +2445,6 @@ export default function ProductPageClient() {
 														</AccordionDetails>
 													</Accordion>
 
-													{/* Colors */}
 													{apiData?.colors?.length > 0 && (
 														<Accordion>
 															<AccordionSummary expandIcon={<ExpandMore />}>
@@ -2461,7 +2458,6 @@ export default function ProductPageClient() {
 														</Accordion>
 													)}
 
-													{/* Materials */}
 													{apiData?.materials?.length > 0 && (
 														<Accordion>
 															<AccordionSummary expandIcon={<ExpandMore />}>
@@ -2475,7 +2471,6 @@ export default function ProductPageClient() {
 														</Accordion>
 													)}
 
-													{/* Printing Methods */}
 													{apiData?.printing_methods?.length > 0 && (
 														<Accordion>
 															<AccordionSummary expandIcon={<ExpandMore />}>
@@ -2489,7 +2484,6 @@ export default function ProductPageClient() {
 														</Accordion>
 													)}
 
-													{/* Print Locations */}
 													{apiData?.print_locations?.length > 0 && (
 														<Accordion>
 															<AccordionSummary expandIcon={<ExpandMore />}>
@@ -2503,7 +2497,6 @@ export default function ProductPageClient() {
 														</Accordion>
 													)}
 
-													{/* Grouped Options Preview */}
 													<Accordion>
 														<AccordionSummary expandIcon={<ExpandMore />}>
 															<Typography className="font-extrabold">Grouped Options Preview</Typography>
@@ -2535,7 +2528,7 @@ export default function ProductPageClient() {
 													</Accordion>
 												</div>
 											)}
-										</div>
+										</div> */}
 
 										<div className="rounded-2xl border border-slate-200 bg-white p-4">
 											<h3 className="font-extrabold text-slate-900 mb-3">المعلومات الحالية</h3>

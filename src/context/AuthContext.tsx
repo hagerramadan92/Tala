@@ -59,67 +59,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (image) localStorage.setItem("userImage", image);
       localStorage.setItem("fullName", full);
     }
-  }, [session, status]); // intentionally not depending on userName/authToken to avoid cascades
+  }, [session, status]);
 
   /* ---------------------- FETCH FAVORITES (MERGED: PRODUCTS + IDS) ---------------------- */
+  const fetchFavorites = async () => {
+    setFavoriteProductsLoading(true);
+
+    if (!authToken) {
+      setFavoriteProducts([]);
+      localStorage.removeItem("favorites");
+      setFavoriteProductsLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        cache: "no-store",
+      });
+
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+      const dataJson = await res.json();
+      const list = Array.isArray(dataJson?.data) ? dataJson.data : [];
+
+      // Products with is_favorite flag
+      const favoritesWithFlag: ProductI[] = list.map((fav: any) => ({
+        ...fav.product,
+        is_favorite: true,
+      }));
+
+      // IDs to localStorage (same request)
+      const ids = list
+        .map((fav: any) => fav?.product?.id)
+        .filter(Boolean);
+
+      setFavoriteProducts(favoritesWithFlag);
+      localStorage.setItem("favorites", JSON.stringify(ids));
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+      setFavoriteProducts([]);
+      localStorage.removeItem("favorites");
+    } finally {
+      setFavoriteProductsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let cancelled = false;
-
-    const fetchFavorites = async () => {
-      setFavoriteProductsLoading(true);
-
-      if (!authToken) {
-        setFavoriteProducts([]);
-        localStorage.removeItem("favorites");
-        setFavoriteProductsLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          cache: "no-store",
-        });
-
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-        const dataJson = await res.json();
-        const list = Array.isArray(dataJson?.data) ? dataJson.data : [];
-
-        // Products with is_favorite flag
-        const favoritesWithFlag: ProductI[] = list.map((fav: any) => ({
-          ...fav.product,
-          is_favorite: true,
-        }));
-
-        // IDs to localStorage (same request)
-        const ids = list
-          .map((fav: any) => fav?.product?.id)
-          .filter(Boolean);
-
-        if (!cancelled) {
-          setFavoriteProducts(favoritesWithFlag);
-          localStorage.setItem("favorites", JSON.stringify(ids));
-        }
-      } catch (err) {
-        console.error("Error fetching favorites:", err);
-        if (!cancelled) {
-          setFavoriteProducts([]);
-          localStorage.removeItem("favorites");
-        }
-      } finally {
-        if (!cancelled) setFavoriteProductsLoading(false);
-      }
-    };
-
     fetchFavorites();
-
-    return () => {
-      cancelled = true;
-    };
   }, [authToken]);
 
   /* ------------------------------ LOGIN ------------------------------ */
@@ -141,6 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (email) localStorage.setItem("userEmail", email);
     if (image) localStorage.setItem("userImage", image);
     localStorage.setItem("fullName", fullNameParam || name);
+
+    // ✅ إعادة تحميل المفضلة فورًا بعد تسجيل الدخول
+    fetchFavorites();
   };
 
   /* ------------------------------ API LOGIN ------------------------------ */
@@ -161,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserEmail(null);
     setUserImage(null);
     setFullName(null);
+    setFavoriteProducts([]); // ✅ إفراغ المفضلة عند تسجيل الخروج
 
     localStorage.clear();
     nextAuthSignOut({ callbackUrl: "/login" });
@@ -185,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         favoriteProductsLoading,
         setFavoriteProducts,
         favoriteIdsSet,
+        fetchFavorites, // ✅ إضافة هذه الدالة لاستدعائها يدويًا إذا لزم الأمر
       }}
     >
       {children}
