@@ -1,5 +1,6 @@
 "use client";
 
+
 import Link from "next/link";
 import Image from "next/image";
 import { FaPlus, FaMinus } from "react-icons/fa6";
@@ -190,113 +191,118 @@ function computePricing(item: any) {
  * - "خدمة تصميم" (not "لدى تصميم") counted ONCE
  */
 function computePricingWithDraft(item: any, draft: any) {
-	const p = item.product || {};
-	const qty = n(draft?.size_tier_qty) > 0 ? n(draft?.size_tier_qty) : n(item.quantity || 1);
+    // ✅ إذا كان draft فارغاً أو محفوظاً، استخدم السعر العادي
+    // if (!draft || draft._isSaved || draft._hasNoChanges) {
+    //     return computePricing(item);
+    // }
+    
+    const p = item.product || {};
+    const qty = n(draft?.size_tier_qty) > 0 ? n(draft?.size_tier_qty) : n(item.quantity || 1);
 
-	const base = pickBasePrice(p);
-	const tierTotal = n(draft?.size_tier_total);
-	const baseLine = tierTotal > 0 ? tierTotal : base * qty;
+    const base = pickBasePrice(p);
+    const tierTotal = n(draft?.size_tier_total);
+    const baseLine = tierTotal > 0 ? tierTotal : base * qty;
 
-	let extrasPerUnit = 0;
-	let oneTimeExtras = 0;
+    let extrasPerUnit = 0;
+    let oneTimeExtras = 0;
 
-	// ✅ Handle option groups with children
-	const groups = draft?.optionGroups || {};
-	const children = draft?.optionChildren || {};
-	
-	// ✅ دالة للحصول على سعر الخيار مع children
-	const getOptionPrice = (groupName: string, optionValue: string) => {
-		const productOptions = Array.isArray(p?.options) ? p.options : [];
-		const optionGroup = productOptions.find((o: any) => o.name === groupName);
-		if (!optionGroup) return 0;
-		
-		const optionItem = optionGroup.items?.find((item: any) => item.value === optionValue);
-		if (!optionItem) return 0;
-		
-		let totalPrice = n(optionItem.base_price);
-		
-		// ✅ إضافة سعر الـ child إذا تم اختياره
-		const childKey = `${groupName}::${optionValue}`;
-		const childValue = children[childKey];
-		if (childValue && childValue !== "اختر") {
-			const childItem = optionItem.children?.find((child: any) => child.value === childValue);
-			if (childItem) {
-				totalPrice += n(childItem.base_price);
-			}
-		}
-		
-		return totalPrice;
-	};
+    // ✅ Handle option groups with children
+    const groups = draft?.optionGroups || {};
+    const children = draft?.optionChildren || {};
+    
+    // ✅ دالة للحصول على سعر الخيار مع children
+    const getOptionPrice = (groupName: string, optionValue: string) => {
+        const productOptions = Array.isArray(p?.options) ? p.options : [];
+        const optionGroup = productOptions.find((o: any) => o.name === groupName);
+        if (!optionGroup) return 0;
+        
+        const optionItem = optionGroup.items?.find((item: any) => item.value === optionValue);
+        if (!optionItem) return 0;
+        
+        let totalPrice = n(optionItem.base_price);
+        
+        // ✅ إضافة سعر الـ child إذا تم اختياره
+        const childKey = `${groupName}::${optionValue}`;
+        const childValue = children[childKey];
+        if (childValue && childValue !== "اختر") {
+            const childItem = optionItem.children?.find((child: any) => child.value === childValue);
+            if (childItem) {
+                totalPrice += n(childItem.base_price);
+            }
+        }
+        
+        return totalPrice;
+    };
 
-	// حساب أسعار الخيارات
-	Object.entries(groups).forEach(([groupName, value]) => {
-		const v = String(value || "").trim();
-		if (!v || v === "اختر") return;
+    // حساب أسعار الخيارات
+    Object.entries(groups).forEach(([groupName, value]) => {
+        const v = String(value || "").trim();
+        if (!v || v === "اختر") return;
 
-		const price = getOptionPrice(groupName, v);
+        const price = getOptionPrice(groupName, v);
 
-		// ✅ one-time for design service (any option except "لدى تصميم")
-		if ((String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") && v && !v.includes("لدى تصميم") && price > 0) {
-			oneTimeExtras += price;
-		} else {
-			extrasPerUnit += price;
-		}
-	});
+        // ✅ one-time for design service (any option except "لدى تصميم")
+        if ((String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") && v && !v.includes("لدى تصميم") && price > 0) {
+            oneTimeExtras += price;
+        } else {
+            extrasPerUnit += price;
+        }
+    });
 
-	// material additional
-	const materials = Array.isArray(p?.materials) ? p.materials : [];
-	const matName = String(draft?.material || "").trim();
-	if (matName && matName !== "اختر") {
-		const m = materials.find((x: any) => String(x.name).trim() === matName);
-		if (m) extrasPerUnit += n(m.additional_price);
-	}
+    // material additional
+    const materials = Array.isArray(p?.materials) ? p.materials : [];
+    const matName = String(draft?.material || "").trim();
+    if (matName && matName !== "اختر") {
+        const m = materials.find((x: any) => String(x.name).trim() === matName);
+        if (m) extrasPerUnit += n(m.additional_price);
+    }
 
-	// color additional
-	const colors = Array.isArray(p?.colors) ? p.colors : [];
-	const colorName = String(draft?.color || "").trim();
-	if (colorName && colorName !== "اختر") {
-		const c = colors.find((x: any) => String(x.name).trim() === colorName);
-		if (c) extrasPerUnit += n(c.additional_price);
-	}
+    // color additional
+    const colors = Array.isArray(p?.colors) ? p.colors : [];
+    const colorName = String(draft?.color || "").trim();
+    if (colorName && colorName !== "اختر") {
+        const c = colors.find((x: any) => String(x.name).trim() === colorName);
+        if (c) extrasPerUnit += n(c.additional_price);
+    }
 
-	// printing method additional
-	const printingMethods = Array.isArray(p?.printing_methods) ? p.printing_methods : [];
-	const pmName = String(draft?.printing_method || "").trim();
-	if (pmName && pmName !== "اختر") {
-		const pm = printingMethods.find((x: any) => String(x.name).trim() === pmName);
-		if (pm) extrasPerUnit += n(pm.pivot_price ?? pm.base_price);
-	}
+    // printing method additional
+    const printingMethods = Array.isArray(p?.printing_methods) ? p.printing_methods : [];
+    const pmName = String(draft?.printing_method || "").trim();
+    if (pmName && pmName !== "اختر") {
+        const pm = printingMethods.find((x: any) => String(x.name).trim() === pmName);
+        if (pm) extrasPerUnit += n(pm.pivot_price ?? pm.base_price);
+    }
 
-	// print locations additional
-	const printLocations = Array.isArray(p?.print_locations) ? p.print_locations : [];
-	const selectedLocNames: string[] = Array.isArray(draft?.print_locations) ? draft.print_locations : [];
-	for (const locName of selectedLocNames) {
-		const loc = printLocations.find((x: any) => String(x.name).trim() === String(locName).trim());
-		if (loc) extrasPerUnit += n(loc.pivot_price ?? loc.additional_price);
-	}
+    // print locations additional
+    const printLocations = Array.isArray(p?.print_locations) ? p.print_locations : [];
+    const selectedLocNames: string[] = Array.isArray(draft?.print_locations) ? draft.print_locations : [];
+    for (const locName of selectedLocNames) {
+        const loc = printLocations.find((x: any) => String(x.name).trim() === String(locName).trim());
+        if (loc) extrasPerUnit += n(loc.pivot_price ?? loc.additional_price);
+    }
 
-	const line = baseLine + extrasPerUnit * qty + oneTimeExtras;
-	const unit = qty > 0 ? line / qty : 0;
+    const line = baseLine + extrasPerUnit * qty + oneTimeExtras;
+    const unit = qty > 0 ? line / qty : 0;
 
-	const originalBaseUnit = n(p?.price) > 0 ? n(p?.price) : base;
-	const discountBaseUnit = n(p?.final_price) > 0 ? n(p?.final_price) : base;
+    const originalBaseUnit = n(p?.price) > 0 ? n(p?.price) : base;
+    const discountBaseUnit = n(p?.final_price) > 0 ? n(p?.final_price) : base;
 
-	return {
-		unit,
-		line,
-		effectiveQty: qty,
-		showRealProductPrice: {
-			discount: !!p?.has_discount,
-			unit_after_options: unit,
-			original_unit_after_options: originalBaseUnit + extrasPerUnit,
-			discount_unit_after_options: discountBaseUnit + extrasPerUnit,
-			extras: extrasPerUnit,
-			one_time_extras: oneTimeExtras,
-			base_used: base,
-			tier_qty: n(draft?.size_tier_qty),
-			tier_total: n(draft?.size_tier_total),
-		},
-	};
+    return {
+        unit,
+        line,
+        effectiveQty: qty,
+        showRealProductPrice: {
+            discount: !!p?.has_discount,
+            unit_after_options: unit,
+            original_unit_after_options: originalBaseUnit + extrasPerUnit,
+            discount_unit_after_options: discountBaseUnit + extrasPerUnit,
+            extras: extrasPerUnit,
+            one_time_extras: oneTimeExtras,
+            base_used: base,
+            tier_qty: n(draft?.size_tier_qty),
+            tier_total: n(draft?.size_tier_total),
+        },
+    };
 }
 
 function productNeedsSelection(p: any) {
@@ -357,64 +363,82 @@ export default function CartPage() {
 	const [draftById, setDraftById] = useState<Record<number, any>>({});
 
 	const handleOptionsChange = useCallback((cartItemId: number, opt: any) => {
-		setDraftById((prev) => {
-			const prevStr = JSON.stringify(prev[cartItemId] ?? null);
-			const nextStr = JSON.stringify(opt ?? null);
-			if (prevStr === nextStr) return prev;
-			return { ...prev, [cartItemId]: opt };
-		});
-	}, []);
+    setDraftById((prev) => {
+        // ✅ إذا كان الخيار يحتوي على علامة _isSaved، احذفه من drafts
+        // if (opt && opt._isSaved) {
+        //     const newDrafts = { ...prev };
+        //     delete newDrafts[cartItemId];
+        //     return newDrafts;
+        // }
+        
+        // ✅ إذا كان الخيار فارغاً أو يحتوي على علامة _hasNoChanges، احذفه
+        // if (!opt || opt._hasNoChanges) {
+        //     const newDrafts = { ...prev };
+        //     delete newDrafts[cartItemId];
+        //     return newDrafts;
+        // }
+        
+        const prevStr = JSON.stringify(prev[cartItemId] ?? null);
+        const nextStr = JSON.stringify(opt ?? null);
+        if (prevStr === nextStr) return prev;
+        return { ...prev, [cartItemId]: opt };
+    });
+}, []);
 
 	const computed = useMemo(() => {
-		const items = cart.map((it: any) => {
-			const id = n(it.cart_item_id || it.id);
-			const draft = id ? draftById[id] : null;
+    const items = cart.map((it: any) => {
+        const id = n(it.cart_item_id || it.id);
+        const draft = id ? draftById[id] : null;
 
-			const pr = draft ? computePricingWithDraft(it, draft) : computePricing(it);
+        // ✅ **بسّط: استخدم draft إذا كان موجوداً**
+        const pr = draft 
+            ? computePricingWithDraft(it, draft) 
+            : computePricing(it);
 
-			return {
-				...it,
-				_unit: pr.unit,
-				_line: pr.line,
-				_real: pr.showRealProductPrice,
-				_effectiveQty: pr.effectiveQty,
-			};
-		});
+        return {
+            ...it,
+            _unit: pr.unit,
+            _line: pr.line,
+            _real: pr.showRealProductPrice,
+            _effectiveQty: pr.effectiveQty,
+        };
+    });
 
-		const localSubtotal = items.reduce((acc: number, it: any) => acc + n(it._line), 0);
-		return { items, localSubtotal };
-	}, [cart, draftById]);
+    const localSubtotal = items.reduce((acc: number, it: any) => acc + n(it._line), 0);
+    return { items, localSubtotal };
+}, [cart, draftById]);
 
 	const backendSubtotal = n(subtotal);
 	const backendTotal = n(total);
 
 	// ✅ حساب الإجمالي الحالي مع التعديلات المحلية
-	const currentTotal = useMemo(() => {
-		let total = backendTotal;
-		
-		// ✅ حساب التغييرات في الأسعار من drafts
-		Object.keys(draftById).forEach(cartItemId => {
-			const item = cart.find((it: any) => n(it.cart_item_id || it.id) === Number(cartItemId));
-			if (item) {
-				const draft = draftById[Number(cartItemId)];
-				if (draft) {
-					const originalPricing = computePricing(item);
-					const newPricing = computePricingWithDraft(item, draft);
-					
-					// ✅ تحديث الإجمالي بالفرق بين السعر القديم والجديد
-					const diff = newPricing.line - originalPricing.line;
-					total += diff;
-				}
-			}
-		});
-		
-		// ✅ تطبيق خصم الكوبون
-		if (couponDiscount > 0) {
-			total -= couponDiscount;
-		}
-		
-		return Math.max(0, total);
-	}, [cart, draftById, backendTotal, couponDiscount]);
+const currentTotal = useMemo(() => {
+    let total = backendTotal;
+    
+    // ✅ **بسّط: استخدم جميع drafts**
+    Object.keys(draftById).forEach(cartItemId => {
+        const item = cart.find((it: any) => n(it.cart_item_id || it.id) === Number(cartItemId));
+        if (item) {
+            const draft = draftById[Number(cartItemId)];
+            
+            // ✅ **استخدم draft إذا كان موجوداً**
+            if (draft) {
+                const originalPricing = computePricing(item);
+                const newPricing = computePricingWithDraft(item, draft);
+                
+                const diff = newPricing.line - originalPricing.line;
+                total += diff;
+            }
+        }
+    });
+    
+    // ✅ تطبيق خصم الكوبون
+    if (couponDiscount > 0) {
+        total -= couponDiscount;
+    }
+    
+    return Math.max(0, total);
+}, [cart, draftById, backendTotal, couponDiscount]);
 
 	// ✅ Save summary + coupon in localStorage for payment page
 	const persistCheckoutSummary = useCallback(() => {
@@ -783,8 +807,8 @@ export default function CartPage() {
 					</div>
 				</div>
 
-				<div className="col-span-1">
-					<div className="border border-slate-200 rounded-2xl p-6 mt-4 bg-white shadow-sm">
+				<div className="col-span-1 ">
+					<div className="border lg:sticky lg:top-[150px] h-fit border-slate-200 rounded-2xl p-6 mt-4 bg-white shadow-sm">
 						<CoBon
 							code={code}
 							setCode={setCode}
@@ -807,13 +831,17 @@ export default function CartPage() {
 						<h4 className="text-md font-extrabold text-pro my-5">ملخص الطلب</h4>
 
 						<TotalOrder
-							items_count={cartCount}
-							subtotal={backendSubtotal}
-							total={currentTotal} // ✅ استخدام currentTotal بدلاً من backendTotal
-							items={cart}
-							couponDiscount={couponDiscount}
-							couponNewTotal={couponNewTotal}
-						/>
+								items_count={cartCount}
+								subtotal={backendSubtotal}
+								total={computed.localSubtotal} // ✅ هذا بالفعل صحيح
+								items={cart}
+								couponDiscount={couponDiscount}
+								couponNewTotal={couponNewTotal}
+								// ✅ إضافة هذه الـ props الجديدة
+								hasUnsavedChanges={Object.keys(draftById).length > 0}
+								unsavedChangesCount={Object.keys(draftById).length}
+								originalTotal={backendTotal} // للإشارة إلى السعر الأصلي
+							/>
 
 						<Button
 							variant="contained"
@@ -1494,304 +1522,361 @@ const StickerForm = forwardRef(function StickerForm(
 	};
 
 	const saveAllOptions = async () => {
-		if (!cartItemId || !apiData) return;
+    if (!cartItemId || !apiData) return;
 
-		setSaving(true);
-		setSavedSuccessfully(false);
+    setSaving(true);
+    setSavedSuccessfully(false);
 
-		const sizeObj = apiData?.sizes?.find((s: any) => String(s.name).trim() === String(size).trim());
-		const colorObj = apiData?.colors?.find((c: any) => String(c.name).trim() === String(color).trim());
-		const materialObj = apiData?.materials?.find((m: any) => String(m.name).trim() === String(material).trim());
-		
-		// ✅ **FIX: البحث الصحيح لطريقة الطباعة**
-		let methodObj = null;
-		if (printingMethod && printingMethod !== "اختر") {
-			methodObj = apiData?.printing_methods?.find((p: any) => 
-				String(p.name).trim() === String(printingMethod).trim()
-			);
-		}
+    const sizeObj = apiData?.sizes?.find((s: any) => String(s.name).trim() === String(size).trim());
+    const colorObj = apiData?.colors?.find((c: any) => String(c.name).trim() === String(color).trim());
+    const materialObj = apiData?.materials?.find((m: any) => String(m.name).trim() === String(material).trim());
+    
+    // ✅ **FIX: البحث الصحيح لطريقة الطباعة**
+    let methodObj = null;
+    if (printingMethod && printingMethod !== "اختر") {
+        methodObj = apiData?.printing_methods?.find((p: any) => 
+            String(p.name).trim() === String(printingMethod).trim()
+        );
+    }
 
-		const locList = Array.isArray(apiData?.print_locations) ? apiData.print_locations : [];
-		const selectedLocObjs = (printLocations || [])
-			.map((name) => locList.find((l: any) => String(l.name).trim() === String(name).trim()))
-			.filter(Boolean);
+    const locList = Array.isArray(apiData?.print_locations) ? apiData.print_locations : [];
+    const selectedLocObjs = (printLocations || [])
+        .map((name) => locList.find((l: any) => String(l.name).trim() === String(name).trim()))
+        .filter(Boolean);
 
-		let print_location_ids: number[] = [];
-		let embroider_location_ids: number[] = [];
+    let print_location_ids: number[] = [];
+    let embroider_location_ids: number[] = [];
 
-		for (const locObj of selectedLocObjs as any[]) {
-			const id = locObj?.id;
-			if (typeof id !== "number") continue;
-			const t = String(locObj?.type || "").toLowerCase();
-			if (t === "embroider" || t === "embroidery") embroider_location_ids.push(id);
-			else print_location_ids.push(id);
-		}
+    for (const locObj of selectedLocObjs as any[]) {
+        const id = locObj?.id;
+        if (typeof id !== "number") continue;
+        const t = String(locObj?.type || "").toLowerCase();
+        if (t === "embroider" || t === "embroidery") embroider_location_ids.push(id);
+        else print_location_ids.push(id);
+    }
 
-		// ✅ بناء selected_options مع دعم الـ children بشكل صحيح
-		const selected_options: any[] = [];
-		
-		// ✅ دالة للحصول على جميع خيارات الـ child مع الأسعار
-		const getAllChildrenOptions = (groupName: string, optionValue: string) => {
-			const options: any[] = [];
-			const optionGroup = apiData.options?.find((o: any) => o.name === groupName);
-			if (!optionGroup) return options;
-			
-			const optionItem = optionGroup.items?.find((item: any) => item.value === optionValue);
-			if (!optionItem) return options;
-			
-			// ✅ إضافة الخيار الرئيسي
-			options.push({
-				option_name: groupName,
-				option_value: optionValue,
-				additional_price: n(optionItem.base_price),
-			});
-			
-			// ✅ إضافة الـ child إذا تم اختياره
-			const childKey = `${groupName}::${optionValue}`;
-			const childValue = optionChildren?.[childKey];
-			if (childValue && childValue !== "اختر") {
-				const childItem = optionItem.children?.find((child: any) => child.value === childValue);
-				if (childItem) {
-					// ✅ **FIXED: إضافة child كخيار منفصل في selected_options**
-					options.push({
-						option_name: childItem.name || `${groupName} - تفاصيل`,
-						option_value: childValue,
-						additional_price: n(childItem.base_price),
-					});
-				}
-			}
-			
-			return options;
-		};
+    // ✅ بناء selected_options مع دعم الـ children بشكل صحيح
+    const selected_options: any[] = [];
+    
+    // ✅ دالة للحصول على جميع خيارات الـ child مع الأسعار
+    const getAllChildrenOptions = (groupName: string, optionValue: string) => {
+        const options: any[] = [];
+        const optionGroup = apiData.options?.find((o: any) => o.name === groupName);
+        if (!optionGroup) return options;
+        
+        const optionItem = optionGroup.items?.find((item: any) => item.value === optionValue);
+        if (!optionItem) return options;
+        
+        // ✅ إضافة الخيار الرئيسي
+        options.push({
+            option_name: groupName,
+            option_value: optionValue,
+            additional_price: n(optionItem.base_price),
+        });
+        
+        // ✅ إضافة الـ child إذا تم اختياره
+        const childKey = `${groupName}::${optionValue}`;
+        const childValue = optionChildren?.[childKey];
+        if (childValue && childValue !== "اختر") {
+            const childItem = optionItem.children?.find((child: any) => child.value === childValue);
+            if (childItem) {
+                // ✅ **FIXED: إضافة child كخيار منفصل في selected_options**
+                options.push({
+                    option_name: childItem.name || `${groupName} - تفاصيل`,
+                    option_value: childValue,
+                    additional_price: n(childItem.base_price),
+                });
+            }
+        }
+        
+        return options;
+    };
 
+    // ✅ **FIXED: بناء selected_options مع الـ children**
+    Object.entries(optionGroups || {}).forEach(([group, value]) => {
+        if (!value || value === "اختر") return;
 
-		
-		// ✅ **FIXED: بناء selected_options مع الـ children**
-		Object.entries(optionGroups || {}).forEach(([group, value]) => {
-			if (!value || value === "اختر") return;
+        // ✅ الحصول على جميع الخيارات (الرئيسي + children)
+        const groupOptions = getAllChildrenOptions(group, value);
+        
+        // ✅ إضافة جميع الخيارات إلى selected_options
+        groupOptions.forEach(opt => {
+            selected_options.push(opt);
+            
+            // ✅ **LOG: عرض كل خيار**
+            console.log(`📦 ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price})`);
+        });
+    });
 
-			// ✅ الحصول على جميع الخيارات (الرئيسي + children)
-			const groupOptions = getAllChildrenOptions(group, value);
-			
-			// ✅ إضافة جميع الخيارات إلى selected_options
-			groupOptions.forEach(opt => {
-				selected_options.push(opt);
-				
-				// ✅ **LOG: عرض كل خيار**
-				console.log(`📦 ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price})`);
-			});
-		});
+    // ✅ **FIX: إضافة طريقة الطباعة إلى selected_options إذا لم تكن موجودة بالفعل**
+    if (printingMethod && printingMethod !== "اختر" && methodObj) {
+        const hasPrintingInOptions = selected_options.some((opt) => 
+            String(opt.option_name).trim() === "طريقة الطباعة"
+        );
+        
+        if (!hasPrintingInOptions) {
+            const printingPrice = n(methodObj.base_price || methodObj.pivot_price || 0);
+            console.log(`🖨️ طريقة الطباعة: "${printingMethod}" (السعر: ${printingPrice})`);
+            
+            selected_options.push({
+                option_name: "طريقة الطباعة",
+                option_value: printingMethod,
+                additional_price: printingPrice,
+            });
+        }
+    }
 
-		// ✅ **FIX: إضافة طريقة الطباعة إلى selected_options إذا لم تكن موجودة بالفعل**
-		if (printingMethod && printingMethod !== "اختر" && methodObj) {
-			const hasPrintingInOptions = selected_options.some((opt) => 
-				String(opt.option_name).trim() === "طريقة الطباعة"
-			);
-			
-			if (!hasPrintingInOptions) {
-				const printingPrice = n(methodObj.base_price || methodObj.pivot_price || 0);
-				console.log(`🖨️ طريقة الطباعة: "${printingMethod}" (السعر: ${printingPrice})`);
-				
-				selected_options.push({
-					option_name: "طريقة الطباعة",
-					option_value: printingMethod,
-					additional_price: printingPrice,
-				});
-			}
-		}
+    // ✅ إضافة الخيارات الأساسية إذا كانت مطلوبة
+    const addSystemOptionIfMissing = (name: string, value: string, price: number = 0) => {
+        const exists = selected_options.some(opt => 
+            String(opt.option_name).trim() === name
+        );
+        if (!exists && value && value !== "اختر") {
+            console.log(`⚙️ ${name}: "${value}" (السعر: ${price})`);
+            selected_options.push({
+                option_name: name,
+                option_value: value,
+                additional_price: price,
+            });
+        }
+    };
 
-		// ✅ إضافة الخيارات الأساسية إذا كانت مطلوبة
-		const addSystemOptionIfMissing = (name: string, value: string, price: number = 0) => {
-			const exists = selected_options.some(opt => 
-				String(opt.option_name).trim() === name
-			);
-			if (!exists && value && value !== "اختر") {
-				console.log(`⚙️ ${name}: "${value}" (السعر: ${price})`);
-				selected_options.push({
-					option_name: name,
-					option_value: value,
-					additional_price: price,
-				});
-			}
-		};
+    // إضافة الخيارات الأساسية
+    if (size && size !== "اختر") {
+        addSystemOptionIfMissing("المقاس", size, 0);
+    }
+    if (color && color !== "اختر") {
+        addSystemOptionIfMissing("اللون", color, 0);
+    }
+    if (material && material !== "اختر") {
+        const materialPrice = materialObj ? n(materialObj.additional_price) : 0;
+        addSystemOptionIfMissing("الخامة", material, materialPrice);
+    }
+    if (printLocations.length > 0) {
+        printLocations.forEach(loc => {
+            const locObj = locList.find((l: any) => String(l.name).trim() === String(loc).trim());
+            const locPrice = locObj ? n(locObj.pivot_price ?? locObj.additional_price) : 0;
+            addSystemOptionIfMissing("مكان الطباعة", loc, locPrice);
+        });
+    }
 
-		// إضافة الخيارات الأساسية
-		if (size && size !== "اختر") {
-			addSystemOptionIfMissing("المقاس", size, 0);
-		}
-		if (color && color !== "اختر") {
-			addSystemOptionIfMissing("اللون", color, 0);
-		}
-		if (material && material !== "اختر") {
-			const materialPrice = materialObj ? n(materialObj.additional_price) : 0;
-			addSystemOptionIfMissing("الخامة", material, materialPrice);
-		}
-		if (printLocations.length > 0) {
-			printLocations.forEach(loc => {
-				const locObj = locList.find((l: any) => String(l.name).trim() === String(loc).trim());
-				const locPrice = locObj ? n(locObj.pivot_price ?? locObj.additional_price) : 0;
-				addSystemOptionIfMissing("مكان الطباعة", loc, locPrice);
-			});
-		}
+    // ✅ **LOG: عرض selected_options النهائية**
+    console.log('📄 ============ selected_options النهائية ============');
+    selected_options.forEach((opt, idx) => {
+        console.log(`${idx + 1}. ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price || 0})`);
+    });
+    console.log('======================================================');
 
-		// ✅ **LOG: عرض selected_options النهائية**
-		console.log('📄 ============ selected_options النهائية ============');
-		selected_options.forEach((opt, idx) => {
-			console.log(`${idx + 1}. ${opt.option_name}: "${opt.option_value}" (السعر: ${opt.additional_price || 0})`);
-		});
-		console.log('======================================================');
+    const payload: any = {
+        selected_options,
+        size_id: sizeObj?.id ?? null,
+        color_id: colorObj?.id ?? null,
+        material_id: materialObj?.id ?? null,
+        printing_method_id: methodObj?.id ?? null,
+        print_locations: print_location_ids,
+        embroider_locations: embroider_location_ids,
+        design_delivery: designDelivery,
+    };
 
-		const payload: any = {
-			selected_options,
-			size_id: sizeObj?.id ?? null,
-			color_id: colorObj?.id ?? null,
-			material_id: materialObj?.id ?? null,
-			printing_method_id: methodObj?.id ?? null,
-			print_locations: print_location_ids,
-			embroider_locations: embroider_location_ids,
-			design_delivery: designDelivery,
-		};
+    if (needSizeTier && sizeTierQty) {
+        payload.quantity = Number(sizeTierQty);
+    }
 
-		if (needSizeTier && sizeTierQty) {
-			payload.quantity = Number(sizeTierQty);
-		}
+    // ✅ حفظ معلومات التصميم
+    const designServiceValue = optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
+    const isHasDesign = !!designServiceValue && 
+        (String(designServiceValue).includes("لدى تصميم") || 
+         String(designServiceValue).includes("تصميم خاص") ||
+         String(designServiceValue).includes("رفع تصميم خاص"));
+    
+    if (isHasDesign) {
+        payload.has_design = true;
+        payload.design_option = designServiceValue;
+        
+        if (existingDesignUrl) {
+            payload.existing_design_url = existingDesignUrl;
+        }
+        
+        if (designPreview) {
+            payload.design_uploaded = true;
+        }
+    }
 
-		// ✅ حفظ معلومات التصميم
-		const designServiceValue = optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
-		const isHasDesign = !!designServiceValue && 
-			(String(designServiceValue).includes("لدى تصميم") || 
-			 String(designServiceValue).includes("تصميم خاص") ||
-			 String(designServiceValue).includes("رفع تصميم خاص"));
-		
-		if (isHasDesign) {
-			payload.has_design = true;
-			payload.design_option = designServiceValue;
-			
-			if (existingDesignUrl) {
-				payload.existing_design_url = existingDesignUrl;
-			}
-			
-			if (designPreview) {
-				payload.design_uploaded = true;
-			}
-		}
+    // ✅ **LOG: عرض payload الكامل**
+    console.log('🚀 ============ Payload المرسل للباك إند ============');
+    console.log(JSON.stringify({
+        ...payload,
+        selected_options: selected_options,
+    }, null, 2));
+    console.log('=====================================================');
 
-		// ✅ **LOG: عرض payload الكامل**
-		console.log('🚀 ============ Payload المرسل للباك إند ============');
-		console.log(JSON.stringify({
-			...payload,
-			selected_options: selected_options, // إظهارها بشكل واضح
-		}, null, 2));
-		console.log('=====================================================');
+    // ✅ حساب السعر الحالي قبل الحفظ
+    const currentPricing = computePricingWithDraft(cartItem, {
+        size,
+        color,
+        material,
+        optionGroups,
+        optionChildren,
+        printing_method: printingMethod,
+        print_locations: printLocations,
+        size_tier_id: sizeTierId,
+        size_tier_qty: sizeTierQty,
+        size_tier_unit: sizeTierUnit,
+        size_tier_total: sizeTierTotal,
+    });
+    
+    console.log('💰 السعر المحسوب قبل الحفظ:', currentPricing.line);
 
-		// ✅ If user uploaded new design file -> send FormData
-		const shouldUploadFile = isHasDesign && designDelivery === "upload" && !!designFile;
+    // ✅ If user uploaded new design file -> send FormData
+    const shouldUploadFile = isHasDesign && designDelivery === "upload" && !!designFile;
 
-		try {
-			let success: any;
-			let responseData: any = null;
+    try {
+        let success: any;
+        let responseData: any = null;
 
-			if (shouldUploadFile) {
-				const form = new FormData();
-				Object.entries(payload).forEach(([k, v]) => {
-					if (k === "selected_options") form.append(k, JSON.stringify(v));
-					else if (Array.isArray(v)) form.append(k, JSON.stringify(v));
-					else form.append(k, v === null || typeof v === "undefined" ? "" : String(v));
-				});
+        if (shouldUploadFile) {
+            const form = new FormData();
+            Object.entries(payload).forEach(([k, v]) => {
+                if (k === "selected_options") form.append(k, JSON.stringify(v));
+                else if (Array.isArray(v)) form.append(k, JSON.stringify(v));
+                else form.append(k, v === null || typeof v === "undefined" ? "" : String(v));
+            });
 
-				form.append("image_design", designFile as File);
-				
-				console.log('📤 إرسال FormData مع ملف التصميم');
-				
-				success = await updateCartItem(cartItemId, form);
-				
-				// ✅ **المهم: تحديث الحالة المحلية لـ cartItem بالصورة مباشرة**
-				if (designPreview) {
-					// ✅ تحديث cartItem مباشرةً لإظهار الصورة فوراً
-					const updatedCartItem = { ...cartItem, image_design: designPreview };
-					console.log('✅ تم تحديث cartItem بالمعاينة المحلية:', updatedCartItem.image_design);
-					
-					// ✅ إعادة تحميل المكونات لتحديث العرض
-					setTimeout(() => {
-						window.location.reload();
-					}, 1000);
-				}
-			} else {
-				console.log('📤 إرسال JSON بدون ملف');
-				success = await updateCartItem(cartItemId, payload);
-			}
+            form.append("image_design", designFile as File);
+            
+            console.log('📤 إرسال FormData مع ملف التصميم');
+            
+            success = await updateCartItem(cartItemId, form);
+        } else {
+            console.log('📤 إرسال JSON بدون ملف');
+            success = await updateCartItem(cartItemId, payload);
+        }
 
-			// ✅ محاولة الحصول على الرد من updateCartItem
-			if (success && typeof success === 'object') {
-				responseData = success;
-				console.log('✅ رد الباك إند:', responseData);
-				
-				// ✅ **إذا كان الرد يحتوي على صورة تصميم جديدة، قم بتحديث الحالة**
-				if (responseData.data && responseData.data.image_design) {
-					const newDesignUrl = responseData.data.image_design;
-					console.log('✅ تم رفع التصميم بنجاح إلى:', newDesignUrl);
-					
-					// ✅ إعادة تحميل الصفحة لعرض الصورة من السيرفر
-					setTimeout(() => {
-						window.location.reload();
-					}, 1000);
-				}
-				
-				// ✅ **FIX: التحقق من أن الإجمالي لا يصبح صفر**
-				if (responseData.data && responseData.data.total && responseData.data.total > 0) {
-					console.log('✅ تم الحفاظ على الإجمالي:', responseData.data.total);
-				} else if (responseData.data && responseData.data.total === 0) {
-					console.warn('⚠️ تحذير: الإجمالي أصبح صفراً!');
-					// إعادة حساب الإجمالي من البيانات المحلية
-					const currentPricing = computePricingWithDraft(cartItem, {
-						size,
-						color,
-						material,
-						optionGroups,
-						optionChildren,
-						printing_method: printingMethod,
-						print_locations: printLocations,
-						size_tier_id: sizeTierId,
-						size_tier_qty: sizeTierQty,
-						size_tier_unit: sizeTierUnit,
-						size_tier_total: sizeTierTotal,
-					});
-					
-					console.log('💰 الإجمالي المحسوب محلياً:', currentPricing.line);
-				}
-			}
+        // ✅ محاولة الحصول على الرد من updateCartItem
+        if (success && typeof success === 'object') {
+            responseData = success;
+            console.log('✅ رد الباك إند:', responseData);
+            
+            // ✅ **FIX: تحديث draftById بالسعر الجديد مباشرة بعد الاستجابة**
+            if (responseData.data) {
+                // الحصول على السعر الجديد من الخادم
+                const newLineTotal = n(responseData.data.line_total || responseData.data.total || 0);
+                const newUnitPrice = n(responseData.data.price_per_unit || 0);
+                const newQuantity = n(responseData.data.quantity || sizeTierQty || cartItem?.quantity || 1);
+                
+                console.log('📊 بيانات السعر الجديد من الخادم:', {
+                    line_total: newLineTotal,
+                    unit_price: newUnitPrice,
+                    quantity: newQuantity
+                });
+            }
+        }
 
-			const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
-			if (success && qty && typeof updateQuantity === "function") {
-				try {
-					await updateQuantity(cartItemId, qty);
-				} catch { }
-			}
+        const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
+        if (success && qty && typeof updateQuantity === "function") {
+            try {
+                await updateQuantity(cartItemId, qty);
+            } catch { }
+        }
 
-			if (success) {
-				setSavedSuccessfully(true);
-				setHasUnsavedChanges(false);
-				setShowSaveButton(false);
-				setTimeout(() => setSavedSuccessfully(false), 2500);
-				toast.success("تم حفظ التغييرات ✅");
-			}
-		} catch (error: any) {
-			console.error('❌ خطأ في حفظ الخيارات:', error);
-			console.error('تفاصيل الخطأ:', error.response || error.message || error);
-			
-			// ✅ **FIX: عرض رسالة خطأ واضحة**
-			let errorMessage = "حدث خطأ أثناء حفظ التغييرات";
-			if (error.response?.data?.message) {
-				errorMessage = error.response.data.message;
-			} else if (error.message) {
-				errorMessage = error.message;
-			}
-			
-			toast.error(errorMessage);
-		} finally {
-			setSaving(false);
-		}
-	};
+        if (success) {
+            setSavedSuccessfully(true);
+            setHasUnsavedChanges(false);
+            setShowSaveButton(false);
+            
+            // ✅ **FIX: عرض رسالة النجاح مع السعر الجديد**
+            const finalPricing = computePricingWithDraft(cartItem, {
+                size,
+                color,
+                material,
+                optionGroups,
+                optionChildren,
+                printing_method: printingMethod,
+                print_locations: printLocations,
+                size_tier_id: sizeTierId,
+                size_tier_qty: sizeTierQty,
+                size_tier_unit: sizeTierUnit,
+                size_tier_total: sizeTierTotal,
+            });
+            
+            toast.success(`تم حفظ التغييرات ✅`);
+            
+            setTimeout(() => setSavedSuccessfully(false), 2500);
+            
+            // ✅ **FIX: إعادة ضبط draftById ليكون فارغاً بعد الحفظ**
+            if (cartItemId && onOptionsChange) {
+                // إعادة ضبط draft إلى حالة فارغة مع علامة _isSaved
+                onOptionsChange(cartItemId, {
+                  size: size,
+            color: color,
+            material: material,
+            optionGroups: optionGroups,
+            optionChildren: optionChildren,
+            printing_method: printingMethod,
+            print_locations: printLocations,
+            size_tier_id: sizeTierId,
+            size_tier_qty: sizeTierQty,
+            size_tier_unit: sizeTierUnit,
+            size_tier_total: sizeTierTotal,
+            existing_design_url: existingDesignUrl,
+            has_new_design_file: false,
+            design_delivery: designDelivery,
+            isValid: true,
+                    // ✅ **إضافة علامة أن هذا draft محفوظ الآن**
+                    // _isSaved: true,
+                    // _hasNoChanges: true
+                });
+            }
+            
+            // ✅ **FIX: تنظيف المعاينة المؤقتة**
+            if (designPreview && cartItemId) {
+                localStorage.removeItem(`design_temp_${cartItemId}`);
+            }
+			 setTimeout(() => setSavedSuccessfully(false), 2500);
+        }
+    } catch (error: any) {
+        console.error('❌ خطأ في حفظ الخيارات:', error);
+        console.error('تفاصيل الخطأ:', error.response || error.message || error);
+        
+        // ✅ **FIX: عرض رسالة خطأ واضحة**
+        let errorMessage = "حدث خطأ أثناء حفظ التغييرات";
+        if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        toast.error(errorMessage);
+        
+        // ✅ **FIX: استعادة السعر السابق في حالة الخطأ**
+        if (cartItemId && onOptionsChange) {
+            // إعادة تعيين draft بالقيم السابقة من cartItem
+            const originalPricing = computePricing(cartItem);
+            const restoredDraft = {
+                size: cartItem?.size || "اختر",
+                color: cartItem?.color?.name || cartItem?.color || "اختر",
+                material: cartItem?.material || "اختر",
+                optionGroups: {},
+                optionChildren: {},
+                printing_method: cartItem?.printing_method || "اختر",
+                print_locations: [],
+                size_tier_id: null,
+                size_tier_qty: cartItem?.quantity || 1,
+                size_tier_unit: originalPricing.unit,
+                size_tier_total: originalPricing.line,
+                existing_design_url: cartItem?.image_design || null,
+                has_new_design_file: false,
+                design_delivery: "upload",
+                isValid: true,
+            };
+            
+            onOptionsChange(cartItemId, restoredDraft);
+            console.log('🔄 تم استعادة القيم الأصلية بعد الخطأ');
+        }
+    } finally {
+        setSaving(false);
+    }
+};
 
 	if (formLoading) return <StickerFormSkeleton />;
 
@@ -2424,100 +2509,109 @@ const StickerForm = forwardRef(function StickerForm(
 });
 
 function TotalOrder({
-	items_count,
-	subtotal,
-	total,
-	items,
-	couponDiscount = 0,
-	couponNewTotal = null,
+    items_count,
+    subtotal,
+    total,
+    items,
+    couponDiscount = 0,
+    couponNewTotal = null,
+    // ✅ إضافة الـ props الجديدة
+    hasUnsavedChanges = false,
+    unsavedChangesCount = 0,
+    originalTotal = null,
 }: {
-	items_count: number;
-	subtotal: number;
-	total: number;
-	items: any[];
-	couponDiscount?: number;
-	couponNewTotal?: number | null;
+    items_count: number;
+    subtotal: number;
+    total: number;
+    items: any[];
+    couponDiscount?: number;
+    couponNewTotal?: number | null;
+    // ✅ الـ props الجديدة
+    hasUnsavedChanges?: boolean;
+    unsavedChangesCount?: number;
+    originalTotal?: number | null;
 }) {
-	const shippingFree = true;
-	const shippingFee = shippingFree ? 0 : 48;
+    const shippingFree = true;
+    const shippingFee = shippingFree ? 0 : 48;
 
-	const totalAfterCoupon =
-		couponNewTotal !== null && couponNewTotal !== undefined
-			? Math.max(0, n(couponNewTotal))
-			: Math.max(0, n(total) - n(couponDiscount));
+    // ✅ استخدام total الذي تم تمريره (وهو currentTotal بالفعل)
+    const totalAfterCoupon =
+        couponNewTotal !== null && couponNewTotal !== undefined
+            ? Math.max(0, n(couponNewTotal))
+            : Math.max(0, n(total) - n(couponDiscount));
 
-	const TAX_RATE = 0.15;
+    const TAX_RATE = 0.15;
 
-	const totalWithShipping = totalAfterCoupon + shippingFee;
-	const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
-	const totalWithoutTax = totalWithShipping - taxAmount;
+    const totalWithShipping = totalAfterCoupon + shippingFee;
+    const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
+    const totalWithoutTax = totalWithShipping - taxAmount;
 
-	const formattedSubtotal = n(subtotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-	const formattedTax = n(taxAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-	const formattedTotalWithoutTax = n(totalWithoutTax).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-	const formattedGrandTotal = n(totalWithShipping).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-	const formattedCoupon = n(couponDiscount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedSubtotal = n(subtotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedTax = n(taxAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedTotalWithoutTax = n(totalWithoutTax).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedGrandTotal = n(totalWithShipping).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedCoupon = n(couponDiscount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-	return (
-		<div className="my-4 gap-2 flex flex-col">
-			<div className="flex text-sm items-center justify-between text-black">
-				<p className="font-semibold">المجموع ({items?.length} عناصر)</p>
-				
-			</div>
+    // ✅ التحقق إذا كان هناك فرق بين الإجمالي الحالي والأصلي
+    const hasPriceChanges = originalTotal !== null && n(originalTotal) !== n(total);
 
-			{(n(couponDiscount) > 0 || (couponNewTotal !== null && couponNewTotal !== undefined)) && (
-				<div className="flex items-center justify-between text-sm">
-					<p className="text-emerald-800 font-semibold">خصم الكوبون</p>
-					<p className="font-extrabold text-emerald-700">
-						- {formattedCoupon}
-						<span className="text-sm ms-1">ريال</span>
-					</p>
-				</div>
-			)}
+    return (
+        <div className="my-4 gap-2 flex flex-col">
+          
 
-			<div className="flex items-center justify-between text-sm">
-				<p>الإجمالي بعد الخصم</p>
-				<p className="font-semibold">
-					{n(totalAfterCoupon).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-					<span className="text-sm ms-1">ريال</span>
-				</p>
-			</div>
+            <div className="flex text-sm items-center justify-between text-black">
+                <p className="font-semibold">المجموع ({items?.length} عناصر)</p>
+               
+            </div>
 
-			<div className="flex items-center justify-between text-sm">
-				<p>الإجمالي بدون الضريبة</p>
-				<p className="font-semibold">
-					{formattedTotalWithoutTax}
-					<span className="text-sm ms-1">ريال</span>
-				</p>
-			</div>
-			<div className="flex items-center justify-between text-sm">
-				<p>ضريبة القيمة المضافة (15%)</p>
-				<p className="font-semibold">
-					{formattedTax}
-					<span className="text-sm ms-1">ريال</span>
-				</p>
-			</div>
+            {(n(couponDiscount) > 0 || (couponNewTotal !== null && couponNewTotal !== undefined)) && (
+                <div className="flex items-center justify-between text-sm">
+                    <p className="text-emerald-800 font-semibold">خصم الكوبون</p>
+                    <p className="font-extrabold text-emerald-700">
+                        - {formattedCoupon}
+                        <span className="text-sm ms-1">ريال</span>
+                    </p>
+                </div>
+            )}
 
-			<div className="flex items-center justify-between pb-3 pt-2">
-				<div className="flex gap-1 items-center">
-					<p className=" text-nowrap text-md text-pro font-semibold">الإجمالي :</p>
-				</div>
-				<p className="text-[15px] text-pro font-bold">
-					{formattedGrandTotal}
-					<span> ريال</span>
-				</p>
-			</div>
-			
-			{/* ✅ إظهار إشعار بأن الإجمالي يحدث تلقائياً */}
-			<div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
-				<div className="flex items-center gap-1">
-					<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-						<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-					</svg>
-					<span className="font-semibold">ملاحظة:</span>
-				</div>
-				<p className="mt-1">السعر الإجمالي يتغير تلقائياً عند اختيار أي خيار من الخيارات أعلاه.</p>
-			</div>
-		</div>
-	);
+            <div className="flex items-center justify-between text-sm">
+                <p>الإجمالي بعد الخصم</p>
+                <p className="font-semibold">
+                    {n(totalAfterCoupon).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-sm ms-1">ريال</span>
+                </p>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+                <p>الإجمالي بدون الضريبة</p>
+                <p className="font-semibold">
+                    {formattedTotalWithoutTax}
+                    <span className="text-sm ms-1">ريال</span>
+                </p>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+                <p>ضريبة القيمة المضافة (15%)</p>
+                <p className="font-semibold">
+                    {formattedTax}
+                    <span className="text-sm ms-1">ريال</span>
+                </p>
+            </div>
+
+            <div className="flex items-center justify-between pb-3 pt-2">
+                <div className="flex gap-1 items-center">
+                    <p className="text-nowrap text-md text-pro font-semibold">الإجمالي :</p>
+                  
+                </div>
+                <p className="text-[15px] text-pro font-bold">
+                    {formattedGrandTotal}
+                    <span> ريال</span>
+                </p>
+            </div>
+            
+           
+        </div>
+    );
 }
+
+
+
