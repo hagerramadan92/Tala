@@ -2184,7 +2184,7 @@ const StickerForm = forwardRef(function StickerForm(
 												{optionItem && Number(optionItem.base_price || 0) > 0 ? (
 													<span className="text-xs font-black text-amber-700">+ {optionItem.base_price.toFixed(2)}</span>
 												) : (
-													<span className="text-xs font-black text-slate-500">0</span>
+													<span className="text-xs font-black text-slate-500"></span>
 												)}
 											</div>
 										);
@@ -2201,7 +2201,7 @@ const StickerForm = forwardRef(function StickerForm(
 												{Number(o.base_price || 0) > 0 ? (
 													<span className="text-xs font-black text-amber-700">+ {o.base_price.toFixed(2)}</span>
 												) : (
-													<span className="text-xs font-black text-slate-500">0</span>
+													<span className="text-xs font-black text-slate-500"></span>
 												)}
 											</div>
 											{o.children && o.children.length > 0 && (
@@ -2244,7 +2244,7 @@ const StickerForm = forwardRef(function StickerForm(
 														{childItem && Number(childItem.base_price || 0) > 0 ? (
 															<span className="text-xs font-black text-amber-700">+ {childItem.base_price.toFixed(2)}</span>
 														) : (
-															<span className="text-xs font-black text-slate-500">0</span>
+															<span className="text-xs font-black text-slate-500"></span>
 														)}
 													</div>
 												);
@@ -2261,7 +2261,7 @@ const StickerForm = forwardRef(function StickerForm(
 														{Number(child.base_price || 0) > 0 ? (
 															<span className="text-xs font-black text-amber-700">+ {child.base_price.toFixed(2)}</span>
 														) : (
-															<span className="text-xs font-black text-slate-500">0</span>
+															<span className="text-xs font-black text-slate-500"></span>
 														)}
 													</div>
 												</MenuItem>
@@ -2410,7 +2410,7 @@ const StickerForm = forwardRef(function StickerForm(
 											{methodObj && Number(methodObj.base_price || 0) > 0 ? (
 												<span className="text-xs font-black text-amber-700">+ {methodObj.base_price}</span>
 											) : (
-												<span className="text-xs font-black text-slate-500">0</span>
+												<span className="text-xs font-black text-slate-500"></span>
 											)}
 										</div>
 									);

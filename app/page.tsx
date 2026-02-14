@@ -171,23 +171,24 @@ export default function Home() {
 							if (!hasProducts) return null;
 
 							
-								const banner = category.category_banners?.[0]?.image ?? "/images/d4.png";
-
+								// const banner = category.category_banners?.[0]?.image ?? "/images/d4.png";
+															 const banners = category.category_banners || [];
+              const hasBanners = banners.length > 0;
 							return (
 								<section
 									key={category.id}
 									className="rounded-[10px_10px_0_0] md:rounded-3xl md:border md:border-gray-100 !bg-gray-50/50 overflow-hidden"
 								>
-									<div className="relative w-full h-[120px] md:h-[160px]">
-										<Image
+									{/* <div className="relative w-full h-[120px] md:h-[160px]"> */}
+										{/* <Image
 											src={banner}
 											alt={category.name}
 											fill
 											className="object-cover"
 											priority={false}
-										/>
-										<div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
-										<div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+										/> */}
+										{/* <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" /> */}
+										{/* <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
 											<h2 className="text-white text-lg md:text-2xl font-extrabold drop-shadow">
 												{category.name}
 											</h2>
@@ -198,9 +199,57 @@ export default function Home() {
 											>
 												الكل
 											</Link>
+										</div> */}
+									{/* </div> */}
+											<div className="flex items-end justify-between mb-2">
+																<h2 className="text-md md:text-2xl ms-1 md:ms-2 drop-shadow whitespace-nowrap">
+																{category.name}
+																</h2>
+											<Link
+											href={`/category/${category.id}`}
+											className="text-pro-max z-7 text-sm md:text-base font-semibold whitespace-nowrap rounded-full bg-white/15 hover:bg-white/25 transition"
+											>
+											الكل
+											</Link>
 										</div>
-									</div>
 
+                  <div className="relative w-full p-3 px-0">
+                    {hasBanners ? (
+                      <div dir="rtl" className={`grid gap-3 ${banners.length === 1 ? 'grid-cols-1' : 'grid-cols-1'} sm:grid-cols-1 md:grid-cols-${Math.min(banners.length, 4)}`}>
+                        {banners.map((banner: any, index: number) => (
+                          <div
+                            key={banner.id}
+                            className={`relative h-15 md:h-29 overflow-hidden ${
+                              index === 0 ? "rounded-tr-2xl rounded-tl-2xl md:rounded-tl-none" :
+                              index === banners.length - 1 ? "rounded-tl-2xl rounded-tr-2xl md:rounded-tr-none" : ""
+                            }`}
+                          >
+                            <Image
+                              src={banner.image || "/images/cover2.png"}
+                              alt={banner.alt || category.name}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                              className="object-center"
+                              priority={index === 0}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="relative h-29 rounded-[10px_10px_0_0] md:rounded-t-3xl overflow-hidden">
+                        <Image
+                          src="/images/cover2.png"
+                          alt={category.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 1200px"
+                          className="object-cover"
+                          priority={false}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+                      </div>
+                    )}
+                  </div>
 									{/* Products */}
 									<div className="md:p-6">
 										<InStockSlider

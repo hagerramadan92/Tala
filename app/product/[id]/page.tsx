@@ -1217,7 +1217,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 												{Number(o.base_price || 0) > 0 ? (
 													<span className="text-xs font-black text-amber-700">+ {o.base_price.toFixed(2)}</span>
 												) : (
-													<span className="text-xs font-black text-slate-500">0</span>
+													<span className="text-xs font-black text-slate-500"></span>
 												)}
 											</div>
 										</MenuItem>
@@ -1249,7 +1249,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 														{Number(child.base_price || 0) > 0 ? (
 															<span className="text-xs font-black text-amber-700">+ {child.base_price.toFixed(2)}</span>
 														) : (
-															<span className="text-xs font-black text-slate-500">0</span>
+															<span className="text-xs font-black text-slate-500"></span>
 														)}
 													</div>
 												</MenuItem>
