@@ -8,7 +8,7 @@ interface ShowImageProps {
   onClose: () => void;
 }
 
-export default function ShowImage({ src = "/images/o1.jpg", onClose }: ShowImageProps) {
+export default function ShowImage({ src = "/images/not.jpg", onClose }: ShowImageProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 "

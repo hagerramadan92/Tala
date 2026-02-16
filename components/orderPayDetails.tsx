@@ -24,7 +24,7 @@ export default function OrderPayDetails({item}:OrderPayDetailsProps) {
       <div className="  border border-gray-200 rounded-md pt-3 overflow-hidden">
         <div className="flex gap-3 ps-3">
           <Image
-            src={item.product.image??"/images/o1.jpg"}
+            src={item.product.image??"/images/not.jpg"}
             alt="product"
             width={92}
             height={92}

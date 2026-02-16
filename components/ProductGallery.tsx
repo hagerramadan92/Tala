@@ -73,7 +73,7 @@ export default function ProductGallery({ mainImage, images }: any) {
               <SwiperSlide key={i} className="cursor-pointer">
                 <div className="relative h-16 sm:h-20 rounded-2xl overflow-hidden ring-1 ring-slate-200 hover:ring-slate-300 transition">
                   <Image
-                    src={img.path || "/images/o1.jpg"}
+                    src={img.path || "/images/not.jpg"}
                     alt={img.alt || `Thumb ${i}`}
                     fill
                     className="object-cover hover:scale-[1.03] transition duration-300"

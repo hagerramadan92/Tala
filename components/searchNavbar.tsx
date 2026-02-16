@@ -13,7 +13,6 @@ import DropdownUser from "./DropdownUser";
 import { useAuth } from "@/src/context/AuthContext";
 import { useAppContext } from "@/src/context/AppContext";
 import Logo from "./Logo";
-import { CategoriesSliderSkeleton } from "./skeletons/HomeSkeletons";
 import CategoriesSlider from "./CategoriesC";
 
 function cn(...c: (string | false | null | undefined)[]) {
@@ -34,11 +33,13 @@ export default function SearchNavbar() {
 
 	const phone = socials.find((s: any) => s.key === "phone")?.value || socials?.[0]?.value;
 
+	// دالة لإغلاق القائمة
+	const closeMenu = () => setMenuOpen(false);
 
 	return (
-		<div className="bg-white/80  " >
+		<div className="bg-white/80">
 			{/* Navbar */}
-			<div className="w-full  container relative  z-30  border-b border-gray-200">
+			<div className="w-full container relative z-30 border-b border-gray-200">
 				<div className="flex items-center justify-between gap-3 py-3 md:py-4">
 					<div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
 						{/* Menu button */}
@@ -49,15 +50,13 @@ export default function SearchNavbar() {
 								"md:hidden shrink-0 relative",
 								"rounded-xl p-2",
 								"bg-white/90 backdrop-blur border border-slate-200",
-								"text-slate-800 ",
+								"text-slate-800",
 								"hover:shadow-md hover:bg-white",
 								"active:scale-95 transition-all duration-200",
 								"focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-200"
 							)}
 						>
-							{/* soft glow */}
 							<span className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-slate-100 to-white opacity-0 hover:opacity-100 transition" />
-
 							<motion.span
 								whileHover={{ scale: 1.05 }}
 								whileTap={{ scale: 0.92 }}
@@ -78,7 +77,6 @@ export default function SearchNavbar() {
 							</Link>
 						</nav>
 
-
 						{/* Search (expands on focus) */}
 						<div
 							className={cn(
@@ -95,16 +93,17 @@ export default function SearchNavbar() {
 					{/* Right Section */}
 					<div className="flex items-center gap-2 md:gap-4 shrink-0">
 						{/* Phone */}
-						{phone && <div className="hidden lg:flex flex-col text-sm leading-tight">
-
-							<a
-								href={`tel:${String(phone).replace(/\s+/g, "")}`}
-								className="flex items-center gap-1 text-pro-hover font-bold hover:opacity-90 transition"
-							>
-								<span className="tabular-nums">{phone}</span>
-								<LuPhone size={22} strokeWidth={1.3} />
-							</a>
-						</div>}
+						{phone && (
+							<div className="hidden lg:flex flex-col text-sm leading-tight">
+								<a
+									href={`tel:${String(phone).replace(/\s+/g, "")}`}
+									className="flex items-center gap-1 text-pro-hover font-bold hover:opacity-90 transition"
+								>
+									<span className="tabular-nums">{phone}</span>
+									<LuPhone size={22} strokeWidth={1.3} />
+								</a>
+							</div>
+						)}
 
 						{/* Cart */}
 						<div className={`cursor-pointer ${!fullName && "hidden"}`}>
@@ -115,7 +114,7 @@ export default function SearchNavbar() {
 						{!fullName ? (
 							<Link
 								href="/login"
-								className=" inline-flex items-center gap-2 rounded-xl bg-pro text-white px-4 py-2.5 max-md:text-xs text-sm font-extrabold shadow-sm hover:opacity-95 active:scale-[0.99] transition"
+								className="inline-flex items-center gap-2 rounded-xl bg-pro text-white px-4 py-2.5 max-md:text-xs text-sm font-extrabold shadow-sm hover:opacity-95 active:scale-[0.99] transition"
 							>
 								<FaRegUser className="max-md:hidden" size={15} />
 								تسجيل دخول
@@ -137,8 +136,8 @@ export default function SearchNavbar() {
 							animate={{ opacity: 0.55 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.2 }}
-							className="fixed inset-0 bg-black  "
-							onClick={() => setMenuOpen(false)}
+							className="fixed inset-0 bg-black z-40"
+							onClick={closeMenu}
 						/>
 
 						{/* Drawer: bottom sheet on mobile, right drawer on md+ */}
@@ -152,27 +151,33 @@ export default function SearchNavbar() {
 							className={cn(
 								"fixed z-50 bg-white shadow-2xl overflow-hidden",
 								"w-screen md:w-[420px]",
-								"  top-0  right-0",
-								" h-full",
+								"top-0 right-0",
+								"h-full",
 								"md:rounded-t-3xl md:rounded-none"
 							)}
 						>
-
 							{/* Drawer header */}
-							<div className="   flex items-center justify-between px-4 md:px-5 py-4 border-b border-slate-200 bg-gradient-to-b from-gray-50 to-white">
+							<div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-slate-200 bg-gradient-to-b from-gray-50 to-white">
 								<div className="flex items-center gap-3">
 									<div className="relative w-10 h-10 rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 overflow-hidden">
-										<Image src="/images/logo11.png" alt="logo" fill className="object-contain p-1.5" />
+										<Image
+											src="/images/logo11.png"
+											alt="logo"
+											fill
+											className="object-contain p-1.5"
+										/>
 									</div>
 									<div>
-										<h2 className="text-lg md:text-xl font-extrabold text-gray-900">القائمة</h2>
+										<h2 className="text-lg md:text-xl font-extrabold text-gray-900">
+											القائمة
+										</h2>
 										<p className="text-xs text-gray-500">تسوق بسهولة حسب الأقسام</p>
 									</div>
 								</div>
 
 								<button
 									aria-label="Close menu"
-									onClick={() => setMenuOpen(false)}
+									onClick={closeMenu}
 									className="rounded-xl p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition focus:outline-none focus:ring-4 focus:ring-gray-200"
 								>
 									<AiOutlineClose size={22} />
@@ -180,34 +185,35 @@ export default function SearchNavbar() {
 							</div>
 
 							{/* Drawer content */}
-							<div className="  p-2 space-y-5 !pl-4 ">
+							<div className="p-2 space-y-5 !pl-4 overflow-y-auto h-[calc(100%-180px)]">
 								{/* Search inside drawer for mobile */}
 								<div className="md:hidden">
-									<p className="text-sm font-extrabold text-gray-800 mb-2">ابحث عن منتج</p>
-									<div className="flex items-center gap-2 " > 
+									<p className="text-sm font-extrabold text-gray-800 mb-2">
+										ابحث عن منتج
+									</p>
+									<div className="flex items-center gap-2">
 										<SearchGrowWrap inDrawer>
 											<SearchComponent setMenuOpen={setMenuOpen} />
 										</SearchGrowWrap>
 
 										<Link
 											href="/blogs"
-											onClick={() => setMenuOpen(false)}
+											onClick={closeMenu}
 											className="w-fit gap-4 inline-flex items-center justify-between rounded-xl bg-slate-900 text-white px-4 py-3 text-sm font-extrabold hover:bg-slate-800 transition"
 										>
 											<span>المدونة</span>
- 										</Link>
+										</Link>
 									</div>
 								</div>
 
-
-
 								{/* Support card */}
 								<div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-
 									<div className="flex items-center justify-between">
 										<div>
 											<p className="text-sm font-extrabold text-gray-900">الدعم</p>
-											<p className="text-xs text-gray-500 mt-0.5">تواصل معنا لأي استفسار</p>
+											<p className="text-xs text-gray-500 mt-0.5">
+												تواصل معنا لأي استفسار
+											</p>
 										</div>
 										<LuPhone className="text-gray-700" size={20} />
 									</div>
@@ -221,14 +227,13 @@ export default function SearchNavbar() {
 										</a>
 										<Link
 											href="/contactUs"
-											onClick={() => setMenuOpen(false)}
+											onClick={closeMenu}
 											className="flex-1 rounded-xl bg-gray-100 text-gray-900 py-2.5 text-sm font-extrabold text-center hover:bg-gray-200 transition"
 										>
 											تواصل معنا
 										</Link>
 									</div>
 								</div>
-
 
 								{/* Categories */}
 								<div className="mt-4 w-full gap-3">
@@ -247,25 +252,30 @@ export default function SearchNavbar() {
 												</div>
 											</div>
 										))
-									) : <CategoriesSlider inSlide={true} categories={parentCategories} />
-									}
+									) : (
+										<CategoriesSlider
+											inSlide={true}
+											categories={parentCategories}
+											onCategoryClick={closeMenu} // 👈 تمرير دالة إغلاق القائمة
+										/>
+									)}
 								</div>
 
 								{/* Empty state */}
-								{!loadingCategories && (!parentCategories || parentCategories.length === 0) && (
-									<div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-gray-500">
-										لا توجد أقسام حالياً
-									</div>
-								)}
-
+								{!loadingCategories &&
+									(!parentCategories || parentCategories.length === 0) && (
+										<div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-gray-500">
+											لا توجد أقسام حالياً
+										</div>
+									)}
 							</div>
 
 							{/* Drawer footer */}
-							<div className="mt-auto border-slate-200 border-t p-5 bg-white">
+							<div className="absolute bottom-0 left-0 right-0 border-slate-200 border-t p-5 bg-white">
 								{!fullName ? (
 									<Link
 										href="/login"
-										onClick={() => setMenuOpen(false)}
+										onClick={closeMenu}
 										className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-pro text-white py-3 text-sm font-extrabold shadow-sm hover:opacity-95 transition"
 									>
 										<FaRegUser size={15} />
@@ -273,7 +283,7 @@ export default function SearchNavbar() {
 									</Link>
 								) : (
 									<button
-										onClick={() => setMenuOpen(false)}
+										onClick={closeMenu}
 										className="w-full rounded-2xl bg-gray-100 text-gray-900 py-3 text-sm font-extrabold hover:bg-gray-200 transition"
 									>
 										إغلاق
@@ -287,7 +297,6 @@ export default function SearchNavbar() {
 		</div>
 	);
 }
-
 
 function SearchGrowWrap({
 	children,

@@ -18,7 +18,8 @@ interface CategoriesSliderProps {
 	categories: CategoryI[];
 	title?: string;
 	subtitle?: string;
-	inSlide ?: any
+	inSlide ?: any;
+	  onCategoryClick?: () => void; 
 }
 
 function cn(...c: (string | false | undefined | null)[]) {
@@ -30,6 +31,7 @@ export default function CategoriesSlider({
 	inSlide,
 	title = "الأقسام",
 	subtitle = "اختر القسم اللي يناسبك",
+	 onCategoryClick
 }: CategoriesSliderProps) {
 	const prevRef = useRef<HTMLButtonElement | null>(null);
 	const nextRef = useRef<HTMLButtonElement | null>(null);
@@ -140,6 +142,7 @@ export default function CategoriesSlider({
 						<SwiperSlide key={cat.id} className=" !h-auto">
 							<Link
 								href={`/category/${cat.slug || cat.id}`}
+								 onClick={onCategoryClick}
 								aria-label={`Go to ${cat.name}`}
 								className="block"
 							>

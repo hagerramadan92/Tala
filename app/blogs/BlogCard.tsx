@@ -34,7 +34,7 @@ export default function BlogCard({ article }: { article: Article }) {
     >
       <div className="relative h-[180px] bg-slate-100">
         <Image
-          src={article.image || "/images/d4.jpg"}
+          src={article.image || "/images/not.jpg"}
           alt={article.image_alt || article.title}
           fill
           className="object-cover group-hover:scale-[1.03] transition duration-300"

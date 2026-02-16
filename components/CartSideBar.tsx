@@ -113,7 +113,7 @@ const formattedTotal = total.toLocaleString("en-US", {
                     >
                       <div className="flex gap-3 py-3">
                         <Image
-                          src={item.product.image || "images/o1.jpg"}
+                          src={item.product.image || "images/not.jpg"}
                           alt={item.product.name}
                           width={80}
                           height={80}

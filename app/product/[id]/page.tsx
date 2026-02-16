@@ -2667,7 +2667,7 @@ export default function ProductPageClient() {
 								{/* Left */}
 								<div className="max-md:w-full flex items-center gap-3 min-w-0">
 									<div className="relative w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden bg-slate-100 ring-1 ring-slate-200 shrink-0">
-										<Image src={product.image || "/images/o1.jpg"} alt={product.name} fill className="object-cover" />
+										<Image src={product.image || "/images/not.jpg"} alt={product.name} fill className="object-cover" />
 									</div>
 
 									<div className="min-w-0">
