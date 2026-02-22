@@ -61,9 +61,9 @@ export default function SignupPage() {
 		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
 			newErrors.email = "البريد الإلكتروني غير صحيح";
 
-		if (!phone.trim()) newErrors.phone = "رقم الهاتف مطلوب";
-		else if (!/^\d+$/.test(phone)) newErrors.phone = "رقم الهاتف يجب أن يحتوي على أرقام فقط";
-		else if (phone.length !== 11) newErrors.phone = "رقم الهاتف يجب أن يكون 11 رقم";
+	if (!phone.trim()) newErrors.phone = "رقم الهاتف مطلوب";
+else if (!/^\d+$/.test(phone)) newErrors.phone = "رقم الهاتف يجب أن يحتوي على أرقام فقط";
+else if (!/^05\d{8}$/.test(phone)) newErrors.phone = "رقم الهاتف يجب أن يبدأ بـ 05 ويتكون من 10 أرقام";
 
 		if (!password.trim()) newErrors.password = "كلمة المرور مطلوبة";
 		else if (password.length < 8) newErrors.password = "كلمة المرور يجب أن تكون 8 أحرف على الأقل";
@@ -246,25 +246,25 @@ export default function SignupPage() {
 								{errors.email && <p className="mt-2 text-xs font-bold text-rose-600">{errors.email}</p>}
 							</div>
 
-							{/* Phone */}
-							<div>
-								<label className="block text-sm font-extrabold text-slate-800 mb-2">رقم الهاتف</label>
-								<div className="relative">
-									<span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-										<FiPhone />
-									</span>
-									<input
-										value={phone}
-										onChange={(e) => {
-											setPhone(e.target.value);
-											if (errors.phone) setErrors((p) => ({ ...p, phone: "" }));
-										}}
-										placeholder="01xxxxxxxxx"
-										className={[fieldBase, "pr-11", errors.phone ? fieldBad : fieldOk].join(" ")}
-									/>
-								</div>
-								{errors.phone && <p className="mt-2 text-xs font-bold text-rose-600">{errors.phone}</p>}
-							</div>
+						{/* Phone */}
+<div>
+	<label className="block text-sm font-extrabold text-slate-800 mb-2">رقم الهاتف</label>
+	<div className="relative">
+		<span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+			<FiPhone />
+		</span>
+		<input
+			value={phone}
+			onChange={(e) => {
+				setPhone(e.target.value);
+				if (errors.phone) setErrors((p) => ({ ...p, phone: "" }));
+			}}
+			placeholder="05xxxxxxxx"
+			className={[fieldBase, "pr-11", errors.phone ? fieldBad : fieldOk].join(" ")}
+		/>
+	</div>
+	{errors.phone && <p className="mt-2 text-xs font-bold text-rose-600">{errors.phone}</p>}
+</div>
 
 							{/* Password */}
 							<div>
