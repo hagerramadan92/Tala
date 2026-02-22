@@ -56,7 +56,7 @@ export default function QuickViewModal({
 	useEffect(() => {
 		if (!product) return;
 		const gallery = (product.images || []).filter((i) => i?.is_active !== false);
-		setActiveImg(gallery?.[0]?.path || product.image || "/images/c1.png");
+		setActiveImg(gallery?.[0]?.path || product.image || "/images/not.jpg");
 	}, [product?.id, open]);
 
 	// lock scroll
@@ -145,19 +145,19 @@ export default function QuickViewModal({
 								<div className="bg-gray-50 p-3 md:p-5">
 									<div className="relative w-full aspect-[4/3] md:aspect-[1/1] rounded-2xl bg-white overflow-hidden ring-1 ring-black/5">
 										<img
-											src={activeImg || product?.image || "/images/c1.png"}
+											src={activeImg || product?.image || "/images/not.jpg"}
 											alt={product?.name}
 											className="absolute inset-0 w-full h-full object-contain"
 										/>
 										{/* Stock badge */}
-										<div className="absolute top-3 left-3">
+										{/* <div className="absolute top-3 left-3">
 											<span
 												className={`px-3 py-1 text-[11px] font-extrabold rounded-full ring-1 ring-black/5 ${inStock ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
 													}`}
 											>
 												{product?.meta?.stock_status || (inStock ? "متوفر" : "غير متوفر")}
 											</span>
-										</div>
+										</div> */}
 									</div>
 
 									{/* Thumbnails */}
@@ -218,9 +218,9 @@ export default function QuickViewModal({
 												</>
 											) : showLowest ? (
 												<>
-													<span className="text-xl font-extrabold text-pro">
+													{/* <span className="text-xl font-extrabold text-pro">
 														يبدأ من {product.lowest_price} ر.س
-													</span>
+													</span> */}
 													<span className="text-xs text-gray-500">
 														(السعر يحدد حسب الخيارات)
 													</span>

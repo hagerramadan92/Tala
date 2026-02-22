@@ -169,7 +169,7 @@ export default function WhyAndFaqs() {
 								ابدأ التسوق
 							</Link>
 							<Link
-								href="/contact"
+								href="/contactUs"
 								className="inline-flex items-center justify-center rounded-2xl px-4 py-3 font-extrabold border border-white/20 bg-white/10 hover:bg-white/15 transition"
 							>
 								تواصل معنا

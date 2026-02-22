@@ -435,11 +435,11 @@ export default function AllProductsPage() {
 											id={product.id}
 											slug={product.slug}
 											name={product.name}
-											image={product.image || "/images/c1.png"}
+											image={product.image || "/images/not.jpg"}
 											images={
 												product.images?.length
 													? product.images
-													: [{ url: "/images/c1.png", alt: "default image" }]
+													: [{ url: "/images/not.jpg", alt: "default image" }]
 											}
 											price={(product.price ?? 1).toString()}
 											final_price={product.final_price}

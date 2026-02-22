@@ -11,16 +11,55 @@ type Comment = {
   user?: { name?: string };
 };
 
-function formatDate(d?: string) {
-  if (!d) return "";
+function formatDate(createdAt: any) {
+  if (!createdAt) return "";
+  
   try {
-    return new Date(d.replace(" ", "T")).toLocaleDateString("ar-SA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    // إذا كان الكائن يحتوي على خاصية datetime
+    if (typeof createdAt === 'object' && createdAt.datetime) {
+      const date = new Date(createdAt.datetime.replace(" ", "T"));
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString("ar-SA", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+    }
+    
+    // إذا كان الكائن يحتوي على خاصية human (نص مقروء)
+    if (typeof createdAt === 'object' && createdAt.human) {
+      // ترجمة النص الإنجليزي للعربية إذا أردت
+      return createdAt.human
+        .replace('ago', 'قبل')
+        .replace('month', 'شهر')
+        .replace('months', 'أشهر')
+        .replace('day', 'يوم')
+        .replace('days', 'أيام')
+        .replace('hour', 'ساعة')
+        .replace('hours', 'ساعات')
+        .replace('minute', 'دقيقة')
+        .replace('minutes', 'دقائق')
+        .replace('second', 'ثانية')
+        .replace('seconds', 'ثواني');
+    }
+    
+    // إذا كان نصاً عادياً
+    if (typeof createdAt === 'string') {
+      const date = new Date(createdAt.replace(" ", "T"));
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString("ar-SA", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+      return createdAt;
+    }
+    
+    return "";
   } catch {
-    return d;
+    return "";
   }
 }
 
@@ -53,6 +92,7 @@ export default function CommentsSection({
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const [content, setContent] = useState("");
 
@@ -79,8 +119,9 @@ export default function CommentsSection({
   const loadComments = async () => {
     if (!API_URL) return;
     setLoading(true);
+    setShowAll(false); // إعادة تعيين حالة العرض عند تحميل التعليقات الجديدة
     try {
-      const res = await fetch(`${API_URL}/articles/${slug}/comments`, {
+      const res = await fetch(`${API_URL}/articles/${articleId}/comments`, {
         cache: "no-store",
         headers: { Accept: "application/json" },
       });
@@ -99,7 +140,7 @@ export default function CommentsSection({
   useEffect(() => {
     loadComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [articleId]);
 
   const submit = async () => {
     setMsg(null);
@@ -161,6 +202,10 @@ export default function CommentsSection({
       setSending(false);
     }
   };
+
+  // تحديد التعليقات التي سيتم عرضها
+  const visibleComments = showAll ? comments : comments.slice(0, 2);
+  const hasMoreComments = comments.length > 2;
 
   return (
     <div className="rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
@@ -258,33 +303,61 @@ export default function CommentsSection({
               لا توجد تعليقات بعد—كن أول من يعلّق ✨
             </div>
           ) : (
-            <div className="space-y-3">
-              {comments.map((c) => (
-                <div
-                  key={c.id}
-                  className="rounded-3xl border border-slate-200 bg-white p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-9 w-9 rounded-2xl bg-slate-100 grid place-items-center text-slate-600 font-extrabold">
-                        {(c.user?.name || "م")[0]}
+            <>
+              <div className="space-y-3">
+                {visibleComments.map((c) => (
+                  <div
+                    key={c.id}
+                    className="rounded-3xl border border-slate-200 bg-white p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-9 w-9 rounded-2xl bg-slate-100 grid place-items-center text-slate-600 font-extrabold">
+                          {(c.user?.name || "م")[0]}
+                        </div>
+                        <p className="text-sm font-extrabold text-slate-900">
+                          {c.user?.name || "مستخدم"}
+                        </p>
                       </div>
-                      <p className="text-sm font-extrabold text-slate-900">
-                        {c.user?.name || "مستخدم"}
+
+                      <p className="text-xs font-bold text-slate-500">
+                        {formatDate(c.created_at)}
                       </p>
                     </div>
 
-                    <p className="text-xs font-bold text-slate-500">
-                      {formatDate(c.created_at)}
+                    <p className="mt-3 text-sm text-slate-700 leading-relaxed">
+                      {c.content}
                     </p>
                   </div>
+                ))}
+              </div>
 
-                  <p className="mt-3 text-sm text-slate-700 leading-relaxed">
-                    {c.content}
-                  </p>
+              {/* زر عرض المزيد / عرض أقل */}
+              {hasMoreComments && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => setShowAll(!showAll)}
+                    className="px-6 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 text-sm font-extrabold hover:bg-slate-100 transition inline-flex items-center gap-2"
+                  >
+                    {showAll ? (
+                      <>
+                        <span>عرض أقل</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </>
+                    ) : (
+                      <>
+                        <span>عرض المزيد من التعليقات ({comments.length - 2} متبقي)</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>

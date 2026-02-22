@@ -264,7 +264,7 @@ export default function Home() {
 													key={product.id}
 													id={product.id}
 													name={product.name}
-													image={product.image || "/images/c1.png"}
+													image={product.image || "/images/not.jpg"}
 													stock={product.stock}
 													average_rating={product.average_rating}
 													reviews={product.reviews}

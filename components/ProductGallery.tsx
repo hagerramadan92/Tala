@@ -42,7 +42,7 @@ export default function ProductGallery({ mainImage, images }: any) {
                 className="relative w-full h-[320px] sm:h-[420px] lg:h-[560px] bg-slate-50"
               >
                 <Image
-                  src={img.path || "/images/c1.png"}
+                  src={img.path || "/images/not.jpg"}
                   alt={img.alt || `Product ${i}`}
                   fill
                   className="object-cover"

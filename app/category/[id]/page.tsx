@@ -501,14 +501,14 @@ export default function CategoryPage() {
                         slug={product.slug}
                         name={product.name}
                         product={product}
-                        image={product.image || "/images/c1.png"}
+                        image={product.image || "/images/not.jpg"}
                         images={
                           product.images?.length
                             ? product.images.map(img => ({
                                 ...img,
-                                url: img.url || "/images/c1.png"
+                                url: img.url || "/images/not.jpg"
                               }))
-                            : [{ url: "/images/c1.png", alt: "default" }]
+                            : [{ url: "/images/not.jpg", alt: "default" }]
                         }
                         price={(product.price ?? 1).toString()}
                         final_price={product.final_price}

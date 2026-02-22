@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import BlogSlider from "../BlogSlider";
 import CommentsSection from "./CommentsSection";
+import ImageWithFallback from "@/components/ImageFallback/ImageWithFallback";
 import { Article } from "../BlogCard";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -20,6 +21,26 @@ type ArticleDetails = Article & {
 
 type ArticleDetailsRes = { status: boolean; data: ArticleDetails };
 type ArticleListRes = { status: boolean; data: Article[] };
+
+// دالة مساعدة لمعالجة مسار الصورة
+function getImageUrl(imagePath?: string): string {
+  if (!imagePath) return "/images/not.jpg";
+  
+  // إذا كان المسار كامل (يبدأ بـ http)
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // إذا كان المسار نسبي، أضف الـ API_URL
+  if (API_URL) {
+    // إزالة الـ slash الزائد إذا وجد
+    const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+    const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${path}`;
+  }
+  
+  return "/images/not.jpg";
+}
 
 async function apiGet<T>(path: string): Promise<T | null> {
   if (!API_URL) return null;
@@ -235,12 +256,13 @@ export default function BlogDetailsPage() {
       <div className="rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
         {/* Hero */}
         <div className="relative h-[260px] md:h-[420px] bg-slate-100">
-          <Image
-            src={article.image || "/images/d4.jpg"}
+          <ImageWithFallback
+            src={getImageUrl(article.image)}
             alt={article.image_alt || article.title}
             fill
             className="object-cover"
-            priority
+            fallbackSrc="/images/not.jpg"
+            
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 

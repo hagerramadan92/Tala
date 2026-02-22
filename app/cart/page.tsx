@@ -643,22 +643,60 @@ const currentTotal = useMemo(() => {
 												</div>
 												
 												{/* ✅ عرض صورة التصميم إذا كانت متوفرة */}
-												{(item.image_design || draftById[item.cart_item_id]?.existing_design_url) && (
-													<div className="w-24 h-20 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative">
-														<div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded z-10">
-															{draftById[item.cart_item_id]?.existing_design_url && !item.image_design ? 'معاينة' : 'التصميم'}
-														</div>
-														<img
-															src={item.image_design || draftById[item.cart_item_id]?.existing_design_url}
-															alt="تصميم المرفوع"
-															className="w-full h-full object-cover"
-															onError={(e) => {
-																console.error('Failed to load design image:', e);
-																(e.target as HTMLImageElement).style.display = 'none';
-															}}
-														/>
-													</div>
-												)}
+																													
+
+																		{/* ✅ عرض صورة التصميم إذا كانت متوفرة */}
+																		{(item.image_design || draftById[item.cart_item_id]?.existing_design_url) && (
+																		<div className="w-24 h-20 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group">
+																			<div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded z-10">
+																			{draftById[item.cart_item_id]?.existing_design_url && !item.image_design ? 'معاينة' : 'التصميم'}
+																			</div>
+																			<img
+																			src={item.image_design || draftById[item.cart_item_id]?.existing_design_url}
+																			alt="تصميم المرفوع"
+																			className="w-full h-full object-cover"
+																			onError={(e) => {
+																				console.error('Failed to load design image:', e);
+																				(e.target as HTMLImageElement).style.display = 'none';
+																			}}
+																			/>
+																			
+																			{/* ✅ إضافة زر لتغيير التصميم */}
+																			<div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+																			<label
+																				htmlFor={`design-change-${item.cart_item_id}`}
+																				className="text-white text-xs bg-blue-600 px-2 py-1 rounded cursor-pointer hover:bg-blue-700"
+																			>
+																				تغيير
+																			</label>
+																			<input
+																				type="file"
+																				id={`design-change-${item.cart_item_id}`}
+																				className="hidden"
+																				accept="image/*"
+																				onChange={(e) => {
+																				const file = e.target.files?.[0];
+																				if (file) {
+																					// ✅ تحديث الصورة مباشرة
+																					const reader = new FileReader();
+																					reader.onload = (e) => {
+																					setDraftById(prev => ({
+																						...prev,
+																						[item.cart_item_id]: {
+																						...prev[item.cart_item_id],
+																						existing_design_url: e.target?.result as string,
+																						has_new_design_file: true
+																						}
+																					}));
+																					localStorage.setItem(`design_temp_${item.cart_item_id}`, e.target?.result as string);
+																					};
+																					reader.readAsDataURL(file);
+																				}
+																				}}
+																			/>
+																			</div>
+																		</div>
+																		)}
 												
 												<div className="flex flex-col justify-between">
 													<div>
@@ -1834,6 +1872,9 @@ const StickerForm = forwardRef(function StickerForm(
             }
 			 setTimeout(() => setSavedSuccessfully(false), 2500);
         }
+		if (success && designPreview && cartItemId) {
+  localStorage.setItem(`design_temp_${cartItemId}`, designPreview);
+}
     } catch (error: any) {
         console.error('❌ خطأ في حفظ الخيارات:', error);
         console.error('تفاصيل الخطأ:', error.response || error.message || error);
@@ -2283,107 +2324,94 @@ const StickerForm = forwardRef(function StickerForm(
 							)}
 
 							{/* ✅ Design section (Preview only) */}
-							{(groupName === "خدمة تصميم" || groupName === "خدمة التصميم") && showDesignSection && (
-								<div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
-									<p className="text-sm font-extrabold text-slate-800 mb-2">التصميم</p>
-									<p className="text-xs text-slate-600 mb-3">
-										تم اختيار: <span className="font-bold text-blue-600">{currentValue}</span>
-									</p>
+							{/* ✅ Design section مع إمكانية الرفع */}
+{(groupName === "خدمة تصميم" || groupName === "خدمة التصميم") && showDesignSection && (
+  <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
+    <p className="text-sm font-extrabold text-slate-800 mb-2">التصميم</p>
+    <p className="text-xs text-slate-600 mb-3">
+      تم اختيار: <span className="font-bold text-blue-600">{currentValue}</span>
+    </p>
 
-									<div className="flex flex-col gap-2">
-										{designPreview || existingDesignUrl ? (
-											<>
-												<div className="w-full max-w-[280px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-													{/* eslint-disable-next-line @next/next/no-img-element */}
-													<img 
-														src={(designPreview as string) || (existingDesignUrl as string)} 
-														alt="design" 
-														className="w-full h-auto object-cover" 
-													/>
-													<div className="p-2 bg-blue-50 text-center">
-														<p className="text-xs font-bold text-blue-700">
-															✓ تم تحميل التصميم
-														</p>
-													</div>
-												</div>
-												
-												{/* زر رفع تصميم جديد */}
-												<div className="mt-2">
-													<input
-														type="file"
-														accept="image/*"
-														className="hidden"
-														id={`design-upload-${cartItemId}`}
-														onChange={(e) => {
-															const file = e.target.files?.[0] || null;
-															if (file) {
-																handleDesignFileChange(file);
-															}
-														}}
-													/>
-													<label
-														htmlFor={`design-upload-${cartItemId}`}
-														className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 cursor-pointer transition"
-													>
-														{designPreview || existingDesignUrl ? 'تغيير التصميم' : 'رفع تصميم'}
-													</label>
-													<p className="text-xs text-slate-500 mt-1">
-														{designFile ? `الملف المختار: ${designFile.name}` : 'يمكنك رفع التصميم لاحقاً'}
-													</p>
-												</div>
-											</>
-										) : (
-											<div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50">
-												<div className="text-slate-400 mb-3">
-													<svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-													</svg>
-												</div>
-												<p className="text-sm text-slate-600 mb-3">لم يتم رفع التصميم بعد</p>
-												
-												<div>
-													<input
-														type="file"
-														accept="image/*"
-														className="hidden"
-														id={`design-upload-new-${cartItemId}`}
-														onChange={(e) => {
-															const file = e.target.files?.[0] || null;
-															if (file) {
-																handleDesignFileChange(file);
-															}
-														}}
-													/>
-													<label
-														htmlFor={`design-upload-new-${cartItemId}`}
-														className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 cursor-pointer transition"
-													>
-														اختر ملف التصميم
-													</label>
-												</div>
-												
-												<p className="text-xs text-slate-500 mt-2">PNG, JPG, GIF - الحد الأقصى 10MB</p>
-												<p className="text-xs text-amber-600 mt-2">
-													ملاحظة: يمكنك حفظ الخيارات الآن ورفع التصميم لاحقاً
-												</p>
-											</div>
-										)}
-										
-										{/* معلومات حول التصميم المرفوع */}
-										{designFile && (
-											<div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-												<div className="flex items-center gap-2">
-													<svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-														<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-													</svg>
-													<span className="text-sm font-bold text-green-800">تم اختيار الملف: {designFile.name}</span>
-												</div>
-												<p className="text-xs text-green-700 mt-1">اضغط على زر "حفظ" أعلاه لرفع التصميم</p>
-											</div>
-										)}
-									</div>
-								</div>
-							)}
+    <div className="flex flex-col gap-2">
+      {/* ✅ عرض الصورة إذا كانت موجودة */}
+      {(designPreview || existingDesignUrl) && (
+        <div className="w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+          <img 
+            src={(designPreview as string) || (existingDesignUrl as string)} 
+            alt="design" 
+            className="w-full h-40 object-contain bg-slate-100" 
+          />
+          <div className="p-2 bg-blue-50 flex justify-between items-center">
+            <p className="text-xs font-bold text-blue-700">
+              ✓ {designPreview ? 'معاينة' : 'تم رفع التصميم'}
+            </p>
+            {designPreview && (
+              <button
+                onClick={() => {
+                  setDesignFile(null);
+                  setDesignPreview(null);
+                  if (cartItemId) {
+                    localStorage.removeItem(`design_temp_${cartItemId}`);
+                  }
+                }}
+                className="text-xs text-red-600 font-bold"
+              >
+                حذف
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* ✅ زر رفع تصميم جديد */}
+      <div className="mt-2">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          id={`design-upload-${cartItemId}`}
+          onChange={(e) => {
+            const file = e.target.files?.[0] || null;
+            if (file) {
+              handleDesignFileChange(file);
+              
+              // ✅ إظهار الصورة فوراً
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                setDesignPreview(e.target?.result as string);
+                if (cartItemId) {
+                  localStorage.setItem(`design_temp_${cartItemId}`, e.target?.result as string);
+                  
+                  // ✅ تحديث draftById لعرض الصورة فوراً
+                  onOptionsChange?.(cartItemId, {
+                    ...optionGroups,
+                    existing_design_url: e.target?.result as string,
+                    has_new_design_file: true
+                  });
+                }
+              };
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
+        <label
+          htmlFor={`design-upload-${cartItemId}`}
+          className="block w-full px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 cursor-pointer transition text-center"
+        >
+          {designPreview || existingDesignUrl ? 'تغيير التصميم' : 'رفع تصميم'}
+        </label>
+        <p className="text-xs text-slate-500 mt-1 text-center">
+          {designFile ? `الملف: ${designFile.name}` : 'PNG, JPG - أقصى حجم 10MB'}
+        </p>
+      </div>
+      
+      {/* ✅ رسالة توضيحية */}
+      <p className="text-xs text-amber-600 mt-2 text-center">
+        الصورة ستظهر في السلة بعد الحفظ
+      </p>
+    </div>
+  </div>
+)}
 						</Box>
 					);
 				})}

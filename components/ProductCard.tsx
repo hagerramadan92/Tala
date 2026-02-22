@@ -196,7 +196,7 @@ export default function ProductCard({
 				<div className={`relative w-full h-[150px] md:h-[240px] bg-gray-50`}>
 					<Link href={`/product/${slug || id}`} className="block h-full">
 						<div className="relative h-full overflow-hidden">
-							<ImageComponent image={image || '/images/c1.png'} />
+							<ImageComponent image={image || '/images/not.jpg'} />
 							<div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
 						</div>
 					</Link>
@@ -247,7 +247,7 @@ export default function ProductCard({
 					/>
 
 					<AnimatePresence>
-						{showImage && <ShowImage onClose={() => setShowImage(false)} src={image || '/images/c1.png'} />}
+						{showImage && <ShowImage onClose={() => setShowImage(false)} src={image || '/images/not.jpg'} />}
 					</AnimatePresence>
 
 

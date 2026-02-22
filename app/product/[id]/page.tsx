@@ -1797,84 +1797,92 @@ export default function ProductPageClient() {
 		return total > 0 ? total : 0;
 	}, [basePrice, extrasTotal]);
  
-	const handleAddToCart = async () => {
-		setShowValidation(true);
+	// في ProductPageClient، ابحثي عن دالة handleAddToCart
+// واستبدليها بهذا الكود:
 
-		const opts = await getSelectedOptions();
-		const validation = validateOptions(opts, apiData);
+const handleAddToCart = async () => {
+  setShowValidation(true);
 
-		if (!validation.isValid && hasOptions) {
-			toast.error(`يرجى اختيار: ${validation.missingOptions.join("، ")}`);
-			return;
-		}
+  const opts = await getSelectedOptions();
+  const validation = validateOptions(opts, apiData);
 
-		if (!token) return toast.error("يجب تسجيل الدخول أولاً");
-		if (!API_URL) return toast.error("API غير متوفر");
+  if (!validation.isValid && hasOptions) {
+    toast.error(`يرجى اختيار: ${validation.missingOptions.join("، ")}`);
+    return;
+  }
 
-		const selected_options = buildSelectedOptionsWithPrice(apiData, opts);
-		const idsPayload = buildIdsPayload(apiData, opts);
+  if (!token) return toast.error("يجب تسجيل الدخول أولاً");
+  if (!API_URL) return toast.error("API غير متوفر");
 
-		const qty = Math.max(1, Number(opts?.size_quantity || 1));
+  const selected_options = buildSelectedOptionsWithPrice(apiData, opts);
+  const idsPayload = buildIdsPayload(apiData, opts);
 
-		const cartData = {
-			product_id: product.id,
-			quantity: qty,
-			...idsPayload,
-			selected_options,
-			design_service_id: null,
-			is_sample: false,
-			note: "",
-			image_design: null,
-		};
+  const qty = Math.max(1, Number(opts?.size_quantity || 1));
 
-		try {
-			const res: any = await addToCart(product.id, cartData);
- 
-			const cartItemId =
-				Number(res?.data?.cart_item_id) ||
-				Number(res?.data?.id) ||
-				Number(res?.cart_item_id) ||
-				Number(res?.id) ||
-				null;
+  const cartData = {
+    product_id: product.id,
+    quantity: qty,
+    ...idsPayload,
+    selected_options,
+    design_service_id: null,
+    is_sample: false,
+    note: "",
+    // ✅ الأهم: إضافة image_design هنا إذا كان موجوداً
+    image_design: designFile || stickerDesignFile ? "pending" : null,
+  };
 
-			const fileToUpload = designFile || stickerDesignFile;
+  try {
+    const res: any = await addToCart(product.id, cartData);
 
-			if (fileToUpload) {
-				if (!cartItemId) {
-					toast.error("تمت الإضافة للسلة لكن لم يتم العثور على cart_item_id لربط ملف التصميم. يمكنك رفعه من السلة.");
-					return;
-				}
+    const cartItemId =
+      Number(res?.data?.cart_item_id) ||
+      Number(res?.data?.id) ||
+      Number(res?.cart_item_id) ||
+      Number(res?.id) ||
+      null;
 
-				setUploadingDesign(true);
-				try {
-					const fd = new FormData();
-					fd.append("image", fileToUpload);
-					fd.append("cart_item_id", String(cartItemId));
+    // ✅ رفع الصورة إذا كانت موجودة
+    const fileToUpload = designFile || stickerDesignFile;
 
-					const res2 = await fetch(`${API_URL}/cart/upload-image`, {
-						method: "POST",
-						headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-						body: fd,
-					});
+    if (fileToUpload && cartItemId) {
+      setUploadingDesign(true);
+      try {
+        const fd = new FormData();
+        fd.append("image", fileToUpload);
+        fd.append("cart_item_id", String(cartItemId));
 
-					const json2 = await res2.json().catch(() => null);
-					if (!res2.ok || (json2 && json2.status === false)) {
-						throw new Error(json2?.message || "فشل رفع ملف التصميم");
-					}
+        const res2 = await fetch(`${API_URL}/cart/upload-image`, {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          body: fd,
+        });
 
-					toast.success("تم رفع ملف التصميم وربطه بالمنتج ✅");
-				} catch (e: any) {
-					console.log(e);
-					toast.error(e?.message || "حدث خطأ أثناء رفع ملف التصميم");
-				} finally {
-					setUploadingDesign(false);
-				}
-			}
+        const json2 = await res2.json().catch(() => null);
+        if (!res2.ok || (json2 && json2.status === false)) {
+          throw new Error(json2?.message || "فشل رفع ملف التصميم");
+        }
 
-		} catch {
-			toast.error("حدث خطأ أثناء إضافة المنتج للسلة");
-		}
-	};
+        toast.success("تم رفع ملف التصميم وربطه بالمنتج ✅");
+        
+        // ✅ تخزين الصورة مؤقتاً في localStorage للمعاينة
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          localStorage.setItem(`design_temp_${cartItemId}`, e.target?.result as string);
+        };
+        reader.readAsDataURL(fileToUpload);
+        
+      } catch (e: any) {
+        console.log(e);
+        toast.error(e?.message || "حدث خطأ أثناء رفع ملف التصميم");
+      } finally {
+        setUploadingDesign(false);
+      }
+    }
+
+  } catch {
+    toast.error("حدث خطأ أثناء إضافة المنتج للسلة");
+  }
+};
 
 
 
@@ -2103,80 +2111,6 @@ export default function ProductPageClient() {
 							</SectionCard>
 						)}
 
-						{/* Design Choice (RULE 3) */}
-                        {/* 
-						<div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
-							<p className="font-extrabold text-slate-900 mb-3">ملف التصميم</p>
-
-							<div className="flex flex-wrap gap-2">
-								<button
-									type="button"
-									onClick={() => {
-										setDesignMode("none");
-										setDesignFile(null);
-									}}
-									className={`px-4 py-2 rounded-2xl border font-extrabold text-sm transition ${designMode === "none"
-										? "bg-[#14213d] text-white border-[#14213d]"
-										: "bg-white text-slate-800 border-slate-200 hover:bg-slate-50"
-										}`}
-								>
-									لا يوجد
-								</button>
-
-								<button
-									type="button"
-									onClick={() => {
-										setDesignMode("have_design");
-									}}
-									className={`px-4 py-2 rounded-2xl border font-extrabold text-sm transition ${designMode === "have_design"
-										? "bg-[#14213d] text-white border-[#14213d]"
-										: "bg-white text-slate-800 border-slate-200 hover:bg-slate-50"
-										}`}
-								>
-									لدي تصميم (I have design)
-								</button>
-
-								<button
-									type="button"
-									onClick={() => {
-										setDesignMode("need_design");
-										setDesignFile(null);
-									}}
-									className={`px-4 py-2 rounded-2xl border font-extrabold text-sm transition ${designMode === "need_design"
-										? "bg-[#14213d] text-white border-[#14213d]"
-										: "bg-white text-slate-800 border-slate-200 hover:bg-slate-50"
-										}`}
-								>
-									أحتاج تصميم
-								</button>
-							</div>
-
-							{designMode === "have_design" && (
-								<div className="mt-4">
-									<label className="block text-sm font-extrabold text-slate-700 mb-2">
-										ارفع ملف التصميم (سيتم رفعه بعد إضافة المنتج للسلة)
-									</label>
-									<input
-										type="file"
-										accept="image/*,.pdf,.ai,.psd,.eps,.svg"
-										onChange={(e) => {
-											const f = e.target.files?.[0] || null;
-											setDesignFile(f);
-											setStickerDesignFile(f);
-
-										}}
-										className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-2xl file:border-0 file:text-sm file:font-extrabold file:bg-amber-50 file:text-amber-800 hover:file:bg-amber-100"
-									/>
-									{designFile && (
-										<p className="mt-2 text-xs font-bold text-slate-600">
-											الملف المختار: <span className="font-black">{designFile.name}</span>
-										</p>
-									)}
-									{uploadingDesign && <p className="mt-2 text-xs font-black text-amber-700">جاري رفع ملف التصميم...</p>}
-								</div>
-							)}
-						</div>
-                        */}
 						{/* Tabs */}
 						<div className="mt-6 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
 							<div className="grid grid-cols-3 border-b border-slate-200">
@@ -2406,161 +2340,7 @@ export default function ProductPageClient() {
 									</div>
 								)}
 
-								{/* ✅ Debug Section - عرض البيانات */}
-								{activeTab === "debug" && (
-									<div className="space-y-4">
-										{/* <div className="rounded-2xl border border-slate-200 bg-white p-4">
-											<div className="flex items-center justify-between mb-3">
-												<h3 className="font-extrabold text-slate-900">بيانات API الخام</h3>
-												<button
-													onClick={() => setShowDebug(!showDebug)}
-													className="flex items-center gap-2 text-sm font-extrabold text-purple-700"
-												>
-													{showDebug ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-													{showDebug ? "إخفاء" : "عرض"}
-												</button>
-											</div>
-
-											{showDebug && (
-												<div className="space-y-4">
-													<Accordion>
-														<AccordionSummary expandIcon={<ExpandMore />}>
-															<Typography className="font-extrabold">Sizes ({apiData?.sizes?.length || 0})</Typography>
-														</AccordionSummary>
-														<AccordionDetails>
-															<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
-																{JSON.stringify(apiData?.sizes || [], null, 2)}
-															</pre>
-														</AccordionDetails>
-													</Accordion>
-
-													<Accordion>
-														<AccordionSummary expandIcon={<ExpandMore />}>
-															<Typography className="font-extrabold">Options ({apiData?.options?.length || 0})</Typography>
-														</AccordionSummary>
-														<AccordionDetails>
-															<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-96">
-																{JSON.stringify(apiData?.options || [], null, 2)}
-															</pre>
-														</AccordionDetails>
-													</Accordion>
-
-													{apiData?.colors?.length > 0 && (
-														<Accordion>
-															<AccordionSummary expandIcon={<ExpandMore />}>
-																<Typography className="font-extrabold">Colors ({apiData?.colors?.length || 0})</Typography>
-															</AccordionSummary>
-															<AccordionDetails>
-																<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
-																	{JSON.stringify(apiData?.colors || [], null, 2)}
-																</pre>
-															</AccordionDetails>
-														</Accordion>
-													)}
-
-													{apiData?.materials?.length > 0 && (
-														<Accordion>
-															<AccordionSummary expandIcon={<ExpandMore />}>
-																<Typography className="font-extrabold">Materials ({apiData?.materials?.length || 0})</Typography>
-															</AccordionSummary>
-															<AccordionDetails>
-																<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
-																	{JSON.stringify(apiData?.materials || [], null, 2)}
-																</pre>
-															</AccordionDetails>
-														</Accordion>
-													)}
-
-													{apiData?.printing_methods?.length > 0 && (
-														<Accordion>
-															<AccordionSummary expandIcon={<ExpandMore />}>
-																<Typography className="font-extrabold">Printing Methods ({apiData?.printing_methods?.length || 0})</Typography>
-															</AccordionSummary>
-														<AccordionDetails>
-															<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
-																{JSON.stringify(apiData?.printing_methods || [], null, 2)}
-															</pre>
-														</AccordionDetails>
-														</Accordion>
-													)}
-
-													{apiData?.print_locations?.length > 0 && (
-														<Accordion>
-															<AccordionSummary expandIcon={<ExpandMore />}>
-																	<Typography className="font-extrabold">Print Locations ({apiData?.print_locations?.length || 0})</Typography>
-															</AccordionSummary>
-															<AccordionDetails>
-																<pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-auto max-h-60">
-																	{JSON.stringify(apiData?.print_locations || [], null, 2)}
-																</pre>
-															</AccordionDetails>
-														</Accordion>
-													)}
-
-													<Accordion>
-														<AccordionSummary expandIcon={<ExpandMore />}>
-															<Typography className="font-extrabold">Grouped Options Preview</Typography>
-														</AccordionSummary>
-														<AccordionDetails>
-															<div className="space-y-2">
-																{apiData?.options?.map((optionGroup: any, idx: number) => (
-																	<div key={idx} className="border border-slate-200 rounded-lg p-3">
-																		<p className="font-extrabold text-slate-900 mb-2">
-																			{optionGroup.name} ({optionGroup.items?.length || 0} عنصر)
-																		</p>
-																		<div className="space-y-1">
-																			{optionGroup.items?.map((item: any) => (
-																				<div key={item.id} className="flex items-center justify-between text-sm">
-																					<span>{item.value}</span>
-																					<span className="font-black text-amber-700">السعر: {item.base_price}</span>
-																					{item.children && item.children.length > 0 && (
-																						<div className="text-xs text-slate-500 mt-1">
-																							({item.children.length} خيار فرعي)
-																						</div>
-																					)}
-																				</div>
-																			))}
-																		</div>
-																	</div>
-																))}
-															</div>
-														</AccordionDetails>
-													</Accordion>
-												</div>
-											)}
-										</div> */}
-
-										<div className="rounded-2xl border border-slate-200 bg-white p-4">
-											<h3 className="font-extrabold text-slate-900 mb-3">المعلومات الحالية</h3>
-											<div className="space-y-2">
-												<div className="flex items-center justify-between">
-													<span className="text-sm text-slate-600">المنتج:</span>
-													<span className="font-black">{product.name}</span>
-												</div>
-												<div className="flex items-center justify-between">
-													<span className="text-sm text-slate-600">ID:</span>
-													<span className="font-black">{product.id}</span>
-												</div>
-												<div className="flex items-center justify-between">
-													<span className="text-sm text-slate-600">يوجد options:</span>
-													<span className={`font-black ${hasOptions ? 'text-emerald-600' : 'text-rose-600'}`}>
-														{hasOptions ? 'نعم' : 'لا'}
-													</span>
-												</div>
-												<div className="flex items-center justify-between">
-													<span className="text-sm text-slate-600">حالة الخيارات المحددة:</span>
-													<span className={`font-black ${selectedOptions.isValid ? 'text-emerald-600' : 'text-amber-600'}`}>
-														{selectedOptions.isValid ? 'صالحة' : 'غير صالحة'}
-													</span>
-												</div>
-												<div className="flex items-center justify-between">
-													<span className="text-sm text-slate-600">السعر الإجمالي:</span>
-													<span className="font-black text-slate-900">{displayTotal.toFixed(2)} ر.س</span>
-												</div>
-											</div>
-										</div>
-									</div>
-								)}
+							
 							</div>
 						</div>
 
@@ -2609,10 +2389,7 @@ export default function ProductPageClient() {
 											<span>السعر الأساسي (المقاس × الكمية)</span>
 											<span>{basePrice.toFixed(2)} ر.س</span>
 										</div>
-										{/* <div className="flex items-center justify-between text-sm font-extrabold text-slate-700 mt-2">
-											<span>إضافات الخيارات</span>
-											<span>+ {extrasTotal.toFixed(2)} ر.س</span>
-										</div> */}
+									
 										<div className="h-px bg-slate-200 my-3" />
 										<div className="flex items-center justify-between text-base font-black text-slate-900">
 											<span>الإجمالي</span>
@@ -2701,11 +2478,7 @@ export default function ProductPageClient() {
 									<div className="hidden sm:flex flex-col items-end">
 										<div className="flex items-center gap-2 justify-end">
 											<p className="text-[12px] text-slate-500 font-extrabold">الإجمالي</p>
-											{/* {extrasTotal > 0 && (
-												<span className="text-[11px] font-extrabold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-													+ إضافات {extrasTotal.toFixed(2)}
-												</span>
-											)} */}
+										
 										</div>
 
 										<div className="mt-0.5 flex items-end gap-2 justify-end">
