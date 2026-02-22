@@ -125,9 +125,11 @@ export default function ContactPageOne() {
 		if (!data.first_name.trim()) newErrors.first_name = "الإسم الأول مطلوب";
 		if (!data.last_name.trim()) newErrors.last_name = "الإسم الأخير مطلوب";
 
-		if (!data.phone.trim()) newErrors.phone = "رقم الهاتف مطلوب";
-		else if (!/^01[0-9]{9}$/.test(data.phone.trim()))
-			newErrors.phone = "رقم الهاتف غير صحيح (مثال: 01012345678)";
+		if (!data.phone.trim()) {
+    newErrors.phone = "رقم الجوال مطلوب";
+} else if (!/^(05)(5|0|3|6|4|9|1|8|7)([0-9]{7})$/.test(data.phone.trim())) {
+    newErrors.phone = "رقم الجوال غير صحيح (مثال: 05XXXXXXXX)";
+}
 
 		if (!data.email.trim()) newErrors.email = "البريد الإلكتروني مطلوب";
 		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim()))
@@ -388,7 +390,7 @@ export default function ContactPageOne() {
 								<Field
 									label="رقم الهاتف"
 									error={errors.phone}
-									hint="01xxxxxxxxx"
+									 hint="05XXXXXXXX"
 								>
 									<div className="relative">
 										<FiPhone className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -397,7 +399,7 @@ export default function ContactPageOne() {
 											value={form.phone}
 											onChange={handleChange}
 											className={inputClass("phone")}
-											placeholder="مثال: 01012345678"
+											placeholder="مثال: 0512345678"
 											inputMode="numeric"
 										/>
 									</div>

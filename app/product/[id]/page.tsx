@@ -2609,10 +2609,10 @@ export default function ProductPageClient() {
 											<span>السعر الأساسي (المقاس × الكمية)</span>
 											<span>{basePrice.toFixed(2)} ر.س</span>
 										</div>
-										<div className="flex items-center justify-between text-sm font-extrabold text-slate-700 mt-2">
+										{/* <div className="flex items-center justify-between text-sm font-extrabold text-slate-700 mt-2">
 											<span>إضافات الخيارات</span>
 											<span>+ {extrasTotal.toFixed(2)} ر.س</span>
-										</div>
+										</div> */}
 										<div className="h-px bg-slate-200 my-3" />
 										<div className="flex items-center justify-between text-base font-black text-slate-900">
 											<span>الإجمالي</span>
@@ -2701,11 +2701,11 @@ export default function ProductPageClient() {
 									<div className="hidden sm:flex flex-col items-end">
 										<div className="flex items-center gap-2 justify-end">
 											<p className="text-[12px] text-slate-500 font-extrabold">الإجمالي</p>
-											{extrasTotal > 0 && (
+											{/* {extrasTotal > 0 && (
 												<span className="text-[11px] font-extrabold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
 													+ إضافات {extrasTotal.toFixed(2)}
 												</span>
-											)}
+											)} */}
 										</div>
 
 										<div className="mt-0.5 flex items-end gap-2 justify-end">

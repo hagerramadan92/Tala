@@ -22,7 +22,7 @@ import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownR
 function ImageWithFallback({
   src,
   alt,
-  fallbackSrc = "/images/not.jpg", // الصورة الافتراضية من الفرونت
+  fallbackSrc = "/images/not.jpg",
   ...props
 }: {
   src?: string | null;

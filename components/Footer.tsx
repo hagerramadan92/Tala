@@ -30,6 +30,8 @@ import {
   FaMoneyBill,
 } from "react-icons/fa";
 
+import Image from "next/image";
+
 type SocialItem = { key: string; value: any; icon?: string };
 type PaymentMethod = { id: number; name: string; icon?: string; is_active: boolean };
 
@@ -59,6 +61,24 @@ function normalizeSocialHref(key: string, value: string) {
   return `https://${v}`;
 }
 
+// خريطة لربط أسماء طرق الدفع بالصور
+const paymentImagesMap: Record<string, string> = {
+  "الدفع عند الاستلام": "/images/payments/cod.png",
+  "بطاقات بنكيه": "/images/payments/card.jpg",
+  "بطاقات بنكية": "/images/payments/card.jpg",
+  "tabby": "/images/payments/tabby.jpeg",
+  "Tabby": "/images/payments/tabby.jpeg",
+  "tamara": "/images/payments/tamara.png",
+  "Tamara": "/images/payments/tamara.png",
+};
+
+// خريطة لتحويل أيقونات Font Awesome إلى صور
+const faIconToImageMap: Record<string, string> = {
+  'fa-money-bill-wave': '/images/payments/cod.png',
+  'fa-university': '/images/payments/card.jpg',
+  'fa-credit-card': '/images/payments/card.jpg',
+};
+
 // Map payment method names/identifiers to React Icons
 const paymentIconsMap: Record<string, any> = {
   visa: FaCcVisa,
@@ -74,6 +94,58 @@ const paymentIconsMap: Record<string, any> = {
 };
 
 function getPaymentIcon(iconName: string | undefined, paymentName: string) {
+  // أولاً: البحث في خريطة الصور حسب اسم طريقة الدفع
+  const imagePath = paymentImagesMap[paymentName];
+  if (imagePath) {
+    return () => (
+      <div className="relative h-5 w-8">
+        <Image
+          src={imagePath}
+          alt={paymentName}
+          fill
+          className="object-contain"
+          sizes="32px"
+        />
+      </div>
+    );
+  }
+
+  // ثانياً: إذا كان iconName موجود ويبدأ بـ 'fas ' (أيقونة Font Awesome)
+  if (iconName && iconName.startsWith('fas ')) {
+    const faIcon = iconName.replace('fas ', '');
+    const mappedImage = faIconToImageMap[faIcon];
+    
+    if (mappedImage) {
+      return () => (
+        <div className="relative h-5 w-8">
+          <Image
+            src={mappedImage}
+            alt={paymentName}
+            fill
+            className="object-contain"
+            sizes="32px"
+          />
+        </div>
+      );
+    }
+  }
+
+  // إذا كان iconName يبدأ بـ http أو / (رابط صورة مباشر)
+  if (iconName && (iconName.startsWith('http') || iconName.startsWith('/'))) {
+    return () => (
+      <div className="relative h-5 w-8">
+        <Image
+          src={iconName}
+          alt={paymentName}
+          fill
+          className="object-contain"
+          sizes="32px"
+        />
+      </div>
+    );
+  }
+
+  // إذا لم نجد صورة، نستخدم الأيقونات المعتادة
   if (!iconName) {
     const lowerName = paymentName.toLowerCase();
     if (lowerName.includes("visa")) return FaCcVisa;
@@ -293,13 +365,23 @@ export default function Footer() {
               <div className="flex flex-wrap gap-2">
                 {activePayments.map((p) => {
                   const PaymentIcon = getPaymentIcon(p.icon, p.name);
+                  const isImageComponent = typeof PaymentIcon === 'function' && 
+                    (PaymentIcon.toString().includes('Image') || 
+                     PaymentIcon.toString().includes('img') ||
+                     paymentImagesMap[p.name] ||
+                     (p.icon && p.icon.startsWith('fas ')));
+                  
                   return (
                     <span
                       key={p.id}
                       className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-xs font-bold ring-1 ring-white/10 hover:bg-white/15 transition"
                       title={p.name}
                     >
-                      <PaymentIcon className="text-sm opacity-90" />
+                      {isImageComponent ? (
+                        <PaymentIcon />
+                      ) : (
+                        <PaymentIcon className="text-sm opacity-90" />
+                      )}
                       <span>{p.name}</span>
                     </span>
                   );
