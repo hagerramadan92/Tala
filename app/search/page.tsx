@@ -183,7 +183,7 @@ export default function SearchPage() {
 							value={localQ}
 							onChange={(e) => setLocalQ(e.target.value)}
 							placeholder="مثال: بوكس - استيكر - رول..."
-							className="w-full h-12 rounded-2xl border border-slate-200 bg-white pr-11 pl-4 outline-none focus:ring-2 focus:ring-pro/30"
+							className="w-full h-12 md:rounded-2xl rounded-lg border border-slate-200 bg-white pr-11 pl-4 outline-none focus:ring-2 focus:ring-pro/30"
 						/>
 					</form>
 				</div>
@@ -213,7 +213,7 @@ export default function SearchPage() {
 								value={localQ}
 								onChange={(e) => setLocalQ(e.target.value)}
 								placeholder="غيّر كلمة البحث بسرعة..."
-								className="w-full h-12 rounded-2xl border border-slate-200 bg-white pr-11 pl-4 outline-none focus:ring-2 focus:ring-pro/30"
+								className="w-full h-12 md:rounded-2xl rounded-lg border border-slate-200 bg-white pr-11 pl-4 outline-none focus:ring-2 focus:ring-pro/30"
 							/>
 						</form>
 					</div>

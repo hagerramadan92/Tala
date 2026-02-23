@@ -169,7 +169,7 @@ export default function CheckoutSummary() {
                   key={item.cart_item_id}
                   className="flex gap-3 p-4 rounded-3xl border border-slate-200 bg-white"
                 >
-                  <div className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+                  <div className="relative w-16 h-16 shrink-0 md:rounded-2xl rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
                     <Image src={imageSrc} alt={name} fill sizes="64px" className="object-cover" />
                   </div>
 

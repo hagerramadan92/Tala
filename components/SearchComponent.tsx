@@ -180,7 +180,7 @@ export default function SearchComponent({ className = "", setMenuOpen }: any) {
 
 			{/* Dropdown */}
 			<AnimateDropdown show={open && trimmed.length > 0}>
-				<div className="mt-2 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+				<div className="mt-2 overflow-hidden md:rounded-2xl rounded-lg border border-gray-100 bg-white shadow-xl">
 					{/* Loading */}
 					{loading && (
 						<div className="p-3">

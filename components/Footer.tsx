@@ -192,8 +192,8 @@ export default function Footer() {
     { title: "سياسة الإسترجاع", href: "/returnsPolicy" },
     { title: "سياسة الخصوصية", href: "/policy" },
     { title: "الضمان", href: "/warranty" },
-    { title: "أنضم كشريك", href: "/partner" },
-    { title: "الفريق", href: "/team" },
+    // { title: "أنضم كشريك", href: "/partner" },
+    // { title: "الفريق", href: "/team" },
     { title: "اتصل بنا", href: "/contactUs" },
   ];
 
@@ -236,7 +236,7 @@ export default function Footer() {
             </p>
 
             {/* Quick actions */}
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="flex  gap-2 pt-2">
               {!isEmptyValue(phone) && (
                 <a
                   href={normalizeSocialHref("phone", String(phone))}

@@ -18,7 +18,7 @@ export default function POVComponent({ product }: { product: ProductI }) {
       </div>
 
       {reviews.length === 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-slate-600 font-bold">
+        <div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4 text-center text-slate-600 font-bold">
           لا توجد تقييمات بعد
         </div>
       )}
@@ -31,7 +31,7 @@ export default function POVComponent({ product }: { product: ProductI }) {
           className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
         >
           <div className="flex items-start gap-3">
-            <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 ring-1 ring-slate-200">
+            <div className="relative w-12 h-12 md:rounded-2xl rounded-lg overflow-hidden bg-slate-100 ring-1 ring-slate-200">
               <Image src={review.user?.image || "/user.png"} alt={review.user?.name || "user"} fill className="object-cover" />
             </div>
 
@@ -68,7 +68,7 @@ export default function POVComponent({ product }: { product: ProductI }) {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setVisibleCount((p) => p + 3)}
-            className="rounded-2xl bg-slate-900 text-white px-6 py-3 font-extrabold shadow-sm hover:opacity-95 transition"
+            className="md:rounded-2xl rounded-lg bg-slate-900 text-white px-6 py-3 font-extrabold shadow-sm hover:opacity-95 transition"
           >
             عرض المزيد
           </motion.button>

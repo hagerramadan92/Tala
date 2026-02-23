@@ -38,8 +38,8 @@ function SkeletonCard() {
 	return (
 		<div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm animate-pulse">
 			<div className="h-6 bg-slate-100 rounded-xl w-1/3 mb-4" />
-			<div className="h-20 bg-slate-100 rounded-2xl w-full" />
-			<div className="h-10 bg-slate-100 rounded-2xl w-full mt-4" />
+			<div className="h-20 bg-slate-100 md:rounded-2xl rounded-lg w-full" />
+			<div className="h-10 bg-slate-100 md:rounded-2xl rounded-lg w-full mt-4" />
 		</div>
 	);
 }
@@ -406,14 +406,14 @@ export default function OrderCompletePage() {
 							<div className="mt-4 flex gap-2">
 								<button
 									onClick={() => router.refresh()}
-									className="rounded-2xl px-4 py-2 font-extrabold border border-slate-200 bg-slate-50 hover:bg-slate-100"
+									className="md:rounded-2xl rounded-lg px-4 py-2 font-extrabold border border-slate-200 bg-slate-50 hover:bg-slate-100"
 								>
 									تحديث
 								</button>
 
 								<Link
 									href="/myAccount/orders"
-									className="rounded-2xl px-4 py-2 font-extrabold bg-pro text-white hover:opacity-90"
+									className="md:rounded-2xl rounded-lg px-4 py-2 font-extrabold bg-pro text-white hover:opacity-90"
 								>
 									طلباتي
 								</Link>
@@ -425,7 +425,7 @@ export default function OrderCompletePage() {
 							<div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6">
 								<div className="flex items-start justify-between gap-4">
 									<div className="flex items-center gap-3">
-										<div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+										<div className="w-14 h-14 md:rounded-2xl rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
 											<FiCheckCircle className="text-emerald-600" size={26} />
 										</div>
 
@@ -455,7 +455,7 @@ export default function OrderCompletePage() {
 
 											<button
 												onClick={copyOrderNumber}
-												className="rounded-2xl border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50"
+												className="md:rounded-2xl rounded-lg border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50"
 												aria-label="copy order number"
 												title="نسخ رقم الطلب"
 											>
@@ -513,7 +513,7 @@ export default function OrderCompletePage() {
 										<div>
 											<h5 className="font-extrabold text-xl text-slate-900 mb-3">شركة الشحن</h5>
 											<div className="p-4 rounded-3xl border border-slate-100 bg-slate-50 flex items-center gap-3">
-												<div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center font-bold text-pro-max text-xs">
+												<div className="w-10 h-10 md:rounded-2xl rounded-lg bg-white border border-slate-100 flex items-center justify-center font-bold text-pro-max text-xs">
 													OTO
 												</div>
 												<div className="text-right">
@@ -533,7 +533,7 @@ export default function OrderCompletePage() {
 								<h5 className="font-extrabold text-xl text-slate-900 mb-3">طريقة الدفع</h5>
 								<div className="flex items-center justify-between gap-3">
 									<div className="flex items-center gap-3">
-										<div className="w-12 h-12 rounded-2xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden">
+										<div className="w-12 h-12 md:rounded-2xl rounded-lg border border-slate-200 bg-white flex items-center justify-center overflow-hidden">
 											<Image src="/images/cod.png" alt="payment method" width={44} height={28} />
 										</div>
 										<p className="text-lg text-slate-900 font-extrabold">
@@ -565,7 +565,7 @@ export default function OrderCompletePage() {
 
 									<Link
 										href="/"
-										className="rounded-2xl bg-pro text-white px-5 py-2 font-extrabold hover:opacity-90"
+										className="md:rounded-2xl rounded-lg bg-pro text-white px-5 py-2 font-extrabold hover:opacity-90"
 									>
 										إضافة طلب جديد
 									</Link>
@@ -583,8 +583,8 @@ export default function OrderCompletePage() {
 
 						{loading ? (
 							<div className="space-y-3">
-								<div className="h-20 bg-slate-100 rounded-2xl animate-pulse" />
-								<div className="h-20 bg-slate-100 rounded-2xl animate-pulse" />
+								<div className="h-20 bg-slate-100 md:rounded-2xl rounded-lg animate-pulse" />
+								<div className="h-20 bg-slate-100 md:rounded-2xl rounded-lg animate-pulse" />
 							</div>
 						) : (
 							<div className="space-y-3">
@@ -598,7 +598,7 @@ export default function OrderCompletePage() {
 									return (
 										<div key={idx} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
 											<div className="flex items-start gap-3">
-												<div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 bg-white shrink-0">
+												<div className="relative w-14 h-14 md:rounded-2xl rounded-lg overflow-hidden border border-slate-200 bg-white shrink-0">
 													<Image src={img} alt={name} fill sizes="56px" className="object-cover" />
 												</div>
 

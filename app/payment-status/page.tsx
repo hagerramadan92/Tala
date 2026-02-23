@@ -66,7 +66,7 @@ export default function PaymentPage() {
 
 	return (
 		<main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-			<div className={`w-full max-w-lg rounded-2xl bg-white shadow-sm ring-1 ${ui.cardRing} p-6`}>
+			<div className={`w-full max-w-lg md:rounded-2xl rounded-lg bg-white shadow-sm ring-1 ${ui.cardRing} p-6`}>
 				<div className="flex items-start justify-between gap-3">
 					<div>
 						<h1 className="text-2xl font-semibold text-gray-900">{ui.title}</h1>

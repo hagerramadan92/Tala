@@ -211,7 +211,9 @@ export default function ProductCard({
 						/>
 						{/* Discount / Stock */}
 						<div className="flex flex-col gap-1 items-start">
-							{product?.price_text && (<span className="px-3 py-1 text-[11px] font-extrabold rounded-lg md:rounded-full bg-emerald-500 text-white ring-1 ring-black/5 shadow-sm">
+							{product?.price_text && (<span className="md:px-3 p-1 truncate max-w-[80px] md:max-w-[140px] text-[8px] md:text-[11px] font-extrabold rounded-lg md:rounded-full bg-emerald-500 text-white ring-1 ring-black/5 shadow-sm">
+								{/* {product?.price_text?.slice(0, 10)} */}
+								{/* {product?.price_text?.length > 17 ?product?.price_text?.slice(0, 17) + '...' :product?.price_text} */}
 								{product?.price_text}
 							</span>)}
 							{showDiscountChip && (

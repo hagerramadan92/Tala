@@ -445,7 +445,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 	if (formLoading) return <StickerFormSkeleton />;
 	if (apiError || !apiData) {
 		return (
-			<div className="rounded-2xl border border-slate-200 bg-white p-4 text-center">
+			<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 text-center">
 				<p className="text-slate-700 font-extrabold">{apiError || "لا توجد بيانات للمنتج"}</p>
 			</div>
 		);
@@ -455,7 +455,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 		<motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="pt-4 mt-4">
 			{/* CART MODE ONLY: Save bar */}
 			{cartItemId && showSaveButton && (
-				<motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-2xl">
+				<motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-yellow-50 border border-yellow-200 md:rounded-2xl rounded-lg">
 					<div className="flex items-center justify-between gap-2">
 						<div className="flex items-center gap-2">
 							<Warning className="text-yellow-600 text-sm" />
@@ -489,7 +489,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 
 			{cartItemId && savedSuccessfully && (
 				<motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="mb-4">
-					<Alert severity="success" className="rounded-2xl" icon={<CheckCircle />}>
+					<Alert severity="success" className="md:rounded-2xl rounded-lg" icon={<CheckCircle />}>
 						تم حفظ التغييرات بنجاح
 					</Alert>
 				</motion.div>
@@ -666,7 +666,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 
 							{/* ✅ Design boxes: show only when social values exist */}
 							{String(groupName).trim() === "خدمة تصميم" && showDesignBoxes && (whatsappHref || emailHref) && (
-								<div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+								<div className="mt-3 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4">
 									<p className="text-sm font-extrabold text-slate-800">أرسل ملف التصميم عبر:</p>
 
 									<div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -676,7 +676,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 												target="_blank"
 												rel="noreferrer"
 												onClick={() => setDesignSendMethod("whatsapp")}
-												className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50 transition"
+												className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition"
 											>
 												<p className="font-black text-slate-900">WhatsApp</p>
 												<p className="text-xs text-slate-500 font-bold mt-1">فتح واتساب وإرسال الملف</p>
@@ -687,7 +687,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 											<a
 												href={emailHref}
 												onClick={() => setDesignSendMethod("email")}
-												className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50 transition"
+												className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition"
 											>
 												<p className="font-black text-slate-900">Email</p>
 												<p className="text-xs text-slate-500 font-bold mt-1">{emailFromSocial}</p>
@@ -698,7 +698,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 											type="button"
 											onClick={() => setDesignSendMethod("upload")}
 											className={[
-												"rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
+												"md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
 												designSendMethod === "upload" ? "ring-2 ring-amber-300" : "",
 											].join(" ")}
 										>
@@ -800,7 +800,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 			</div>
 
 			{apiData?.options_note && (
-				<div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-2xl">
+				<div className="mt-6 p-3 bg-blue-50 border border-blue-200 md:rounded-2xl rounded-lg">
 					<div className="flex items-start gap-2">
 						<Info className="text-blue-500 text-sm mt-0.5" />
 						<p className="text-sm text-blue-700 font-semibold">{apiData.options_note}</p>

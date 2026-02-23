@@ -164,13 +164,13 @@ export default function WhyAndFaqs() {
 						<div className="flex gap-3">
 							<Link
 								href="/category"
-								className="inline-flex items-center justify-center rounded-2xl px-4 py-3 font-extrabold bg-white text-[#14213d] hover:bg-white/90 transition"
+								className="inline-flex items-center justify-center rounded-lg md:md:rounded-2xl rounded-lg md:px-4 md:py-3 p-2 font-extrabold bg-white text-[#14213d] hover:bg-white/90 transition"
 							>
 								ابدأ التسوق
 							</Link>
 							<Link
 								href="/contactUs"
-								className="inline-flex items-center justify-center rounded-2xl px-4 py-3 font-extrabold border border-white/20 bg-white/10 hover:bg-white/15 transition"
+								className="inline-flex items-center justify-center rounded-lg md:md:rounded-2xl rounded-lg md:px-4 md:py-3 p-2  font-extrabold border border-white/20 bg-white/10 hover:bg-white/15 transition"
 							>
 								تواصل معنا
 							</Link>
@@ -181,7 +181,7 @@ export default function WhyAndFaqs() {
 						{whyTala.map((x, idx) => (
 							<div
 								key={idx}
-								className="rounded-2xl border border-white/10 bg-white/5 p-6"
+								className="md:rounded-2xl rounded-lg border border-white/10 bg-white/5 p-6"
 							>
 								<div className="text-sm font-extrabold text-white/70">
 									0{idx + 1}
@@ -213,17 +213,17 @@ export default function WhyAndFaqs() {
 					{/* Loading / Error / Empty */}
 					{faqsLoading ? (
 						<div className="mt-8">
-							<div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 animate-pulse h-16" />
-							<div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 animate-pulse h-16 mt-3" />
-							<div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 animate-pulse h-16 mt-3" />
+							<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5 animate-pulse h-16" />
+							<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5 animate-pulse h-16 mt-3" />
+							<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5 animate-pulse h-16 mt-3" />
 						</div>
 					) : faqsError ? (
-						<div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5">
+						<div className="mt-8 md:rounded-2xl rounded-lg border border-rose-200 bg-rose-50 p-5">
 							<p className="font-extrabold text-rose-700">تعذّر تحميل الأسئلة الشائعة</p>
 							<p className="mt-1 text-sm text-rose-700/80">{faqsError}</p>
 						</div>
 					) : faqs.length === 0 ? (
-						<div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+						<div className="mt-8 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5">
 							<p className="font-bold text-slate-600">لا توجد أسئلة شائعة حالياً.</p>
 						</div>
 					) : (
@@ -234,17 +234,17 @@ export default function WhyAndFaqs() {
 								return (
 									<div
 										key={item.id}
-										className="rounded-2xl border border-slate-200 bg-white overflow-hidden"
+										className="md:rounded-2xl rounded-lg border border-slate-200 bg-white overflow-hidden"
 									>
 										<button
 											type="button"
 											onClick={() => setOpenFaq(isOpen ? null : idx)}
-											className="w-full flex items-center justify-between gap-4 p-5 text-left"
+											className="w-full flex items-center justify-between gap-4 p-5 text-start"
 										>
 											<span className="font-extrabold text-[#14213d]">{item.question}</span>
 
 											<span
-												className={`shrink-0 w-9 h-9 rounded-2xl border border-slate-200 flex items-center justify-center transition ${
+												className={`shrink-0 w-9 h-9 md:rounded-2xl rounded-lg border border-slate-200 flex items-center justify-center transition ${
 													isOpen ? "bg-[#14213d] text-white" : "bg-white text-slate-700"
 												}`}
 											>
@@ -290,7 +290,7 @@ export default function WhyAndFaqs() {
 							{testimonials.map((t, idx) => (
 								<div
 									key={idx}
-									className="rounded-2xl border border-slate-100 bg-white/80 backdrop-blur p-6 shadow-sm hover:shadow-md transition"
+									className="md:rounded-2xl rounded-lg border border-slate-100 bg-white/80 backdrop-blur p-6 shadow-sm hover:shadow-md transition"
 								>
 									<Stars value={t.rating} />
 									<p className="mt-3 text-sm text-slate-700 leading-relaxed">
@@ -299,7 +299,7 @@ export default function WhyAndFaqs() {
 
 									<div className="mt-5 flex items-center justify-between">
 										<div className="flex items-center gap-3">
-											<div className="w-10 h-10 rounded-2xl bg-[#14213d] text-white flex items-center justify-center font-extrabold">
+											<div className="w-10 h-10 md:rounded-2xl rounded-lg bg-[#14213d] text-white flex items-center justify-center font-extrabold">
 												{t.name.slice(0, 1)}
 											</div>
 											<div>

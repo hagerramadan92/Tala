@@ -30,7 +30,7 @@ export default function ResetPasswordPage() {
   const setMessage = (type: "error" | "success" | "info", text: string) => setMsg({ type, text });
 
   const fieldBase =
-    "w-full rounded-2xl border bg-white px-4 py-3 text-[15px] font-semibold outline-none transition " +
+    "w-full md:rounded-2xl rounded-lg border bg-white px-4 py-3 text-[15px] font-semibold outline-none transition " +
     "placeholder:text-slate-400 focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200";
 
   const fieldOk = "border-slate-200 focus:border-pro focus:ring-pro/10";
@@ -160,7 +160,7 @@ export default function ResetPasswordPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   className={[
-                    "mb-4 rounded-2xl border px-4 py-3 text-sm font-bold",
+                    "mb-4 md:rounded-2xl rounded-lg border px-4 py-3 text-sm font-bold",
                     msg.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "",
                     msg.type === "error" ? "border-rose-200 bg-rose-50 text-rose-700" : "",
                     msg.type === "info" ? "border-slate-200 bg-slate-50 text-slate-700" : "",
@@ -174,7 +174,7 @@ export default function ResetPasswordPage() {
             {/* invalid link guard */}
             {invalidLink ? (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-sm font-bold">
+                <div className="md:rounded-2xl rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-sm font-bold">
                   الرابط غير صحيح أو منتهي. ارجع لصفحة "نسيت كلمة المرور" واطلب كود جديد.
                 </div>
 
@@ -198,7 +198,7 @@ export default function ResetPasswordPage() {
             ) : (
               <form className="space-y-4" onSubmit={handleResetPassword}>
                 {/* email preview */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-xs font-bold text-slate-500">الحساب:</p>
                   <p className="text-sm font-extrabold text-slate-900 truncate">{email}</p>
                 </div>
@@ -296,7 +296,7 @@ export default function ResetPasswordPage() {
                   onClick={handleResetPassword as any}
                   disabled={!canSubmit}
                   className={[
-                    "w-full rounded-2xl py-3 font-extrabold text-white transition",
+                    "w-full md:rounded-2xl rounded-lg py-3 font-extrabold text-white transition",
                     "bg-slate-900 hover:opacity-95",
                     "disabled:opacity-60 disabled:cursor-not-allowed",
                   ].join(" ")}

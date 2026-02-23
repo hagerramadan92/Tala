@@ -145,7 +145,7 @@ else if (!/^05\d{8}$/.test(phone)) newErrors.phone = "رقم الهاتف يجب
 
 	// ✅ same input style like login page
 	const fieldBase =
-		"w-full rounded-2xl border bg-white px-4 py-3 text-[15px] font-semibold outline-none transition " +
+		"w-full md:rounded-2xl rounded-lg border bg-white px-4 py-3 text-[15px] font-semibold outline-none transition " +
 		"placeholder:text-slate-400 focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200";
 
 	const fieldOk = "border-slate-200 focus:border-pro focus:ring-pro/10";
@@ -179,7 +179,7 @@ else if (!/^05\d{8}$/.test(phone)) newErrors.phone = "رقم الهاتف يجب
 					<div className="p-7">
 						{/* form error */}
 						{errors.form && (
-							<div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-sm font-bold">
+							<div className="mb-4 md:rounded-2xl rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-sm font-bold">
 								{errors.form}
 							</div>
 						)}

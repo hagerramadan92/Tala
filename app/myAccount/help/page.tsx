@@ -27,7 +27,7 @@ function Card({
 		<Link href={item.href} aria-label={item.title} className="group">
 			<div
 				className="
-          relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 md:p-5
+          relative overflow-hidden md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 md:p-5
           shadow-sm transition
           hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300
           focus:outline-none
@@ -41,7 +41,7 @@ function Card({
 				<div className="flex items-start gap-4">
 					<div
 						className="
-              grid h-12 w-12 place-items-center rounded-2xl
+              grid h-12 w-12 place-items-center md:rounded-2xl rounded-lg
               bg-slate-50 text-[#233a7d] ring-1 ring-slate-200
               group-hover:bg-[#eff6ff] group-hover:ring-[#c7ddff]
               transition
@@ -148,7 +148,7 @@ export default function Page() {
 									onChange={(e) => setQ(e.target.value)}
 									placeholder="ابحث: استرجاع، ضمان، خصوصية..."
 									className="
-                    w-full rounded-2xl border border-slate-200 bg-white
+                    w-full md:rounded-2xl rounded-lg border border-slate-200 bg-white
                     pl-10 pr-4 py-3 text-sm font-semibold text-slate-900
                     placeholder:text-slate-400 outline-none transition
                     focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200 
@@ -192,7 +192,7 @@ export default function Page() {
 				</div>
 
 				{filtered.length === 0 ? (
-					<div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
+					<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-6 text-center">
 						<p className="font-extrabold text-slate-900">لا توجد نتائج</p>
 						<p className="mt-2 text-sm text-slate-600">
 							جرّب كلمات أخرى مثل: استرجاع، ضمان، شحن.

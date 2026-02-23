@@ -263,7 +263,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
       <div className="min-h-[55vh] flex items-center justify-center px-4" dir="rtl">
         <div className="max-w-md w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-rose-50 flex items-center justify-center">
+            <div className="w-11 h-11 md:rounded-2xl rounded-lg bg-rose-50 flex items-center justify-center">
               <FiAlertTriangle className="text-rose-600" size={22} />
             </div>
             <div>
@@ -312,7 +312,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
 
         {/* Notes */}
         {order.notes && (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div className="mt-4 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-slate-700 font-extrabold text-sm">ملاحظة:</p>
             <p className="text-slate-700 font-bold mt-1">{order.notes}</p>
           </div>
@@ -320,7 +320,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
 
         {/* Cancel banner */}
         {order.status === "cancelled" && (
-          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+          <div className="mt-4 md:rounded-2xl rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
             <p className="font-extrabold text-rose-800">تم إلغاء هذا الطلب</p>
           </div>
         )}
@@ -348,9 +348,9 @@ export default function OrderDetailsPage({ orderId }: Props) {
                   "/images/not.jpg";
 
                 return (
-                  <div key={index} className="rounded-2xl border border-slate-200 p-4">
+                  <div key={index} className="md:rounded-2xl rounded-lg border border-slate-200 p-4">
                     <div className="flex gap-4">
-                      <div className="relative w-[92px] h-[92px] rounded-2xl overflow-hidden bg-slate-100 ring-1 ring-slate-200 shrink-0">
+                      <div className="relative w-[92px] h-[92px] md:rounded-2xl rounded-lg overflow-hidden bg-slate-100 ring-1 ring-slate-200 shrink-0">
                         <Image src={img} alt={item.product_name} fill className="object-cover" />
                       </div>
 
@@ -396,7 +396,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
 
             {/* Address line */}
             {addressText && (
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 flex items-center gap-2">
+              <div className="mt-4 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 flex items-center gap-2">
                 <SlLocationPin className="text-slate-700" />
                 <p className="text-slate-700 font-extrabold text-sm">
                   عنوان التوصيل: <span className="mx-1 text-slate-900">{addressText}</span>
@@ -410,7 +410,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
             <p className="text-slate-900 font-extrabold text-lg mb-4">تتبع الطلب</p>
 
             {order.status === "cancelled" ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+              <div className="md:rounded-2xl rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
                 <p className="font-extrabold text-rose-800">لا يمكن متابعة التقدم لأن الطلب ملغي.</p>
               </div>
             ) : (
@@ -424,7 +424,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
           {/* Summary */}
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
-              <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-900 flex items-center justify-center">
+              <div className="w-11 h-11 md:rounded-2xl rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center">
                 <GoChecklist className="w-6 h-6" />
               </div>
               <p className="text-slate-900 font-extrabold text-lg">ملخص الطلب</p>
@@ -449,7 +449,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
           {/* Payment */}
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-900 flex items-center justify-center">
+              <div className="w-11 h-11 md:rounded-2xl rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center">
                 <IoWalletOutline className="w-6 h-6" />
               </div>
 
@@ -469,7 +469,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
           {/* Full address card */}
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-900 flex items-center justify-center">
+              <div className="w-11 h-11 md:rounded-2xl rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center">
                 <SlLocationPin className="w-6 h-6" />
               </div>
 
@@ -511,7 +511,7 @@ export default function OrderDetailsPage({ orderId }: Props) {
             <div className="sm:hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-slate-900 font-extrabold mb-3">بيانات المستخدم</p>
               <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                <div className="relative w-12 h-12 md:rounded-2xl rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
                   <Image src={order.user.image || "/images/not.jpg"} alt={order.user.name} fill className="object-cover" />
                 </div>
                 <div>

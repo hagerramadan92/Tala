@@ -71,7 +71,7 @@ function Sk({ className = "" }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-black/5 animate-pulse",
+        "relative overflow-hidden md:rounded-2xl rounded-lg bg-slate-100 ring-1 ring-black/5 animate-pulse",
         className
       )}
     />
@@ -241,7 +241,7 @@ export default function CommentsSection({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="اكتب اسمك"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-4 focus:ring-slate-200"
+                  className="mt-2 w-full md:rounded-2xl rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-4 focus:ring-slate-200"
                 />
               </div>
 
@@ -254,7 +254,7 @@ export default function CommentsSection({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@mail.com"
                   inputMode="email"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-4 focus:ring-slate-200"
+                  className="mt-2 w-full md:rounded-2xl rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-4 focus:ring-slate-200"
                 />
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function CommentsSection({
               onClick={submit}
               disabled={sending}
               className={cn(
-                "px-5 py-2.5 rounded-2xl font-extrabold text-sm text-white transition",
+                "px-5 py-2.5 md:rounded-2xl rounded-lg font-extrabold text-sm text-white transition",
                 sending
                   ? "bg-slate-400 cursor-not-allowed"
                   : "bg-pro hover:opacity-95 active:scale-[0.99]"
@@ -299,7 +299,7 @@ export default function CommentsSection({
               <Sk className="h-20" />
             </div>
           ) : comments.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-600">
+            <div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-600">
               لا توجد تعليقات بعد—كن أول من يعلّق ✨
             </div>
           ) : (
@@ -312,7 +312,7 @@ export default function CommentsSection({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <div className="h-9 w-9 rounded-2xl bg-slate-100 grid place-items-center text-slate-600 font-extrabold">
+                        <div className="h-9 w-9 md:rounded-2xl rounded-lg bg-slate-100 grid place-items-center text-slate-600 font-extrabold">
                           {(c.user?.name || "م")[0]}
                         </div>
                         <p className="text-sm font-extrabold text-slate-900">
@@ -337,7 +337,7 @@ export default function CommentsSection({
                 <div className="mt-4 text-center">
                   <button
                     onClick={() => setShowAll(!showAll)}
-                    className="px-6 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 text-sm font-extrabold hover:bg-slate-100 transition inline-flex items-center gap-2"
+                    className="px-6 py-3 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-sm font-extrabold hover:bg-slate-100 transition inline-flex items-center gap-2"
                   >
                     {showAll ? (
                       <>

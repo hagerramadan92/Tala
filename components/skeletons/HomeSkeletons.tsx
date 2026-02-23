@@ -60,7 +60,7 @@ export function CategoriesSliderSkeleton() {
 
 export function ProductCardSkeleton() {
 	return (
-		<div className="rounded-2xl border border-gray-100 overflow-hidden bg-white">
+		<div className="md:rounded-2xl rounded-lg border border-gray-100 overflow-hidden bg-white">
 			<Sk className="h-[160px] md:h-[190px] rounded-none" />
 
 			<div className="p-3 space-y-3">
@@ -166,7 +166,7 @@ function GallerySkeleton() {
 				{Array.from({ length: 5 }).map((_, i) => (
 					<div
 						key={i}
-						className="animate-pulse bg-slate-200 h-16 w-16 rounded-2xl"
+						className="animate-pulse bg-slate-200 h-16 w-16 md:rounded-2xl rounded-lg"
 					/>
 				))}
 			</div>
@@ -178,14 +178,14 @@ function BottomBarSkeleton() {
 		<div className="fixed bottom-0 start-0 end-0 z-50 border-t border-slate-200 bg-white/90 backdrop-blur">
 			<div className="container py-3 flex items-center justify-between gap-3">
 				<div className="flex items-center gap-3">
-					<div className="animate-pulse bg-slate-200 w-14 h-14 rounded-2xl" />
+					<div className="animate-pulse bg-slate-200 w-14 h-14 md:rounded-2xl rounded-lg" />
 					<div className="space-y-2">
 						<div className="animate-pulse bg-slate-200 h-3 w-32" />
 						<div className="animate-pulse bg-slate-200 h-4 w-48" />
 					</div>
 				</div>
 
-				<div className="animate-pulse bg-slate-200 h-12 w-40 rounded-2xl" />
+				<div className="animate-pulse bg-slate-200 h-12 w-40 md:rounded-2xl rounded-lg" />
 			</div>
 		</div>
 	);
@@ -216,7 +216,7 @@ export function StickerFormSkeleton() {
 			</div>
 
 			{/* Info / note */}
-			<Sk className="h-12 w-full rounded-2xl" />
+			<Sk className="h-12 w-full md:rounded-2xl rounded-lg" />
 		</div>
 	);
 }
@@ -240,12 +240,12 @@ export default function CategoryPageSkeleton() {
 				</div>
 
 				{/* banner */}
-				<Sk className="h-[160px] md:h-[220px] w-full rounded-2xl mb-6" />
+				<Sk className="h-[160px] md:h-[220px] w-full md:rounded-2xl rounded-lg mb-6" />
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 					{/* filters */}
 					<div className="hidden lg:block lg:col-span-3">
-						<div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 sticky top-4">
+						<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-3 sticky top-4">
 							<Sk className="h-5 w-24" />
 							<Sk className="h-10 w-full" />
 							<Sk className="h-10 w-full" />
@@ -267,7 +267,7 @@ export default function CategoryPageSkeleton() {
 
 						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 							{Array.from({ length: 12 }).map((_, i) => (
-								<div key={i} className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+								<div key={i} className="md:rounded-2xl rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
 									<Sk className="h-[180px] w-full rounded-none" />
 									<div className="p-3 space-y-2">
 										<Sk className="h-5 w-4/5" />

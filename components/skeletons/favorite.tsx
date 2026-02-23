@@ -14,7 +14,7 @@ function Sk({ className = "" }: { className?: string }) {
 
 function FavoriteCardSkeleton() {
 	return (
-		<div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+		<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
 			{/* image */}
 			<Sk className="h-44 w-full rounded-xl" />
 

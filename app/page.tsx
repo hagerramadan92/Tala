@@ -289,7 +289,7 @@ export default function Home() {
 							type="button"
 							onClick={loadMore}
 							disabled={loadingMore}
-							className="rounded-2xl px-6 py-3 font-extrabold shadow-sm border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+							className="md:rounded-2xl  rounded-lg md:px-6 p-3 md:text-lg font-extrabold shadow-sm border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
 						>
 							{loadingMore ? "جاري تحميل المزيد..." : "تحميل المزيد"}
 						</button>

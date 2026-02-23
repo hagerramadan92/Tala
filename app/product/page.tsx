@@ -69,20 +69,20 @@ function ProductCardSkeleton() {
 
 function FilterSkeleton() {
 	return (
-		<div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
+		<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 space-y-4">
 			<div className="flex items-center justify-between">
 				<Sk className="h-5 w-24" />
 				<Sk className="h-9 w-20 rounded-xl" />
 			</div>
-			<Sk className="h-10 w-full rounded-2xl" />
-			<Sk className="h-10 w-full rounded-2xl" />
-			<Sk className="h-10 w-full rounded-2xl" />
+			<Sk className="h-10 w-full md:rounded-2xl rounded-lg" />
+			<Sk className="h-10 w-full md:rounded-2xl rounded-lg" />
+			<Sk className="h-10 w-full md:rounded-2xl rounded-lg" />
 			<div className="grid grid-cols-2 gap-3">
-				<Sk className="h-10 w-full rounded-2xl" />
-				<Sk className="h-10 w-full rounded-2xl" />
+				<Sk className="h-10 w-full md:rounded-2xl rounded-lg" />
+				<Sk className="h-10 w-full md:rounded-2xl rounded-lg" />
 			</div>
-			<Sk className="h-10 w-full rounded-2xl" />
-			<Sk className="h-10 w-full rounded-2xl" />
+			<Sk className="h-10 w-full md:rounded-2xl rounded-lg" />
+			<Sk className="h-10 w-full md:rounded-2xl rounded-lg" />
 		</div>
 	);
 }
@@ -421,7 +421,7 @@ export default function AllProductsPage() {
 								<motion.div
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
-									className="bg-white border border-slate-200 rounded-2xl p-10 text-center"
+									className="bg-white border border-slate-200 md:rounded-2xl rounded-lg p-10 text-center"
 								>
 									<p className="text-slate-700 font-extrabold text-lg">لا توجد منتجات مطابقة للفلاتر</p>
 									<p className="text-slate-500 text-sm mt-2">جرّب إزالة بعض الفلاتر أو تغيير البحث</p>
@@ -469,7 +469,7 @@ export default function AllProductsPage() {
 						{/* ✅ Custom Pagination (your design) */}
 						{totalPages > 1 && (
 							<div className="mt-10 flex items-center justify-center">
-								<div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+								<div className="flex items-center gap-2 md:rounded-2xl rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
 									<button
 										onClick={() => setPage((p) => Math.max(1, p - 1))}
 										disabled={page === 1}

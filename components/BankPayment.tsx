@@ -2,51 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  FaCcVisa, 
-  FaCcMastercard, 
-  FaMobileAlt, 
-  FaWallet, 
-  FaCreditCard,
-  FaQuestionCircle
-} from "react-icons/fa";
+import Image from "next/image";
 
 type PaymentMethod = {
   id: number;
   name: string;
-  icon?: string;       // e.g. "fab fa-cc-visa" or "FaCcVisa"
+  icon?: string;
+  image?: string;      // This contains the actual image URL
   is_active?: boolean;
-};
-
-// Mapping from FontAwesome class names to React Icons components
-const iconMap: Record<string, React.ComponentType<any>> = {
-  // Brand icons
-  "fab fa-cc-visa": FaCcVisa,
-  "fab fa-cc-mastercard": FaCcMastercard,
-  "fab fa-cc-amex": FaCcVisa, // Example fallback
-  "fab fa-cc-discover": FaCcMastercard, // Example fallback
-  
-  // Solid icons
-  "fas fa-mobile-alt": FaMobileAlt,
-  "fas fa-wallet": FaWallet,
-  "fas fa-credit-card": FaCreditCard,
-  "fas fa-university": FaWallet, // Example for bank
-  "fas fa-money-bill-wave": FaWallet, // Example
-};
-
-// Helper function to get icon component
-const getIconComponent = (iconName: string): React.ComponentType<any> => {
-  // Direct mapping
-  if (iconMap[iconName]) {
-    return iconMap[iconName];
-  }
-  
-  // Try to extract icon name from class pattern
-  const iconKey = Object.keys(iconMap).find(key => 
-    key.includes(iconName.toLowerCase().replace(/\s+/g, '-'))
-  );
-  
-  return iconKey ? iconMap[iconKey] : FaQuestionCircle;
 };
 
 export default function BankPayment({
@@ -64,8 +27,6 @@ export default function BankPayment({
       .filter((m: PaymentMethod) => m?.is_active !== false)
       .map((m: PaymentMethod) => ({
         ...m,
-        // fallback icon if missing
-        icon: m.icon || "fas fa-credit-card",
       }));
   }, [paymentMethods]);
 
@@ -89,7 +50,6 @@ export default function BankPayment({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {methods.map((m: PaymentMethod) => {
                 const active = selectedId === m.id;
-                const IconComponent = getIconComponent(m.icon || "fas fa-credit-card");
 
                 return (
                   <label
@@ -108,9 +68,18 @@ export default function BankPayment({
                       className="w-5 h-5 accent-[#14213d] cursor-pointer"
                     />
 
-                    {/* icon box */}
-                    <div className="w-12 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
-                      <IconComponent className="text-xl text-slate-800" />
+                    {/* Image container - using img tag for simplicity */}
+                    <div className="w-12 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={m.image} 
+                        alt={m.name}
+                        className="w-full h-full object-contain p-1"
+                        onError={(e) => {
+                          // Fallback if image fails to load
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          // You could add a fallback icon here if needed
+                        }}
+                      />
                     </div>
 
                     <div className="flex flex-col gap-1">

@@ -411,7 +411,7 @@ export default function CategoryPage() {
         {/* Banner with fallback */}
         {category.category_banners?.[0]?.image && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
-            <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-200 relative w-full h-[200px] md:h-[300px]">
+            <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full h-[200px] md:h-[300px]">
               <ImageWithFallback
                 src={category.category_banners[0].image}
                 alt={`${category.name} banner`}
@@ -476,7 +476,7 @@ export default function CategoryPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white border border-slate-200 rounded-2xl p-10 text-center"
+                className="bg-white border border-slate-200 md:rounded-2xl rounded-lg p-10 text-center"
               >
                 <p className="text-slate-700 font-extrabold text-lg">لا توجد منتجات مطابقة للفلاتر</p>
                 <p className="text-slate-500 text-sm mt-2">
@@ -537,7 +537,7 @@ export default function CategoryPage() {
                 <div
                   className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white 
                  px-2 py-1.5 shadow-sm
-                 sm:gap-2 sm:rounded-2xl sm:px-3 sm:py-2"
+                 sm:gap-2 sm:md:rounded-2xl rounded-lg sm:px-3 sm:py-2"
                 >
                   {/* Prev */}
                   <button

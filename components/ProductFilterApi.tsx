@@ -99,7 +99,7 @@ export default function ProductFilterApi({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
+    <div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <FiFilter />
@@ -262,7 +262,7 @@ export default function ProductFilterApi({
         )}
 
         {!hasCategories && !hasMaterials && !hasColors && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
+          <div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4 text-center">
             <p className="text-sm font-extrabold text-slate-700">لا توجد خيارات تصفية هنا</p>
             <p className="text-xs text-slate-500 mt-1">ستظهر الخيارات تلقائيًا عند توفرها</p>
           </div>
@@ -284,7 +284,7 @@ function FilterSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-2xl border border-slate-200 overflow-hidden">
+    <div className="md:rounded-2xl rounded-lg border border-slate-200 overflow-hidden">
       <button
         type="button"
         aria-label={title}

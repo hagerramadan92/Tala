@@ -56,7 +56,7 @@ export default function StaticPageClient({ data }: { data: PageData }) {
               prose prose-slate max-w-none
               prose-headings:font-extrabold
               prose-a:text-pro
-              prose-img:rounded-2xl
+              prose-img:md:rounded-2xl rounded-lg
             "
 					>
 						{parse(cleanHtml)}

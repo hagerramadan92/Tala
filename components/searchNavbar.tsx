@@ -56,7 +56,7 @@ export default function SearchNavbar() {
 								"focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-200"
 							)}
 						>
-							<span className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-slate-100 to-white opacity-0 hover:opacity-100 transition" />
+							<span className="absolute inset-0 md:rounded-2xl rounded-lg bg-gradient-to-tr from-slate-100 to-white opacity-0 hover:opacity-100 transition" />
 							<motion.span
 								whileHover={{ scale: 1.05 }}
 								whileTap={{ scale: 0.92 }}
@@ -159,7 +159,7 @@ export default function SearchNavbar() {
 							{/* Drawer header */}
 							<div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-slate-200 bg-gradient-to-b from-gray-50 to-white">
 								<div className="flex items-center gap-3">
-									<div className="relative w-10 h-10 rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 overflow-hidden">
+									<div className="relative w-10 h-10 md:rounded-2xl rounded-lg bg-white shadow-sm ring-1 ring-gray-200 overflow-hidden">
 										<Image
 											src="/images/logo11.png"
 											alt="logo"
@@ -207,7 +207,7 @@ export default function SearchNavbar() {
 								</div>
 
 								{/* Support card */}
-								<div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+								<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 									<div className="flex items-center justify-between">
 										<div>
 											<p className="text-sm font-extrabold text-gray-900">الدعم</p>
@@ -241,10 +241,10 @@ export default function SearchNavbar() {
 										Array.from({ length: 6 }).map((_, i) => (
 											<div
 												key={i}
-												className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+												className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
 											>
 												<div className="flex items-center gap-3">
-													<div className="h-12 w-12 rounded-2xl bg-slate-100 animate-pulse" />
+													<div className="h-12 w-12 md:rounded-2xl rounded-lg bg-slate-100 animate-pulse" />
 													<div className="flex-1">
 														<div className="h-4 w-24 rounded bg-slate-100 animate-pulse" />
 														<div className="mt-2 h-3 w-16 rounded bg-slate-100 animate-pulse" />
@@ -264,7 +264,7 @@ export default function SearchNavbar() {
 								{/* Empty state */}
 								{!loadingCategories &&
 									(!parentCategories || parentCategories.length === 0) && (
-										<div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-gray-500">
+										<div className="mt-4 md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 text-sm text-gray-500">
 											لا توجد أقسام حالياً
 										</div>
 									)}
@@ -276,7 +276,7 @@ export default function SearchNavbar() {
 									<Link
 										href="/login"
 										onClick={closeMenu}
-										className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-pro text-white py-3 text-sm font-extrabold shadow-sm hover:opacity-95 transition"
+										className="w-full inline-flex items-center justify-center gap-2 md:rounded-2xl rounded-lg bg-pro text-white py-3 text-sm font-extrabold shadow-sm hover:opacity-95 transition"
 									>
 										<FaRegUser size={15} />
 										تسجيل دخول
@@ -284,7 +284,7 @@ export default function SearchNavbar() {
 								) : (
 									<button
 										onClick={closeMenu}
-										className="w-full rounded-2xl bg-gray-100 text-gray-900 py-3 text-sm font-extrabold hover:bg-gray-200 transition"
+										className="w-full md:rounded-2xl rounded-lg bg-gray-100 text-gray-900 py-3 text-sm font-extrabold hover:bg-gray-200 transition"
 									>
 										إغلاق
 									</button>

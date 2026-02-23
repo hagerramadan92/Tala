@@ -17,9 +17,9 @@ export default function CartSkeleton() {
 				{/* items */}
 				<div className="col-span-1 lg:col-span-2 space-y-4">
 					{[1, 2].map((i) => (
-						<div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+						<div key={i} className="bg-white border border-slate-200 md:rounded-2xl rounded-lg p-5 shadow-sm">
 							<div className="flex gap-4">
-								<Skel className="w-24 h-20 rounded-2xl" />
+								<Skel className="w-24 h-20 md:rounded-2xl rounded-lg" />
 								<div className="flex-1 space-y-3">
 									<Skel className="h-5 w-2/3" />
 									<Skel className="h-4 w-1/3" />
@@ -33,9 +33,9 @@ export default function CartSkeleton() {
 							</div>
 
 							<div className="mt-4">
-								<Skel className="h-10 w-full rounded-2xl" />
-								<Skel className="h-10 w-full rounded-2xl mt-2" />
-								<Skel className="h-10 w-2/3 rounded-2xl mt-2" />
+								<Skel className="h-10 w-full md:rounded-2xl rounded-lg" />
+								<Skel className="h-10 w-full md:rounded-2xl rounded-lg mt-2" />
+								<Skel className="h-10 w-2/3 md:rounded-2xl rounded-lg mt-2" />
 							</div>
 						</div>
 					))}
@@ -43,10 +43,10 @@ export default function CartSkeleton() {
 
 				{/* summary */}
 				<div className="col-span-1">
-					<div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+					<div className="bg-white border border-slate-200 md:rounded-2xl rounded-lg p-5 shadow-sm">
 						<Skel className="h-5 w-24" />
-						<Skel className="h-10 w-full rounded-2xl mt-4" />
-						<Skel className="h-10 w-full rounded-2xl mt-2" />
+						<Skel className="h-10 w-full md:rounded-2xl rounded-lg mt-4" />
+						<Skel className="h-10 w-full md:rounded-2xl rounded-lg mt-2" />
 
 						<div className="mt-6 space-y-3">
 							<div className="flex justify-between">
@@ -64,7 +64,7 @@ export default function CartSkeleton() {
 							</div>
 						</div>
 
-						<Skel className="h-12 w-full rounded-2xl mt-6" />
+						<Skel className="h-12 w-full md:rounded-2xl rounded-lg mt-6" />
 					</div>
 				</div>
 			</div>

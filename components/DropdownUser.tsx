@@ -157,7 +157,7 @@ export default function DropdownUser() {
                     alt="User"
                     width={44}
                     height={44}
-                    className="rounded-2xl object-cover border border-slate-200 bg-white"
+                    className="md:rounded-2xl rounded-lg object-cover border border-slate-200 bg-white"
                   />
                   <div className="min-w-0">
                     <p className="text-sm font-extrabold text-slate-900 truncate">
@@ -177,10 +177,10 @@ export default function DropdownUser() {
                     key={it.href}
                     href={it.href}
                     onClick={handleLinkClick}
-                    className="group flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5 hover:bg-slate-50 transition"
+                    className="group flex items-center justify-between gap-3 md:rounded-2xl rounded-lg px-3 py-2.5 hover:bg-slate-50 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="h-9 w-9 rounded-2xl border border-slate-200 bg-white flex items-center justify-center text-slate-700 group-hover:scale-[1.02] transition">
+                      <span className="h-9 w-9 md:rounded-2xl rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 group-hover:scale-[1.02] transition">
                         {it.icon}
                       </span>
                       <span className="text-sm font-bold text-slate-800">{it.label}</span>
@@ -207,10 +207,10 @@ export default function DropdownUser() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5 hover:bg-rose-50 transition"
+                  className="w-full flex items-center justify-between gap-3 md:rounded-2xl rounded-lg px-3 py-2.5 hover:bg-rose-50 transition"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="h-9 w-9 rounded-2xl border border-rose-200 bg-white flex items-center justify-center text-rose-600">
+                    <span className="h-9 w-9 md:rounded-2xl rounded-lg border border-rose-200 bg-white flex items-center justify-center text-rose-600">
                       <FaArrowRightFromBracket size={18} />
                     </span>
                     <span className="text-sm font-extrabold text-rose-700">تسجيل الخروج</span>

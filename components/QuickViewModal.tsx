@@ -114,7 +114,7 @@ export default function QuickViewModal({
 						onClick={onClose}
 					>
 						<div
-							className="w-full max-w-[980px] max-h-[90vh] overflow-auto rounded-2xl md:rounded-3xl bg-white shadow-2xl ring-1 ring-black/10"
+							className="w-full max-w-[980px] max-h-[90vh] overflow-auto md:rounded-2xl rounded-lg md:rounded-3xl bg-white shadow-2xl ring-1 ring-black/10"
 							role="dialog"
 							aria-modal="true"
 							onClick={(e) => e.stopPropagation()}
@@ -143,7 +143,7 @@ export default function QuickViewModal({
 							<div className="grid grid-cols-1 md:grid-cols-2">
 								{/* Left: Image */}
 								<div className="bg-gray-50 p-3 md:p-5">
-									<div className="relative w-full aspect-[4/3] md:aspect-[1/1] rounded-2xl bg-white overflow-hidden ring-1 ring-black/5">
+									<div className="relative w-full aspect-[4/3] md:aspect-[1/1] md:rounded-2xl rounded-lg bg-white overflow-hidden ring-1 ring-black/5">
 										<img
 											src={activeImg || product?.image || "/images/not.jpg"}
 											alt={product?.name}
@@ -203,7 +203,7 @@ export default function QuickViewModal({
 									</div>
 
 									{/* Price */}
-									<div className="rounded-2xl ring-1 ring-black/5 p-4 bg-white">
+									<div className="md:rounded-2xl rounded-lg ring-1 ring-black/5 p-4 bg-white">
 										<div className="flex items-baseline gap-2">
 											{hasRealPrice ? (
 												<>
@@ -249,7 +249,7 @@ export default function QuickViewModal({
 
 									{/* Description */}
 									{product?.description ? (
-										<div className="rounded-2xl ring-1 ring-black/5 p-4 bg-gray-50">
+										<div className="md:rounded-2xl rounded-lg ring-1 ring-black/5 p-4 bg-gray-50">
 											<div className="text-sm font-extrabold text-gray-900 mb-2">وصف سريع</div>
 											<div
 												className="prose prose-sm max-w-none prose-ul:my-2 prose-li:my-1 prose-h2:my-2 prose-h3:my-2"

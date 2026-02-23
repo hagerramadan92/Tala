@@ -51,7 +51,7 @@ export default function SideBar({ active }: SideBarProps) {
 	];
 
 	return (
-		<aside className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+		<aside className="bg-white md:rounded-2xl rounded-lg shadow-sm border border-slate-200 p-4">
 			<ul className="flex flex-col gap-1">
 				{items.map((item) => {
 					const isActive =

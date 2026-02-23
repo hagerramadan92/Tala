@@ -92,7 +92,7 @@ export default function ProductFilter({
 	};
 
 	return (
-		<div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 sticky top-[150px]">
+		<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4 sticky top-[150px]">
 			<div className="flex items-center justify-between gap-2">
 				<div className="flex items-center gap-2">
 					<FiFilter />
@@ -233,7 +233,7 @@ export default function ProductFilter({
 
 			{/* If no options at all */}
 			{!hasCategories && !hasBrands && !hasMaterials && !hasColors && (
-				<div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
+				<div className="mt-4 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4 text-center">
 					<p className="text-sm font-extrabold text-slate-700">لا توجد خيارات تصفية هنا</p>
 					<p className="text-xs text-slate-500 mt-1">سيتم عرض الخيارات تلقائيًا عند توفرها</p>
 				</div>
@@ -255,7 +255,7 @@ function FilterSection({
 	const [open, setOpen] = useState(defaultOpen);
 
 	return (
-		<div className="rounded-2xl border border-slate-200 overflow-hidden">
+		<div className="md:rounded-2xl rounded-lg border border-slate-200 overflow-hidden">
 			<button
 				type="button"
 				aria-label={title}

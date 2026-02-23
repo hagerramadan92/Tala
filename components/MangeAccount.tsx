@@ -74,7 +74,7 @@ export default function MangeAccount() {
 	return (
 		<div dir="rtl" className="space-y-6">
 			{/* Account Card */}
-			<section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+			<section className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
 				<div className="flex items-start gap-3 p-5 md:p-6 bg-gradient-to-b from-slate-50 to-white">
 					<div className="mt-0.5 grid h-10 w-10 place-items-center rounded-xl bg-pro/10 text-pro ring-1 ring-pro/15">
 						<HiOutlineUserCircle size={22} />
@@ -140,7 +140,7 @@ export default function MangeAccount() {
 			</section>
 
 			{/* Security Card */}
-			<section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+			<section className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
 				<div className="flex items-start gap-3 p-5 md:p-6 bg-gradient-to-b from-slate-50 to-white">
 					<div className="mt-0.5 grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/15">
 						<HiOutlineShieldCheck size={22} />
@@ -158,7 +158,7 @@ export default function MangeAccount() {
 
 				<div className="p-5 md:p-6 space-y-3">
 					{/* Password expandable row */}
-					<div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+					<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
 						<div className="flex items-center justify-between gap-4 p-4">
 							<div className="flex items-start gap-3 min-w-0">
 								<div className="mt-0.5 grid h-10 w-10 place-items-center rounded-xl bg-slate-50 text-slate-700 ring-1 ring-slate-200">
@@ -260,7 +260,7 @@ function SettingRow({
 	right: React.ReactNode;
 }) {
 	return (
-		<div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+		<div className="flex flex-wrap items-center justify-between gap-4 md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 			<div className="flex items-start gap-3 min-w-0">
 				<div className="mt-0.5 grid h-10 w-10 place-items-center rounded-xl bg-slate-50 text-slate-700 ring-1 ring-slate-200">
 					{icon}

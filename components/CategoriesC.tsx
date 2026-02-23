@@ -51,7 +51,7 @@ export default function CategoriesSlider({
 				<div className="flex items-start gap-2">
 					<span
 						className={cn(
-							"mt-0.5 grid h-9 w-9 place-items-center rounded-2xl",
+							"mt-0.5 grid h-9 w-9 place-items-center md:rounded-2xl rounded-lg",
 							"bg-slate-50 border border-slate-200 text-slate-700"
 						)}
 						aria-hidden="true"
@@ -171,9 +171,10 @@ export default function CategoriesSlider({
 										<div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
 									</div>
 
-									<p className="text-[12.5px] md:text-[14px] font-extrabold text-slate-700 text-center leading-tight group-hover:text-pro transition">
-										{cat.name}
-									</p>
+								<p className="text-[10.5px] md:text-[14px] font-extrabold text-slate-700 text-center leading-tight group-hover:text-pro transition 
+								truncate max-w-[80px] md:max-w-[120px]">
+  {cat.name}
+</p>
 								</div>
 							</Link>
 						</SwiperSlide>
@@ -190,7 +191,7 @@ export default function CategoriesSlider({
 
 function baseArrowClass(disabled?: boolean) {
 	return cn(
-		"max-md:h-9 max-md:w-9 h-10 w-10 rounded-2xl border shadow-sm grid place-items-center transition",
+		"max-md:h-9 max-md:w-9 h-10 w-10 md:rounded-2xl rounded-lg border shadow-sm grid place-items-center transition",
 		"bg-white border-slate-200 text-slate-700",
 		disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-50"
 	);

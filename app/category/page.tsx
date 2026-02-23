@@ -230,7 +230,7 @@ export default function CategoriesPage() {
 							value={q}
 							onChange={(e) => setQ(e.target.value)}
 							placeholder="ابحث عن قسم أو قسم فرعي..."
-							className="w-full h-12 rounded-2xl border border-slate-200 bg-white pr-11 pl-4 text-slate-800 outline-none focus:ring-2 focus:ring-pro/30"
+							className="w-full h-12 md:rounded-2xl rounded-lg border border-slate-200 bg-white pr-11 pl-4 text-slate-800 outline-none focus:ring-2 focus:ring-pro/30"
 						/>
 					</div>
 

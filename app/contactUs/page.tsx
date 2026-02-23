@@ -28,16 +28,21 @@ function Field({
 	error,
 	children,
 	hint,
+	optional = false,
 }: {
 	label: string;
 	error?: string;
 	hint?: string;
 	children: React.ReactNode;
+	optional?: boolean;
 }) {
 	return (
 		<div className="space-y-2">
 			<div className="flex items-center justify-between gap-3">
-				<label className="text-sm font-extrabold text-slate-900">{label}</label>
+				<label className="text-sm font-extrabold text-slate-900">
+					{label}
+					{optional && <span className="text-xs text-slate-400 me-2">(اختياري)</span>}
+				</label>
 				{hint ? <span className="text-xs text-slate-500">{hint}</span> : null}
 			</div>
 			{children}
@@ -61,7 +66,7 @@ function ActionPill({
 		<button
 			type="button"
 			onClick={onClick}
-			className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+			className="inline-flex items-center gap-2 md:rounded-2xl rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
 		>
 			{icon}
 			{label}
@@ -83,7 +88,7 @@ function InfoCard({
 	return (
 		<div className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
 			<div className="flex items-start gap-4">
-				<div className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-50 text-pro ring-1 ring-slate-200">
+				<div className="grid h-12 w-12 place-items-center md:rounded-2xl rounded-lg bg-slate-50 text-pro ring-1 ring-slate-200">
 					{icon}
 				</div>
 				<div className="min-w-0 flex-1">
@@ -122,20 +127,26 @@ export default function ContactPageOne() {
 	const validate = useCallback((data: FormData) => {
 		const newErrors: Errors = {};
 
+		// ✅ فقط الاسم الأول مطلوب
 		if (!data.first_name.trim()) newErrors.first_name = "الإسم الأول مطلوب";
-		if (!data.last_name.trim()) newErrors.last_name = "الإسم الأخير مطلوب";
+		
+		// ✅ الاسم الأخير غير مطلوب - لا تحقق منه
 
+		// ✅ رقم الجوال مطلوب مع التحقق من الصيغة
 		if (!data.phone.trim()) {
-    newErrors.phone = "رقم الجوال مطلوب";
-} else if (!/^(05)(5|0|3|6|4|9|1|8|7)([0-9]{7})$/.test(data.phone.trim())) {
-    newErrors.phone = "رقم الجوال غير صحيح (مثال: 05XXXXXXXX)";
-}
+			newErrors.phone = "رقم الجوال مطلوب";
+		} else if (!/^(05)(5|0|3|6|4|9|1|8|7)([0-9]{7})$/.test(data.phone.trim())) {
+			newErrors.phone = "رقم الجوال غير صحيح (مثال: 05XXXXXXXX)";
+		}
 
-		if (!data.email.trim()) newErrors.email = "البريد الإلكتروني مطلوب";
-		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim()))
+		// ✅ البريد الإلكتروني غير مطلوب - فقط تحقق من الصيغة إذا تم إدخاله
+		if (data.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
 			newErrors.email = "صيغة البريد الإلكتروني غير صحيحة";
+		}
 
-		if (!data.company.trim()) newErrors.company = "اسم الشركة مطلوب";
+		// ✅ اسم الشركة غير مطلوب - لا تحقق منه
+
+		// ✅ الرسالة مطلوبة
 		if (!data.message.trim()) newErrors.message = "الرسالة مطلوبة";
 
 		return newErrors;
@@ -144,7 +155,7 @@ export default function ContactPageOne() {
 	const isValid = useMemo(() => Object.keys(errors).length === 0, [errors]);
 
 	const inputBase =
-		"w-full rounded-2xl border bg-white px-4 py-3 text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none transition";
+		"w-full md:rounded-2xl rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none transition";
 	const withIcon = "ps-9"; // RTL + icon on left
 
 	const inputClass = useCallback(
@@ -193,14 +204,20 @@ export default function ContactPageOne() {
 			setLoading(true);
 
 			try {
+				// ✅ تحضير البيانات للإرسال - إرسال القيم الفارغة كما هي
+				const payload = {
+					first_name: form.first_name.trim(),
+					last_name: form.last_name.trim(), // يمكن أن يكون فارغاً
+					phone: form.phone.trim(),
+					email: form.email.trim(), // يمكن أن يكون فارغاً
+					message: form.message.trim(),
+					company: form.company.trim(), // يمكن أن يكون فارغاً
+				};
+
 				const res = await fetch(base_url, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						...form,
-						phone: form.phone.trim(),
-						email: form.email.trim(),
-					}),
+					body: JSON.stringify(payload),
 				});
 
 				const data = await res.json().catch(() => null);
@@ -373,7 +390,8 @@ export default function ContactPageOne() {
 									</div>
 								</Field>
 
-								<Field label="الإسم الأخير" error={errors.last_name}>
+								{/* ✅ الاسم الأخير - اختياري */}
+								<Field label="الإسم الأخير" error={errors.last_name} optional={true}>
 									<div className="relative">
 										<FiUser className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
 										<input
@@ -381,7 +399,7 @@ export default function ContactPageOne() {
 											value={form.last_name}
 											onChange={handleChange}
 											className={inputClass("last_name")}
-											placeholder="أدخل الاسم الأخير"
+											placeholder="أدخل الاسم الأخير (اختياري)"
 											autoComplete="family-name"
 										/>
 									</div>
@@ -390,7 +408,7 @@ export default function ContactPageOne() {
 								<Field
 									label="رقم الهاتف"
 									error={errors.phone}
-									 hint="05XXXXXXXX"
+									hint="05XXXXXXXX"
 								>
 									<div className="relative">
 										<FiPhone className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -405,7 +423,8 @@ export default function ContactPageOne() {
 									</div>
 								</Field>
 
-								<Field label="البريد الإلكتروني" error={errors.email}>
+								{/* ✅ البريد الإلكتروني - اختياري */}
+								<Field label="البريد الإلكتروني" error={errors.email} optional={true}>
 									<div className="relative">
 										<FiMail className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
 										<input
@@ -414,14 +433,15 @@ export default function ContactPageOne() {
 											value={form.email}
 											onChange={handleChange}
 											className={inputClass("email")}
-											placeholder="example@email.com"
+											placeholder="example@email.com (اختياري)"
 											autoComplete="email"
 										/>
 									</div>
 								</Field>
 
+								{/* ✅ الشركة - اختيارية */}
 								<div className="md:col-span-2">
-									<Field label="الشركة" error={errors.company}>
+									<Field label="الشركة" error={errors.company} optional={true}>
 										<div className="relative">
 											<FiBriefcase className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
 											<input
@@ -429,7 +449,7 @@ export default function ContactPageOne() {
 												value={form.company}
 												onChange={handleChange}
 												className={inputClass("company")}
-												placeholder="اسم الشركة"
+												placeholder="اسم الشركة (اختياري)"
 												autoComplete="organization"
 											/>
 										</div>
@@ -459,7 +479,7 @@ export default function ContactPageOne() {
 										aria-label="submit form"
 										disabled={loading}
 										className={`
-                      w-full rounded-2xl py-3.5 font-extrabold text-white transition
+                      w-full md:rounded-2xl rounded-lg py-3.5 font-extrabold text-white transition
                       ${loading ? "bg-slate-400 cursor-not-allowed" : "bg-pro hover:opacity-95 active:scale-[0.99]"}
                     `}
 									>

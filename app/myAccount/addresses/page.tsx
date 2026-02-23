@@ -22,7 +22,7 @@ function AddressListSkeleton({ count = 4 }: { count?: number }) {
 	return (
 		<div className="space-y-4 mt-6" dir="rtl">
 			{Array.from({ length: count }).map((_, i) => (
-				<div key={i} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+				<div key={i} className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
 					<div className="p-4 bg-slate-50 flex items-center justify-between">
 						<div className="space-y-2">
 							<Sk className="h-5 w-44" />
@@ -144,7 +144,7 @@ export default function Page() {
 	return (
 		<div dir="rtl" className="space-y-6">
 			{/* Header */}
-			<div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 md:p-5">
+			<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4 md:p-5">
 				<div className="flex items-start md:items-center justify-between gap-3">
 					<div>
 						<h2 className="text-slate-900 font-extrabold text-xl md:text-2xl">
@@ -187,7 +187,7 @@ export default function Page() {
 							<div
 								key={item.id}
 								onClick={() => setSelectedAddress(item.id)}
-								className={`cursor-pointer rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden transition
+								className={`cursor-pointer md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden transition
                   ${active ? "border-pro ring-2 ring-pro/10" : "border-slate-200 hover:border-slate-200"}
                 `}
 							>
@@ -248,7 +248,7 @@ export default function Page() {
 					})}
 				</div>
 			) : (
-				<div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-center">
+				<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-6 text-center">
 					<p className="text-slate-700 font-extrabold">لا يوجد عناوين لعرضها</p>
 					<p className="mt-2 text-sm text-slate-500">
 						اضغط على "إضافة عنوان" لإضافة عنوانك الأول.

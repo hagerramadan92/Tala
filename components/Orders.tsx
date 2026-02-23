@@ -39,7 +39,7 @@ function OrdersSkeleton({ count = 4 }: { count?: number }) {
 	return (
 		<div dir="rtl" className="space-y-5">
 			{/* Header skeleton */}
-			<div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 md:p-5">
+			<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4 md:p-5">
 				<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 					<div className="space-y-2">
 						<Sk className="h-6 w-28" />
@@ -57,7 +57,7 @@ function OrdersSkeleton({ count = 4 }: { count?: number }) {
 				{Array.from({ length: count }).map((_, i) => (
 					<div
 						key={i}
-						className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+						className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden"
 					>
 						<div className="bg-slate-50 p-4 flex items-center justify-between">
 							<div className="space-y-2">
@@ -72,7 +72,7 @@ function OrdersSkeleton({ count = 4 }: { count?: number }) {
 
 						<div className="p-4">
 							<div className="flex gap-4">
-								<Sk className="h-[90px] w-[90px] rounded-2xl" />
+								<Sk className="h-[90px] w-[90px] md:rounded-2xl rounded-lg" />
 								<div className="flex-1 space-y-2">
 									<Sk className="h-4 w-2/3" />
 									<Sk className="h-4 w-1/2" />
@@ -183,7 +183,7 @@ export default function Orders() {
 			) : (
 				<>
 					{/* Header */}
-					<div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 md:p-5">
+					<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4 md:p-5">
 						<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 							<div>
 								<h2 className="text-xl font-extrabold text-slate-900">طلباتي</h2>
@@ -228,7 +228,7 @@ export default function Orders() {
 								return (
 									<div
 										key={order.id}
-										className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+										className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden"
 									>
 										{/* top bar */}
 										<div className="bg-gradient-to-b from-slate-50 to-white p-4 flex items-center justify-between gap-3">
@@ -264,7 +264,7 @@ export default function Orders() {
 													alt={productName}
 													width={92}
 													height={92}
-													className="rounded-2xl object-cover ring-1 ring-black/5 bg-slate-50"
+													className="md:rounded-2xl rounded-lg object-cover ring-1 ring-black/5 bg-slate-50"
 												/>
 
 												<span className="absolute -top-2 start-[74px] rounded-full min-w-[28px] h-7 px-2 text-white bg-pro text-center text-xs font-extrabold grid place-items-center ring-2 ring-white">

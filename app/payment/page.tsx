@@ -99,189 +99,137 @@ function BlockSkeleton() {
 	return (
 		<div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm animate-pulse">
 			<div className="h-6 bg-slate-100 rounded-xl w-1/3 mb-4" />
-			<div className="h-20 bg-slate-100 rounded-2xl w-full" />
-			<div className="h-10 bg-slate-100 rounded-2xl w-full mt-4" />
+			<div className="h-20 bg-slate-100 md:rounded-2xl rounded-lg w-full" />
+			<div className="h-10 bg-slate-100 md:rounded-2xl rounded-lg w-full mt-4" />
 		</div>
 	);
 }
 
-// function SummaryBlock({ summary, selectedShipping }: { summary: CheckoutSummaryV1 | null, selectedShipping: any }) {
-// 	const currentShippingFee = selectedShipping ? n(selectedShipping.price) : n(summary?.shipping_fee);
-// 	const shippingFree = currentShippingFee <= 0;
 
-// 	// Calculate inclusive tax and totals
-// 	const subtotal = n(summary?.subtotal);
-// 	const discount = n(summary?.coupon_discount);
-// 	const hasCoupon = discount > 0;
-	
-// 	// Total including tax and shipping
-// 	const finalTotal = subtotal + currentShippingFee - discount;
-	
-// 	const TAX_RATE = 0.15;
-// 	const taxAmount = finalTotal * (TAX_RATE / (1 + TAX_RATE));
-// 	const totalWithoutTax = finalTotal - taxAmount;
 
-// 	return (
-// 		<div className="my-2 gap-2 flex flex-col">
-// 			<div className="flex text-sm items-center justify-between text-black">
-// 				<p className="font-semibold">المجموع ({n(summary?.items_length)} عناصر)</p>
-				
-// 			</div>
-
-// 			<div className="flex items-center justify-between">
-// 				<p className="text-sm">إجمالي رسوم الشحن</p>
-// 				{shippingFree ? (
-// 					<p className="font-semibold text-green-600">مجانا</p>
-// 				) : (
-// 					<p className="text-md">
-// 						{money(currentShippingFee)} <span className="text-sm ms-1">ريال</span>
-// 					</p>
-// 				)}
-// 			</div>
-
-// 			{hasCoupon && (
-// 				<div className="flex items-center justify-between text-sm">
-// 					<p className="text-emerald-800 font-semibold">خصم الكوبون</p>
-// 					<p className="font-extrabold text-emerald-700">
-// 						- {money(discount)}
-// 						<span className="text-sm ms-1">ريال</span>
-// 					</p>
-// 				</div>
-// 			)}
-
-// 			<div className="flex items-center justify-between text-sm">
-// 				<p>ضريبة القيمة المضافة (15%)</p>
-// 				<p className="font-semibold">
-// 					{money(taxAmount)}
-// 					<span className="text-sm ms-1">ريال</span>
-// 				</p>
-// 			</div>
-
-// 			<div className="flex items-center justify-between text-sm">
-// 				<p>الإجمالي بدون الضريبة</p>
-// 				<p className="font-semibold">
-// 					{money(totalWithoutTax)}
-// 					<span className="text-sm ms-1">ريال</span>
-// 				</p>
-// 			</div>
-
-// 			<div className="flex items-center justify-between pb-3 pt-2">
-// 				<div className="flex gap-1 items-center">
-// 					<p className=" text-nowrap text-md text-pro font-semibold">الإجمالي :</p>
-// 				</div>
-// 				<p className="text-[15px] text-pro font-bold">
-// 					{money(finalTotal)}
-// 					<span> ريال</span>
-// 				</p>
-// 			</div>
-// 		</div>
-// 	);
-// }
 function TotalOrder({
-    items_count,
-    subtotal,
-    total,
-    items,
-    couponDiscount = 0,
-    couponNewTotal = null,
-    // ✅ إضافة الـ props الجديدة
-    hasUnsavedChanges = false,
-    unsavedChangesCount = 0,
-    originalTotal = null,
+    summary,
+    selectedShipping,
 }: {
-    items_count: number;
-    subtotal: number;
-    total?: number;
-    items: any[];
-    couponDiscount?: number;
-    couponNewTotal?: number | null;
-    // ✅ الـ props الجديدة
-    hasUnsavedChanges?: boolean;
-    unsavedChangesCount?: number;
-    originalTotal?: number | null;
+    summary: CheckoutSummaryV1 | null;
+    selectedShipping: any;
 }) {
-    const shippingFree = true;
-    const shippingFee = shippingFree ? 0 : 48;
+    // إذا لم يكن هناك ملخص، نعرض رسالة خطأ
+    if (!summary) {
+        return (
+            <div className="my-4 p-4 bg-amber-50 border border-amber-200 md:rounded-2xl rounded-lg text-center">
+                <p className="text-amber-700 text-sm font-semibold">
+                    لا توجد بيانات للملخص. الرجاء العودة إلى السلة.
+                </p>
+            </div>
+        );
+    }
 
-    // ✅ استخدام total الذي تم تمريره (وهو currentTotal بالفعل)
-    const totalAfterCoupon =
-        couponNewTotal !== null && couponNewTotal !== undefined
-            ? Math.max(0, n(couponNewTotal))
-            : Math.max(0, n(total) - n(couponDiscount));
+    // دالة مساعدة لجلب القيم الرقمية بأمان
+    const getNumeric = (value: any): number => {
+        if (value === null || value === undefined) return 0;
+        const num = typeof value === 'string' ? Number(value) : value;
+        return Number.isFinite(num) ? num : 0;
+    };
 
-    const TAX_RATE = 0.15;
+    // --- قراءة البيانات من checkout_summary_v1 ---
+    const itemsCount = summary.items_length ?? summary.items_count ?? 0;
+    const subtotal = getNumeric(summary.subtotal);
+    const couponDiscount = getNumeric(summary.coupon_discount);
+    const hasCoupon = couponDiscount > 0;
 
+    // حساب الإجمالي بعد الخصم
+    const totalAfterCoupon = getNumeric(summary.total) > 0
+        ? getNumeric(summary.total)
+        : subtotal - couponDiscount;
+
+    // --- قراءة رسوم الشحن من الـ selectedShipping (إذا كان متاحًا) ---
+    const shippingFee = selectedShipping ? getNumeric(selectedShipping.price) : getNumeric(summary.shipping_fee);
+    const isShippingFree = shippingFee <= 0;
+
+    // --- حساب الضريبة والإجمالي النهائي ---
+    const TAX_RATE = 0.15; // 15%
     const totalWithShipping = totalAfterCoupon + shippingFee;
+    // حساب الضريبة بطريقة عكسية (لأن totalWithShipping شامل الضريبة)
     const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
     const totalWithoutTax = totalWithShipping - taxAmount;
 
-    const formattedSubtotal = n(subtotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formattedTax = n(taxAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formattedTotalWithoutTax = n(totalWithoutTax).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formattedGrandTotal = n(totalWithShipping).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formattedCoupon = n(couponDiscount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    // ✅ التحقق إذا كان هناك فرق بين الإجمالي الحالي والأصلي
-    const hasPriceChanges = originalTotal !== null && n(originalTotal) !== n(total);
-
     return (
         <div className="my-4 gap-2 flex flex-col">
-          
-
+            {/* المجموع */}
             <div className="flex text-sm items-center justify-between text-black">
-                <p className="font-semibold">المجموع ({items?.length} عناصر)</p>
-               
+                <p className="font-semibold">المجموع ({itemsCount} عناصر)</p>
+                {/* <p className="text-md">
+                    {money(subtotal)} <span className="text-sm ms-1">ريال</span>
+                </p> */}
             </div>
 
-            {(n(couponDiscount) > 0 || (couponNewTotal !== null && couponNewTotal !== undefined)) && (
+            {/* خصم الكوبون */}
+            {hasCoupon && (
                 <div className="flex items-center justify-between text-sm">
                     <p className="text-emerald-800 font-semibold">خصم الكوبون</p>
                     <p className="font-extrabold text-emerald-700">
-                        - {formattedCoupon}
+                        - {money(couponDiscount)}
                         <span className="text-sm ms-1">ريال</span>
                     </p>
                 </div>
             )}
 
-            {/* <div className="flex items-center justify-between text-sm">
+            {/* الإجمالي بعد الخصم */}
+            <div className="flex items-center justify-between text-sm">
                 <p>الإجمالي بعد الخصم</p>
                 <p className="font-semibold">
-                    {n(totalAfterCoupon).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    <span className="text-sm ms-1">ريال</span>
-                </p>
-            </div> */}
-{/* 
-            <div className="flex items-center justify-between text-sm">
-                <p>الإجمالي بدون الضريبة</p>
-                <p className="font-semibold">
-                    {formattedTotalWithoutTax}
+                    {money(totalAfterCoupon)}
                     <span className="text-sm ms-1">ريال</span>
                 </p>
             </div>
+
+            {/* رسوم الشحن */}
+            {/* <div className="flex items-center justify-between text-sm">
+                <p>إجمالي رسوم الشحن</p>
+                {isShippingFree ? (
+                    <p className="font-semibold text-green-600">مجاناً</p>
+                ) : (
+                    <p className="font-semibold">
+                        {money(shippingFee)} <span className="text-sm ms-1">ريال</span>
+                    </p>
+                )}
+            </div> */}
+
+            {/* ضريبة القيمة المضافة */}
             <div className="flex items-center justify-between text-sm">
                 <p>ضريبة القيمة المضافة (15%)</p>
                 <p className="font-semibold">
-                    {formattedTax}
+                    {money(taxAmount)}
                     <span className="text-sm ms-1">ريال</span>
                 </p>
             </div>
 
+            {/* الإجمالي بدون الضريبة */}
+            <div className="flex items-center justify-between text-sm">
+                <p>الإجمالي بدون الضريبة</p>
+                <p className="font-semibold">
+                    {money(totalWithoutTax)}
+                    <span className="text-sm ms-1">ريال</span>
+                </p>
+            </div>
+
+            {/* خط فاصل */}
+            <hr className="border-slate-200 my-1" />
+
+            {/* الإجمالي النهائي */}
             <div className="flex items-center justify-between pb-3 pt-2">
                 <div className="flex gap-1 items-center">
-                    <p className="text-nowrap text-md text-pro font-semibold">الإجمالي :</p>
-                  
+                    <p className="text-nowrap text-md text-pro font-semibold">الإجمالي النهائي :</p>
                 </div>
-                <p className="text-[15px] text-pro font-bold">
-                    {formattedGrandTotal}
-                    <span> ريال</span>
+                <p className="text-[18px] text-pro font-extrabold">
+                    {money(totalWithShipping)}
+                    <span className="text-sm me-1"> ريال</span>
                 </p>
-            </div> */}
-            
-           
+            </div>
         </div>
     );
 }
-
 
 export default function PaymentPage() {
 	const { cart, cartCount, removeFromCart, updateQuantity, subtotal, total } = useCart();
@@ -570,7 +518,7 @@ export default function PaymentPage() {
 
 							<button
 								onClick={() => setOpenModal(true)}
-								className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 font-extrabold text-slate-700 hover:bg-slate-100"
+								className="inline-flex items-center gap-2 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 font-extrabold text-slate-700 hover:bg-slate-100"
 							>
 								<FiPlus />
 								أضف عنوان
@@ -686,7 +634,7 @@ export default function PaymentPage() {
 															}`}
 														>
 															<div className="flex items-center gap-3">
-																<div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-1 overflow-hidden">
+																<div className="w-10 h-10 md:rounded-2xl rounded-lg bg-white border border-slate-100 flex items-center justify-center p-1 overflow-hidden">
 																	{option.logo ? (
 																		<img src={option.logo} alt={option.deliveryOptionName} className="w-full h-full object-contain" />
 																	) : (
@@ -754,31 +702,19 @@ export default function PaymentPage() {
 						{/* <OrderSummary /> */}
 
 						{/* ✅ Same total summary from cart, using checkout_summary_v1 */}
-						<div className="mt-4">
-							<h4 className="text-md font-extrabold text-pro mb-3">ملخص الطلب</h4>
+						{/* <OrderSummary /> */}
 
-							{/* {checkoutSummary ? (
-								<SummaryBlock summary={checkoutSummary} selectedShipping={selectedShipping} />
-							) : (
-								<div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-									<p className="font-extrabold text-amber-800 text-sm">
-										لا يوجد ملخص للطلب (checkout_summary_v1) — ارجع للسلة ثم ادخل صفحة الدفع مرة أخرى.
-									</p>
-								</div>
-							)} */}
+{/* ✅ Same total summary from cart, using checkout_summary_v1 */}
+
+       {/* ملخص الطلب */}
+							<div className="mt-4">
+								<h4 className="text-md font-extrabold text-pro mb-3">ملخص الطلب</h4>
 								<TotalOrder
-								items_count={cartCount}
-								subtotal={backendSubtotal}
-								// total={localSubtotal} // ✅ هذا بالفعل صحيح
-								items={cart}
-								// couponDiscount={""}
-								// couponNewTotal={""}
-								// ✅ إضافة هذه الـ props الجديدة
-								// hasUnsavedChanges={Object.keys(draftById).length > 0}
-								// unsavedChangesCount={Object.keys(draftById).length}
-								originalTotal={backendTotal} // للإشارة إلى السعر الأصلي
-							/>
-						</div>
+									summary={checkoutSummary}
+									selectedShipping={selectedShipping}
+								/>
+							</div>
+
 
 						<div className="mt-4">
 							<Button

@@ -99,7 +99,7 @@ export default function LoginWithGoogle() {
       disabled={loading}
     >
       <div
-        className={`p-3 flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:shadow transition ${
+        className={`p-3 flex items-center justify-center gap-2 md:rounded-2xl rounded-lg border border-slate-200 bg-white hover:shadow transition ${
           loading ? "opacity-60" : ""
         }`}
       >

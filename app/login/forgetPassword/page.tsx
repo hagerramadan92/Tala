@@ -22,7 +22,7 @@ export default function ForgetPasswordPage() {
 
 	const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-	const fieldBase = "w-full rounded-2xl border bg-white px-4 py-3 text-[15px] font-semibold outline-none transition " +
+	const fieldBase = "w-full md:rounded-2xl rounded-lg border bg-white px-4 py-3 text-[15px] font-semibold outline-none transition " +
 		"placeholder:text-slate-400 focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200";
 
 	const fieldOk = "border-slate-200 focus:border-pro focus:ring-pro/10";
@@ -179,7 +179,7 @@ export default function ForgetPasswordPage() {
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: 10 }}
 									className={[
-										"mb-4 rounded-2xl border px-4 py-3 text-sm font-bold",
+										"mb-4 md:rounded-2xl rounded-lg border px-4 py-3 text-sm font-bold",
 										msg.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "",
 										msg.type === "error" ? "border-rose-200 bg-rose-50 text-rose-700" : "",
 										msg.type === "info" ? "border-slate-200 bg-slate-50 text-slate-700" : "",
@@ -232,7 +232,7 @@ export default function ForgetPasswordPage() {
 							</div>
 						) : (
 							<div className="space-y-4">
-								<div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+								<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
 									<div className="min-w-0">
 										<p className="text-xs font-bold text-slate-500">سيتم التحقق على البريد:</p>
 										<p className="text-sm font-extrabold text-slate-900 truncate">{email}</p>
@@ -273,7 +273,7 @@ export default function ForgetPasswordPage() {
 												onKeyDown={(e) => handleOtpKeyDown(index, e)}
 												onPaste={handleOtpPaste}
 												className={[
-													"w-12 h-12 rounded-2xl text-center text-lg font-extrabold outline-none transition",
+													"w-12 h-12 md:rounded-2xl rounded-lg text-center text-lg font-extrabold outline-none transition",
 													"border bg-white focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200",
 													digit ? "border-slate-300 focus:border-pro focus:ring-pro/10" : "border-slate-200 focus:border-pro focus:ring-pro/10",
 												].join(" ")}
@@ -300,7 +300,7 @@ export default function ForgetPasswordPage() {
 									onClick={handleConfirmCode}
 									disabled={!canVerify}
 									className={[
-										"w-full rounded-2xl py-3 font-extrabold text-white transition",
+										"w-full md:rounded-2xl rounded-lg py-3 font-extrabold text-white transition",
 										"bg-slate-900 hover:opacity-95",
 										"disabled:opacity-60 disabled:cursor-not-allowed",
 									].join(" ")}

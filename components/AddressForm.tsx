@@ -28,6 +28,13 @@ interface AddressFormInputs {
 	addressType: string;
 }
 
+interface Place {
+	id: number;
+	name: string;
+	label: string;
+	children?: Place[];
+}
+
 // ✅ Saudi phone: 05XXXXXXXX OR +9665XXXXXXXX OR 9665XXXXXXXX
 const SA_PHONE_REGEX = /^(?:05\d{8}|(?:\+?966)5\d{8})$/;
 
@@ -76,8 +83,47 @@ export default function AddressForm({
 	const base_url = process.env.NEXT_PUBLIC_API_URL;
 	const [loading, setLoading] = useState(false);
 	const [mounted, setMounted] = useState(false);
+	const [places, setPlaces] = useState<Place[]>([]);
+	const [cities, setCities] = useState<Place[]>([]);
+	const [areas, setAreas] = useState<Place[]>([]);
+	const [loadingPlaces, setLoadingPlaces] = useState(false);
 
 	useEffect(() => setMounted(true), []);
+
+	// جلب المدن والمناطق عند فتح الفورم
+	useEffect(() => {
+		if (open) {
+			fetchPlaces();
+		}
+	}, [open]);
+
+	const fetchPlaces = async () => {
+		try {
+			setLoadingPlaces(true);
+			const token = localStorage.getItem("auth_token");
+			const response = await fetch(`${base_url}/addresses/places`, {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			const result = await response.json();
+			
+			if (result.status && result.data) {
+				setPlaces(result.data);
+				// استخراج المدن (العناصر التي لديها أطفال)
+				const citiesList = result.data.filter((place: Place) => 
+					place.children && place.children.length > 0
+				);
+				setCities(citiesList);
+			}
+		} catch (error) {
+			console.error("Error fetching places:", error);
+			toast.error("حدث خطأ في تحميل المدن");
+		} finally {
+			setLoadingPlaces(false);
+		}
+	};
 
 	const {
 		register,
@@ -94,6 +140,7 @@ export default function AddressForm({
 		},
 	});
 
+	const selectedCity = watch("city");
 	const selectedType = watch("addressType");
 	const isEdit = Boolean(initialData?.id);
 
@@ -101,6 +148,24 @@ export default function AddressForm({
 		() => (isEdit ? "تعديل العنوان" : "إضافة عنوان جديد"),
 		[isEdit]
 	);
+
+	// تحديث المناطق عند اختيار مدينة
+	useEffect(() => {
+		if (selectedCity) {
+			// البحث عن المدينة المختارة في قائمة المدن
+			const selectedCityData = cities.find(city => city.name === selectedCity);
+			if (selectedCityData && selectedCityData.children) {
+				setAreas(selectedCityData.children);
+			} else {
+				setAreas([]);
+			}
+			
+			// إعادة تعيين المنطقة عند تغيير المدينة
+			setValue("area", "");
+		} else {
+			setAreas([]);
+		}
+	}, [selectedCity, cities, setValue]);
 
 	useEffect(() => {
 		if (initialData) {
@@ -119,7 +184,6 @@ export default function AddressForm({
 
 	const normalizeSaudiPhone = (raw: string) => {
 		const v = (raw || "").trim().replace(/\s+/g, "");
-		// optional: convert +9665XXXXXXXX -> 05XXXXXXXX
 		if (v.startsWith("+9665") && v.length === 13) return "0" + v.slice(4);
 		if (v.startsWith("9665") && v.length === 12) return "0" + v.slice(3);
 		return v;
@@ -139,7 +203,6 @@ export default function AddressForm({
 				city: data.city,
 				area: data.area,
 				address_details: data.details,
-				// ✅ no nickname in form; label fallback to full name
 				label: `${data.firstName} ${data.lastName}`,
 				type: data.addressType,
 			};
@@ -209,7 +272,7 @@ export default function AddressForm({
 						animate={{ y: 0, scale: 1, opacity: 1 }}
 						exit={{ y: 18, scale: 0.98, opacity: 0 }}
 						transition={{ type: "spring", stiffness: 420, damping: 30 }}
-						className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 overflow-hidden"
+						className="relative w-full max-w-4xl md:rounded-2xl rounded-lg bg-white shadow-2xl ring-1 ring-black/5 overflow-hidden"
 					>
 						<div className="sticky top-0 z-10 border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 md:p-5">
 							<div className="flex items-start justify-between gap-4">
@@ -235,7 +298,7 @@ export default function AddressForm({
 						<form onSubmit={handleSubmit(handleAddAddress)}>
 							<div className="max-h-[70vh] overflow-y-auto p-4 md:p-6 space-y-6">
 								{/* Section: Personal */}
-								<div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
+								<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
 									<div className="flex items-center justify-between mb-4">
 										<h3 className="text-base md:text-lg font-extrabold text-slate-900">
 											بيانات المستلم
@@ -293,7 +356,7 @@ export default function AddressForm({
 								</div>
 
 								{/* ✅ Section: Location FIRST */}
-								<div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
+								<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
 									<h3 className="text-base md:text-lg font-extrabold text-slate-900 mb-4">
 										المدينة والمنطقة
 									</h3>
@@ -302,36 +365,48 @@ export default function AddressForm({
 										<Field label="المدينة" error={errors.city?.message}>
 											<select
 												{...register("city")}
+												disabled={loadingPlaces}
 												className={`w-full rounded-xl border px-4 py-3 text-sm font-semibold outline-none transition bg-white
                           ${
 														errors.city
 															? "border-rose-300 focus:ring-4 focus:ring-rose-100"
 															: "border-slate-200 focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200"
-													}`}
+													} ${loadingPlaces ? "opacity-50 cursor-not-allowed" : ""}`}
 											>
-												<option value="">اختر المدينة</option>
-												{/* بدّل القيم دي بمدن السعودية */}
-												<option value="الرياض">الرياض</option>
-												<option value="جدة">جدة</option>
-												<option value="الدمام">الدمام</option>
+												<option value="">
+													{loadingPlaces ? "جاري التحميل..." : "اختر المدينة"}
+												</option>
+												{cities.map((city) => (
+													<option key={city.id} value={city.name}>
+														{city.label}
+													</option>
+												))}
 											</select>
 										</Field>
 
 										<Field label="المنطقة" error={errors.area?.message}>
 											<select
 												{...register("area")}
+												disabled={!selectedCity || loadingPlaces}
 												className={`w-full rounded-xl border px-4 py-3 text-sm font-semibold outline-none transition bg-white
                           ${
 														errors.area
 															? "border-rose-300 focus:ring-4 focus:ring-rose-100"
 															: "border-slate-200 focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200"
-													}`}
+													} ${!selectedCity || loadingPlaces ? "opacity-50 cursor-not-allowed" : ""}`}
 											>
-												<option value="">اختر المنطقة</option>
-												{/* بدّل القيم دي بمناطق/أحياء السعودية */}
-												<option value="حي العليا">حي العليا</option>
-												<option value="حي النزهة">حي النزهة</option>
-												<option value="حي الملقا">حي الملقا</option>
+												<option value="">
+													{!selectedCity 
+														? "اختر المدينة أولاً" 
+														: loadingPlaces 
+															? "جاري التحميل..." 
+															: "اختر المنطقة"}
+												</option>
+												{areas.map((area) => (
+													<option key={area.id} value={area.label}>
+														{area.label}
+													</option>
+												))}
 											</select>
 										</Field>
 									</div>
@@ -367,7 +442,7 @@ export default function AddressForm({
 								</div>
 
 								{/* ✅ Section: Address details AFTER city/area */}
-								<div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
+								<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
 									<h3 className="text-base md:text-lg font-extrabold text-slate-900 mb-4">
 										تفاصيل العنوان
 									</h3>
@@ -399,10 +474,10 @@ export default function AddressForm({
 
 								<button
 									type="submit"
-									disabled={loading || isSubmitting}
+									disabled={loading || isSubmitting || loadingPlaces}
 									className={`rounded-xl px-7 py-3 text-sm font-extrabold text-white transition
                     ${
-											loading || isSubmitting
+											loading || isSubmitting || loadingPlaces
 												? "bg-slate-400 cursor-not-allowed"
 												: "bg-pro hover:opacity-95 active:scale-[0.99]"
 										}

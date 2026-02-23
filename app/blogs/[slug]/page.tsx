@@ -77,7 +77,7 @@ function Sk({ className = "" }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-black/5 animate-pulse",
+        "relative overflow-hidden md:rounded-2xl rounded-lg bg-slate-100 ring-1 ring-black/5 animate-pulse",
         className
       )}
     />
@@ -233,7 +233,7 @@ export default function BlogDetailsPage() {
           </p>
           <Link
             href="/blogs"
-            className="mt-6 inline-flex items-center justify-center rounded-2xl px-5 py-3 font-extrabold bg-slate-900 text-white hover:bg-slate-800 transition"
+            className="mt-6 inline-flex items-center justify-center md:rounded-2xl rounded-lg px-5 py-3 font-extrabold bg-slate-900 text-white hover:bg-slate-800 transition"
           >
             العودة للمدونة
           </Link>
@@ -355,7 +355,7 @@ export default function BlogDetailsPage() {
                 </h3>
 
                 <div className="mt-4 grid gap-3">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4">
                     <p className="text-xs font-bold text-slate-500">عدد التعليقات</p>
                     <p className="mt-1 text-base font-extrabold text-slate-900">
                       {article.comments_count ?? 0}
@@ -364,14 +364,14 @@ export default function BlogDetailsPage() {
 
                   <Link
                     href="/blogs"
-                    className="rounded-2xl px-4 py-3 font-extrabold bg-slate-900 text-white hover:bg-slate-800 transition text-center"
+                    className="md:rounded-2xl rounded-lg px-4 py-3 font-extrabold bg-slate-900 text-white hover:bg-slate-800 transition text-center"
                   >
                     كل المقالات
                   </Link>
 
                   <Link
                     href="/contactUs"
-                    className="rounded-2xl px-4 py-3 font-extrabold border border-slate-200 bg-white hover:bg-slate-50 transition text-center"
+                    className="md:rounded-2xl rounded-lg px-4 py-3 font-extrabold border border-slate-200 bg-white hover:bg-slate-50 transition text-center"
                   >
                     تواصل معنا
                   </Link>

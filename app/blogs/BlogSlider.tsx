@@ -48,7 +48,7 @@ export default function BlogSlider({
           type="button"
           aria-label="السابق"
           onClick={() => scrollByOne("prev")}
-          className="h-10 w-10 grid place-items-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm"
+          className="h-10 w-10 grid place-items-center md:rounded-2xl rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm"
         >
           <ChevronRight size={18} />
         </button>
@@ -57,7 +57,7 @@ export default function BlogSlider({
           type="button"
           aria-label="التالي"
           onClick={() => scrollByOne("next")}
-          className="h-10 w-10 grid place-items-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm"
+          className="h-10 w-10 grid place-items-center md:rounded-2xl rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm"
         >
           <ChevronLeft size={18} />
         </button>

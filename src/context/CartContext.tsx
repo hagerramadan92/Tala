@@ -385,41 +385,61 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 		}
 	};
 
-	const updateCartItem = async (
-		cartItemId: number,
-		updates: any
-	): Promise<boolean> => {
-		if (!token) return false;
+	// في ملف CartContext
+const updateCartItem = async (
+    cartItemId: number,
+    updates: any
+): Promise<boolean> => {
+    if (!token) return false;
 
+    try {
+        const response = await fetch(`${API_URL}/cart/items/${cartItemId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+            },
+            body: JSON.stringify(updates),
+        });
 
-		try {
-			const response = await fetch(`${API_URL}/cart/items/${cartItemId}`, {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-					Accept: "application/json",
-				},
-				body: JSON.stringify(updates),
-			});
-
-			const data = await response.json();
+        const data = await response.json();
  
-			if (response.ok && data.status) {
-				await loadItemOptions(cartItemId);
-				// toast.success("تم تحديث العنصر بنجاح");
-				return true;
-			} else {
-				await refreshCart();
-				toast.error(data.message || "فشل تحديث العنصر");
-				return false;
-			}
-		} catch (err) {
-			await refreshCart();
-			toast.error("خطأ في الاتصال، حاول مرة أخرى");
-			return false;
-		}
-	};
+        if (response.ok && data.status) {
+            // ✅ تحديث السلة المحلية بالبيانات الجديدة من الخادم
+            if (data.data) {
+                setCart(prevCart => 
+                    prevCart.map(item => {
+                        if (item.cart_item_id === cartItemId) {
+                            // ✅ دمج البيانات الجديدة مع القديمة
+                            const updatedItem = {
+                                ...item,
+                                ...data.data,
+                                selected_options: parseSelectedOptions(data.data.selected_options || data.data.selected_options_json),
+                                image_design: data.data.image_design || item.image_design,
+                                price_per_unit: data.data.price_per_unit || item.price_per_unit,
+                                line_total: data.data.line_total || item.line_total,
+                            };
+                            return updatedItem;
+                        }
+                        return item;
+                    })
+                );
+            }
+            
+            toast.success("تم تحديث العنصر بنجاح");
+            return data; // ✅ إرجاع البيانات الكاملة بدلاً من boolean
+        } else {
+            await refreshCart();
+            toast.error(data.message || "فشل تحديث العنصر");
+            return false;
+        }
+    } catch (err) {
+        await refreshCart();
+        toast.error("خطأ في الاتصال، حاول مرة أخرى");
+        return false;
+    }
+};
 
 	const updateSelectedOption = async (
 		cartItemId: number,

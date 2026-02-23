@@ -1,24 +1,5 @@
 "use client";
 
-/**
- * ✅ ONE FILE VERSION (ProductPageClient + StickerForm + shared utils)
- *
- * Fixes applied:
- * 1) ❌ لا نرسل (المقاس/اللون/الخامة/طريقة الطباعة/مكان الطباعة/كمية المقاس) داخل selected_options
- *    ✅ تُرسل فقط كمفاتيز IDs + quantity:
- *    - size_id, color_id, material_id, printing_method_id, print_locations (ids), quantity
- *
- * 2) ✅ خدمة التصميم (خدمة تصميم) لا تُضرب في الكمية (One-time)
- *    - في الحساب (extrasTotal) + داخل selected_options additional_price
- *
- * 3) ✅ (I have design) يرفع الملف AFTER add-to-cart فقط عبر:
- *    POST  {API_URL}/upload-image
- *    FormData: img, cart_item_id
- *
- * 4) ✅ StickerForm (Cart upload) تم توحيد الرفع لنفس endpoint /upload-image
- *    (في cart mode فقط، لأن لازم cart_item_id)
- */
-
 import React, { useEffect, useMemo, useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -63,6 +44,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { Save, CheckCircle, Warning, Info, Refresh, ExpandMore } from "@mui/icons-material";
+import Link from "next/link";
 
 /* ------------------------------------------
  * Types
@@ -196,51 +178,55 @@ function buildIdsPayload(apiData: any, opts: SelectedOptions) {
  * ✅ RULE (2):
  * - معظم الإضافات per-unit => تتضرب في qty
  * - "خدمة تصميم" => one-time (لا تُضرب في qty)
+ * 
+ * ✅ RULE (3):
+ * - التعامل مع الحالات الثلاثة لطريقة مشاركة التصميم (child options)
  */
 function buildSelectedOptionsWithPrice(apiData: any, opts: SelectedOptions) {
-	const selected_options: Array<{ option_name: string; option_value: string; additional_price: number }> = [];
-	const qty = getQty(opts);
+  const selected_options: Array<{ option_name: string; option_value: string; additional_price: number }> = [];
+  const qty = getQty(opts);
 
-	// ✅ Handle optionGroups (الخيارات الرئيسية)
-	Object.entries(opts.optionGroups || {}).forEach(([group, value]) => {
-		if (!value || value === "اختر") return;
+  // ✅ Handle optionGroups (الخيارات الرئيسية)
+  Object.entries(opts.optionGroups || {}).forEach(([group, value]) => {
+    if (!value || value === "اختر") return;
 
-		// البحث في الهيكل الجديد للـ options
-		const optionGroup = apiData?.options?.find((o: any) => o.name === group);
-		if (!optionGroup) return;
+    // البحث في الهيكل الجديد للـ options
+    const optionGroup = apiData?.options?.find((o: any) => o.name === group);
+    if (!optionGroup) return;
 
-		const optionItem = optionGroup.items?.find((item: any) => item.value === value);
-		if (!optionItem) return;
+    const optionItem = optionGroup.items?.find((item: any) => item.value === value);
+    if (!optionItem) return;
 
-		const perUnit = num(optionItem.base_price);
-		const oneTime = isOneTimeServiceOption(group, value);
+    const perUnit = num(optionItem.base_price);
+    const oneTime = isOneTimeServiceOption(group, value);
 
-		selected_options.push({
-			option_name: group,
-			option_value: value,
-			additional_price: oneTime ? perUnit : perUnit * qty,
-		});
+    selected_options.push({
+      option_name: group,
+      option_value: value,
+      additional_price: oneTime ? perUnit : perUnit * qty,
+    });
 
-		// ✅ إذا كان للعنصر children، نضيف القيمة المختارة من optionChildren
-		const childKey = `${group}::${value}`;
-		const childValue = opts.optionChildren?.[childKey];
-		if (childValue && childValue !== "اختر") {
-			// البحث في children للعنصر
-			const childItem = optionItem.children?.find((child: any) => child.value === childValue);
-			if (childItem) {
-				const childPerUnit = num(childItem.base_price);
-				const childOneTime = isOneTimeServiceOption(childItem.name || group, childValue);
-				
-				selected_options.push({
-					option_name: childItem.name || `${group} - تفاصيل`,
-					option_value: childValue,
-					additional_price: childOneTime ? childPerUnit : childPerUnit * qty,
-				});
-			}
-		}
-	});
+    // ✅ إذا كان للعنصر children، نضيف القيمة المختارة من optionChildren
+    const childKey = `${group}::${value}`;
+    const childValue = opts.optionChildren?.[childKey];
+    
+    if (childValue && childValue !== "اختر") {
+      // البحث في children للعنصر
+      const childItem = optionItem.children?.find((child: any) => child.value === childValue);
+      if (childItem) {
+        const childPerUnit = num(childItem.base_price);
+        const childOneTime = isOneTimeServiceOption(childItem.name || group, childValue);
+        
+        selected_options.push({
+          option_name: childItem.name || `${group} - تفاصيل`,
+          option_value: childValue,
+          additional_price: childOneTime ? childPerUnit : childPerUnit * qty,
+        });
+      }
+    }
+  });
 
-	return selected_options;
+  return selected_options;
 }
 
 function extractValueFromOptions(options: any[], optionName: string) {
@@ -273,15 +259,15 @@ function Sk({ className = "" }: { className?: string }) {
 function ReviewsSkeleton() {
 	return (
 		<div className="space-y-4">
-			<div className="rounded-2xl border border-slate-200 bg-white p-4">
+			<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4">
 				<Sk className="h-5 w-40" />
 				<Sk className="h-3 w-72 mt-3" />
 				<Sk className="h-3 w-56 mt-2" />
 			</div>
 
-			<div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+			<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 space-y-3">
 				{Array.from({ length: 3 }).map((_, i) => (
-					<div key={i} className="rounded-2xl border border-slate-200 p-4">
+					<div key={i} className="md:rounded-2xl rounded-lg border border-slate-200 p-4">
 						<div className="flex items-center gap-3">
 							<Sk className="h-10 w-10 rounded-full" />
 							<div className="flex-1">
@@ -351,7 +337,7 @@ function SectionCard({ title, icon, children }: { title: string; icon?: React.Re
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 	return (
-		<div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+		<div className="flex items-start justify-between gap-4 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
 			<p className="text-sm font-extrabold text-slate-700">{label}</p>
 			<div className="text-sm font-black text-slate-900 text-left">{value}</div>
 		</div>
@@ -369,7 +355,7 @@ function Pill({ children, tone = "slate" }: { children: React.ReactNode; tone?: 
 
 function OptChip({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+		<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
 			<p className="text-xs text-slate-500 font-bold">{label}</p>
 			<p className="text-sm font-extrabold text-slate-900 mt-1">{value}</p>
 		</div>
@@ -432,10 +418,15 @@ export function StarRatingInput({ value, onChange, disabled = false }: StarRatin
 type DesignSendMethod = "whatsapp" | "email" | "upload" | null;
 
 function getSocialValue(socialMedia: any, key: "whatsapp" | "email") {
-	const arr = Array.isArray(socialMedia) ? socialMedia : [];
-	const item = arr.find((x: any) => String(x?.key).toLowerCase() === key);
-	const value = String(item?.value || "").trim();
-	return value || null;
+  // إذا كان المطلوب هو البريد الإلكتروني، نرجع البريد المحدد
+//   if (key === "email") {
+//     return "hagerramadan440@gmail.com";
+//   }
+  
+  const arr = Array.isArray(socialMedia) ? socialMedia : [];
+  const item = arr.find((x: any) => String(x?.key).toLowerCase() === key);
+  const value = String(item?.value || "").trim();
+  return value || null;
 }
 
 interface StickerFormProps {
@@ -940,7 +931,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 
 	// design service (show only if "خدمة تصميم" === "لدى تصميم")
 	const designServiceValue = String(optionGroups?.["خدمة تصميم"] ?? optionGroups?.["خدمة التصميم"] ?? "اختر").trim();
-	const showDesignBoxes = ["رفع تصميم خاص", "رفع تصميمي الخاص", "لدي تصميم يحتاج تعديل"].includes(designServiceValue);
+	const showDesignBoxes = ["رفع تصميم خاص", "رفع تصميمي الخاص", "لدي تصميم يحتاج تعديل"  ].includes(designServiceValue);
 
 	const whatsappFromSocial = getSocialValue(socialMedia, "whatsapp");
 	const emailFromSocial = getSocialValue(socialMedia, "email");
@@ -1004,7 +995,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 	if (formLoading) return <StickerFormSkeleton />;
 	if (apiError || !apiData) {
 		return (
-			<div className="rounded-2xl border border-slate-200 bg-white p-4 text-center">
+			<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 text-center">
 				<p className="text-slate-700 font-extrabold">{apiError || "لا توجد بيانات للمنتج"}</p>
 			</div>
 		);
@@ -1014,7 +1005,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 		<motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="pt-4 mt-4">
 			{/* CART MODE ONLY: Save bar */}
 			{cartItemId && showSaveButton && (
-				<motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-2xl">
+				<motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-yellow-50 border border-yellow-200 md:rounded-2xl rounded-lg">
 					<div className="flex items-center justify-between gap-2">
 						<div className="flex items-center gap-2">
 							<Warning className="text-yellow-600 text-sm" />
@@ -1048,7 +1039,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 
 			{cartItemId && savedSuccessfully && (
 				<motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="mb-4">
-					<Alert severity="success" className="rounded-2xl" icon={<CheckCircle />}>
+					<Alert severity="success" className="md:rounded-2xl rounded-lg" icon={<CheckCircle />}>
 						تم حفظ التغييرات بنجاح
 					</Alert>
 				</motion.div>
@@ -1265,129 +1256,193 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 								</div>
 							)}
 
-							{/* Design boxes: show only when social values exist */}
-							{(String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") &&
-								showDesignBoxes &&
-								(whatsappHref || emailHref || cartItemId) && (
-									<div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-										<p className="text-sm font-extrabold text-slate-800">أرسل ملف التصميم عبر:</p>
+								{/* Design boxes: show only when social values exist */}
+		{(String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") &&
+		showDesignBoxes &&
+		(whatsappHref || emailHref || cartItemId) && (
+			<div className="mt-3 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4">
+			<p className="text-sm font-extrabold text-slate-800">أرسل ملف التصميم عبر:</p>
 
-										<div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-											{whatsappHref && (
-												<a
-													href={whatsappHref}
-													target="_blank"
-													rel="noreferrer"
-													onClick={() => setDesignSendMethod("whatsapp")}
-													className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50 transition"
-												>
-													<p className="font-black text-slate-900">WhatsApp</p>
-													<p className="text-xs text-slate-500 font-bold mt-1">فتح واتساب وإرسال الملف</p>
-												</a>
-											)}
+			<div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+				{whatsappHref && (
+				<button
+					type="button"
+					onClick={() => {
+					setDesignSendMethod("whatsapp");
+					}}
+					className={[
+					"md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
+					designSendMethod === "whatsapp" ? "ring-2 ring-green-500" : "",
+					].join(" ")}
+				>
+					<p className="font-black text-slate-900">WhatsApp</p>
+					<p className="text-xs text-slate-500 font-bold mt-1">إرسال عبر واتساب</p>
+				</button>
+				)}
+{emailHref && emailFromSocial && (
+  <button
+    type="button"
+    onClick={() => {
+      setDesignSendMethod("email");
+    }}
+    className={[
+      "md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
+      designSendMethod === "email" ? "ring-2 ring-blue-500" : "",
+    ].join(" ")}
+  >
+    <p className="font-black text-slate-900">📧 البريد الإلكتروني</p>
+    <p className="text-xs text-blue-600 font-bold mt-1 font-mono">{emailFromSocial}</p>
+    <p className="text-[10px] text-slate-400 mt-1">انقر للاختيار</p>
+  </button>
+)}
 
-											{emailHref && (
-												<a
-													href={emailHref}
-													onClick={() => setDesignSendMethod("email")}
-													className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50 transition"
-												>
-													<p className="font-black text-slate-900">Email</p>
-													<p className="text-xs text-slate-500 font-bold mt-1">{emailFromSocial}</p>
-												</a>
-											)}
+				<button
+				type="button"
+				onClick={() => setDesignSendMethod("upload")}
+				className={[
+					"md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
+					designSendMethod === "upload" ? "ring-2 ring-amber-300" : "",
+				].join(" ")}
+				>
+				<p className="font-black text-slate-900">رفع الملف</p>
+				<p className="text-xs text-slate-500 font-bold mt-1">رفع مباشر عبر الموقع</p>
+				</button>
+			</div>
 
-											<button
-												type="button"
-												onClick={() => setDesignSendMethod("upload")}
-												className={[
-													"rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
-													designSendMethod === "upload" ? "ring-2 ring-amber-300" : "",
-												].join(" ")}
-											>
-												<p className="font-black text-slate-900">رفع الملف</p>
-												<p className="text-xs text-slate-500 font-bold mt-1">رفع مباشر عبر الموقع</p>
-											</button>
-										</div>
+			{/* عرض محتوى واتساب فقط عند اختياره */}
+			{designSendMethod === "whatsapp" && (
+				<div className="mt-4">
+				<Divider className="!my-3" />
+				<div className="bg-green-50 border border-green-200 rounded-lg p-4">
+					<div className="flex items-center gap-3 mb-3">
+					<div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-xl">
+						📱
+					</div>
+					<div>
+						<p className="text-sm font-bold text-green-800">تم اختيار الإرسال عبر واتساب</p>
+						<p className="text-xs text-green-600">انقر على الزر أدناه لفتح المحادثة</p>
+					</div>
+					</div>
+					<Link
+					href={whatsappHref||"#"}
+					target="_blank"
+					rel="noreferrer"
+					className="flex items-center justify-center gap-2 w-full bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-green-700 transition"
+					>
+					<span>فتح واتساب</span>
+					<span>📤</span>
+					</Link>
+				</div>
+				</div>
+			)}
 
-										{designSendMethod === "upload" && (
-											<div className="mt-4">
-												<Divider className="!my-3" />
-												<div className="flex flex-col gap-3">
-													{/* Upload Card */}
-													<div className="relative">
-														<label
-															className={[
-																"flex flex-col items-center justify-center gap-2",
-																"w-full rounded-2xl border-2 border-dashed",
-																"px-6 py-7 text-center cursor-pointer transition",
-																designFile
-																	? "border-emerald-400 bg-emerald-50"
-																	: "border-slate-300 hover:border-amber-400 hover:bg-amber-50",
-															].join(" ")}
-														>
-															<input
-																type="file"
-																accept="image/*,.pdf,.ai,.psd,.eps,.svg"
-																className="hidden"
-																onChange={(e) => {
-																	const f = e.target.files?.[0] ?? null;
-																	setDesignFile(f);
-																	onDesignFileChange?.(f); // ✅ مهم
-																}}
+		{designSendMethod === "email" && emailFromSocial && (
+  <div className="mt-4">
+    <Divider className="!my-3" />
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xl">
+          📧
+        </div>
+        <div>
+          <p className="text-sm font-bold text-blue-800">تم اختيار الإرسال عبر البريد الإلكتروني</p>
+          <p className="text-xs text-blue-600 font-mono">{emailFromSocial}</p>
+        </div>
+      </div>
+      <Link
+        href={`mailto:${emailFromSocial}?subject=${encodeURIComponent("طلب تصميم")}&body=${encodeURIComponent(
+          `السلام عليكم،\n\nلدي طلب تصميم للمنتج`
+        )}`}
+        className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
+      >
+        <span>إرسال بريد إلكتروني</span>
+        <span>📤</span>
+      </Link>
+      <p className="text-xs text-center text-blue-500 mt-3">
+        أو أرسل مباشرة على: {emailFromSocial}
+      </p>
+    </div>
+  </div>
+			)}
 
-															/>
+			{/* عرض محتوى الرفع المباشر فقط عند اختياره */}
+			{designSendMethod === "upload" && (
+				<div className="mt-4">
+				<Divider className="!my-3" />
+				<div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+					<div className="flex items-center gap-3 mb-3">
+					<div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl">
+						📎
+					</div>
+					<div>
+						<p className="text-sm font-bold text-amber-800">تم اختيار الرفع المباشر</p>
+						<p className="text-xs text-amber-600">قم برفع ملف التصميم مباشرة</p>
+					</div>
+					</div>
+					
+					{/* Upload Card */}
+					<div className="relative">
+					<label
+						className={[
+						"flex flex-col items-center justify-center gap-2",
+						"w-full rounded-lg border-2 border-dashed",
+						"px-6 py-5 text-center cursor-pointer transition",
+						designFile
+							? "border-emerald-400 bg-emerald-50"
+							: "border-amber-300 hover:border-amber-500 bg-white",
+						].join(" ")}
+					>
+						<input
+						type="file"
+						accept="image/*,.pdf,.ai,.psd,.eps,.svg"
+						className="hidden"
+						onChange={(e) => {
+							const f = e.target.files?.[0] ?? null;
+							setDesignFile(f);
+							onDesignFileChange?.(f);
+						}}
+						/>
 
-															{/* Icon */}
-															<div
-																className={[
-																	"w-12 h-12 rounded-full flex items-center justify-center text-xl",
-																	designFile ? "bg-emerald-200 text-emerald-800" : "bg-amber-200 text-amber-800",
-																].join(" ")}
-															>
-																📎
-															</div>
+						{!designFile ? (
+						<>
+							<div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-lg mb-1">
+							⬆️
+							</div>
+							<p className="text-xs font-bold text-slate-700">اختر ملف التصميم</p>
+							<p className="text-[10px] text-slate-500">PNG, JPG, PDF, AI, PSD, SVG</p>
+						</>
+						) : (
+						<>
+							<div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-lg mb-1">
+							✅
+							</div>
+							<p className="text-xs font-bold text-emerald-700">{designFile.name}</p>
+							<p className="text-[10px] text-slate-500">
+							{(designFile.size / 1024 / 1024).toFixed(2)} MB
+							</p>
+						</>
+						)}
+					</label>
 
-															{!designFile ? (
-																<>
-																	<p className="text-sm font-black text-slate-800">اسحب الملف هنا أو اضغط للاختيار</p>
-																	<p className="text-xs font-bold text-slate-500">PNG, JPG, PDF, AI, PSD, SVG</p>
-																</>
-															) : (
-																<>
-																	<p className="text-sm font-black text-emerald-800">تم اختيار الملف ✅</p>
-																	<p className="text-xs font-extrabold text-slate-700">
-																		{designFile.name}
-																		<span className="text-slate-500 font-bold">
-																			{" "}
-																			— {(designFile.size / 1024 / 1024).toFixed(2)} MB
-																		</span>
-																	</p>
-																</>
-															)}
-														</label>
-
-														{/* Remove */}
-														{designFile && !designUploading && (
-															<button
-																type="button"
-																onClick={() => {
-																	setDesignFile(null);
-																	onDesignFileChange?.(null); // ✅
-																}}
-
-																className="absolute top-3 right-3 text-xs font-black text-rose-700 hover:underline"
-															>
-																إزالة
-															</button>
-														)}
-													</div>
-												</div>
-
-											</div>
-										)}
-									</div>
-								)}
+					{/* Remove button */}
+					{designFile && (
+						<button
+						type="button"
+						onClick={() => {
+							setDesignFile(null);
+							onDesignFileChange?.(null);
+						}}
+						className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold hover:bg-red-600 transition shadow-sm"
+						>
+						✕
+						</button>
+					)}
+					</div>
+				</div>
+				</div>
+			)}
+			</div>
+		)}
 						</Box>
 					);
 				})}
@@ -1465,7 +1520,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 			</div>
 
 			{apiData?.options_note && (
-				<div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-2xl">
+				<div className="mt-6 p-3 bg-blue-50 border border-blue-200 md:rounded-2xl rounded-lg">
 					<div className="flex items-start gap-2">
 						<Info className="text-blue-500 text-sm mt-0.5" />
 						<p className="text-sm text-blue-700 font-semibold">{apiData.options_note}</p>
@@ -1689,86 +1744,103 @@ export default function ProductPageClient() {
 	}, [apiData]);
 
 	const validateOptions = useCallback(
-		(options: SelectedOptions, data: any) => {
-			if (!data) return { isValid: false, missingOptions: [] as string[] };
+  (options: SelectedOptions, data: any) => {
+    if (!data) return { isValid: false, missingOptions: [] as string[] };
 
-			let isValid = true;
-			const missingOptions: string[] = [];
+    let isValid = true;
+    const missingOptions: string[] = [];
 
-			if (data.sizes?.length > 0 && (!options.size || options.size === "اختر")) {
-				isValid = false;
-				missingOptions.push("المقاس");
-			}
+    if (data.sizes?.length > 0 && (!options.size || options.size === "اختر")) {
+      isValid = false;
+      missingOptions.push("المقاس");
+    }
 
-			const selectedSizeObj = (data?.sizes || []).find((s: any) => s?.name === options.size);
-			const hasTiers = Array.isArray(selectedSizeObj?.tiers) && selectedSizeObj.tiers.length > 0;
-			if (data.sizes?.length > 0 && hasTiers && !options.size_tier_id) {
-				isValid = false;
-				missingOptions.push("كمية المقاس");
-			}
+    const selectedSizeObj = (data?.sizes || []).find((s: any) => s?.name === options.size);
+    const hasTiers = Array.isArray(selectedSizeObj?.tiers) && selectedSizeObj.tiers.length > 0;
+    if (data.sizes?.length > 0 && hasTiers && !options.size_tier_id) {
+      isValid = false;
+      missingOptions.push("كمية المقاس");
+    }
 
-			if (data.colors?.length > 0 && (!options.color || options.color === "اختر")) {
-				isValid = false;
-				missingOptions.push("اللون");
-			}
+    if (data.colors?.length > 0 && (!options.color || options.color === "اختر")) {
+      isValid = false;
+      missingOptions.push("اللون");
+    }
 
-			if (data.materials?.length > 0 && (!options.material || options.material === "اختر")) {
-				isValid = false;
-				missingOptions.push("الخامة");
-			}
+    if (data.materials?.length > 0 && (!options.material || options.material === "اختر")) {
+      isValid = false;
+      missingOptions.push("الخامة");
+    }
 
-			if (Array.isArray(data?.options) && data.options.length > 0) {
-				data.options.forEach((o: any) => {
-					const groupName = String(o.name || "").trim();
-					const items = o.items || [];
-					const isRequired = items.some((x: any) => Boolean(x?.is_required));
-					if (!isRequired) return;
+    if (Array.isArray(data?.options) && data.options.length > 0) {
+      data.options.forEach((o: any) => {
+        const groupName = String(o.name || "").trim();
+        const items = o.items || [];
+        const isRequired = items.some((x: any) => Boolean(x?.is_required));
+        if (!isRequired) return;
 
-					const v = options.optionGroups?.[groupName];
-					if (!v || v === "اختر") {
-						isValid = false;
-						missingOptions.push(groupName);
-					}
+        const v = options.optionGroups?.[groupName];
+        if (!v || v === "اختر") {
+          isValid = false;
+          missingOptions.push(groupName);
+        }
 
-					// ✅ التحقق من children إذا كانت مطلوبة
-					if (v && v !== "اختر") {
-						const item = items.find((i: any) => i.value === v);
-						if (item?.children && item.children.length > 0) {
-							const childKey = `${groupName}::${v}`;
-							const childValue = options.optionChildren?.[childKey];
-							if (!childValue || childValue === "اختر") {
-								isValid = false;
-								missingOptions.push(`${groupName} - تفاصيل`);
-							}
-						}
-					}
-				});
-			}
+        // ✅ التحقق من children إذا كانت مطلوبة (مثل طريقة مشاركة التصميم)
+        if (v && v !== "اختر") {
+          const item = items.find((i: any) => i.value === v);
+          if (item?.children && item.children.length > 0) {
+            const childKey = `${groupName}::${v}`;
+            const childValue = options.optionChildren?.[childKey];
+            
+            // ✅ إذا كانت خدمة تصميم، يجب اختيار طريقة المشاركة
+            if ((groupName === "خدمة تصميم" || groupName === "خدمة التصميم") && (!childValue || childValue === "اختر")) {
+              isValid = false;
+              missingOptions.push("طريقة مشاركة التصميم");
+            }
+            // للـ children الأخرى
+            else if (item.children.some((child: any) => child.is_required) && (!childValue || childValue === "اختر")) {
+              isValid = false;
+              missingOptions.push(`${groupName} - تفاصيل`);
+            }
+          }
+        }
+      });
+    }
 
-			if (Array.isArray(data?.printing_methods) && data.printing_methods.length > 0) {
-				if (!options.printing_method || options.printing_method === "اختر") {
-					isValid = false;
-					missingOptions.push("طريقة الطباعة");
-				}
-			}
+    if (Array.isArray(data?.printing_methods) && data.printing_methods.length > 0) {
+      if (!options.printing_method || options.printing_method === "اختر") {
+        isValid = false;
+        missingOptions.push("طريقة الطباعة");
+      }
+    }
 
-			if (Array.isArray(data?.print_locations) && data.print_locations.length > 0) {
-				if (!Array.isArray(options.print_locations) || options.print_locations.length === 0) {
-					isValid = false;
-					missingOptions.push("مكان الطباعة");
-				}
-			}
+    if (Array.isArray(data?.print_locations) && data.print_locations.length > 0) {
+      if (!Array.isArray(options.print_locations) || options.print_locations.length === 0) {
+        isValid = false;
+        missingOptions.push("مكان الطباعة");
+      }
+    }
 
-			// design file validation (حسب اختيارك)
-			if (designMode === "have_design" && !designFile) {
-				isValid = false;
-				missingOptions.push("ملف التصميم");
-			}
+    // ✅ التحقق من وجود ملف إذا كانت طريقة المشاركة "رفع الملف"
+    if (designMode === "have_design" && !designFile && !stickerDesignFile) {
+      // البحث في optionChildren عن طريقة المشاركة
+      let needFile = false;
+      Object.entries(options.optionChildren || {}).forEach(([_, value]) => {
+        if (value && value.includes("الموقع مباشرة")) {
+          needFile = true;
+        }
+      });
+      
+      if (needFile) {
+        isValid = false;
+        missingOptions.push("ملف التصميم (للرفع المباشر)");
+      }
+    }
 
-			return { isValid, missingOptions };
-		},
-		[designMode, designFile]
-	);
+    return { isValid, missingOptions };
+  },
+  [designMode, designFile, stickerDesignFile]
+);
 
 	const getSelectedOptions = async () => {
 		if (stickerFormRef.current?.getOptions) {
@@ -1814,20 +1886,40 @@ const handleAddToCart = async () => {
   if (!token) return toast.error("يجب تسجيل الدخول أولاً");
   if (!API_URL) return toast.error("API غير متوفر");
 
+  // ✅ بناء selected_options بشكل صحيح مع تضمين الـ child options (طريقة مشاركة التصميم)
   const selected_options = buildSelectedOptionsWithPrice(apiData, opts);
   const idsPayload = buildIdsPayload(apiData, opts);
 
   const qty = Math.max(1, Number(opts?.size_quantity || 1));
 
+  // ✅ التحقق من اختيار طريقة مشاركة التصميم
+  let designServiceSelected = false;
+  let designMethod = null;
+  
+  // البحث في optionGroups عن خدمة التصميم
+  Object.entries(opts.optionGroups || {}).forEach(([group, value]) => {
+    if (group === "خدمة التصميم" || group === "خدمة تصميم") {
+      designServiceSelected = true;
+      
+      // البحث عن طريقة المشاركة المختارة في optionChildren
+      const childKey = `${group}::${value}`;
+      const childValue = opts.optionChildren?.[childKey];
+      
+      if (childValue) {
+        designMethod = childValue;
+      }
+    }
+  });
+
   const cartData = {
     product_id: product.id,
     quantity: qty,
     ...idsPayload,
-    selected_options,
+    selected_options, // ✅ هذا هو المهم - يحتوي الآن على كل الخيارات بما فيها children
     design_service_id: null,
     is_sample: false,
     note: "",
-    // ✅ الأهم: إضافة image_design هنا إذا كان موجوداً
+    // ✅ إضافة image_design إذا كان مطلوباً
     image_design: designFile || stickerDesignFile ? "pending" : null,
   };
 
@@ -1841,7 +1933,7 @@ const handleAddToCart = async () => {
       Number(res?.id) ||
       null;
 
-    // ✅ رفع الصورة إذا كانت موجودة
+    // ✅ رفع الصورة إذا كانت موجودة وكانت طريقة المشاركة "رفع الملف"
     const fileToUpload = designFile || stickerDesignFile;
 
     if (fileToUpload && cartItemId) {
@@ -1879,8 +1971,21 @@ const handleAddToCart = async () => {
       }
     }
 
-  } catch {
-    toast.error("حدث خطأ أثناء إضافة المنتج للسلة");
+    // ✅ رسالة نجاح مع توجيه حسب طريقة المشاركة
+    // if (designMethod) {
+    //   if (designMethod.includes("واتس اب")) {
+    //     toast.success("تمت الإضافة ✅ سيتم التواصل معك عبر واتساب لاستلام التصميم");
+    //   } else if (designMethod.includes("ايميل")) {
+    //     toast.success("تمت الإضافة ✅ يرجى إرسال التصميم على البريد الإلكتروني");
+    //   } else if (designMethod.includes("الموقع مباشرة") && fileToUpload) {
+    //     toast.success("تمت الإضافة مع رفع التصميم ✅");
+    //   }
+    // } else {
+    //   toast.success("تمت الإضافة للسلة ✅");
+    // }
+
+  } catch (e: any) {
+    toast.error(e?.message || "حدث خطأ أثناء إضافة المنتج للسلة");
   }
 };
 
@@ -1997,7 +2102,7 @@ const handleAddToCart = async () => {
 			<div className="min-h-[60vh] flex items-center justify-center px-4" dir="rtl">
 				<div className="max-w-md w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 					<div className="flex items-center gap-3">
-						<div className="w-11 h-11 rounded-2xl bg-rose-50 flex items-center justify-center">
+						<div className="w-11 h-11 md:rounded-2xl rounded-lg bg-rose-50 flex items-center justify-center">
 							<FiAlertTriangle className="text-rose-600" size={22} />
 						</div>
 						<div>
@@ -2007,7 +2112,7 @@ const handleAddToCart = async () => {
 					</div>
 					<button
 						onClick={() => location.reload()}
-						className="mt-4 w-full rounded-2xl bg-slate-900 text-white py-3 font-extrabold hover:opacity-95 transition"
+						className="mt-4 w-full md:rounded-2xl rounded-lg bg-slate-900 text-white py-3 font-extrabold hover:opacity-95 transition"
 					>
 						إعادة المحاولة
 					</button>
@@ -2080,7 +2185,7 @@ const handleAddToCart = async () => {
 									)}
 
 									{Array.isArray(apiData?.offers) && apiData.offers.length > 0 && (
-										<div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+										<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
 											<p className="text-sm font-extrabold text-slate-700 flex items-center gap-2">
 												<Tags className="w-4 h-4" /> العروض المتاحة
 											</p>
@@ -2162,7 +2267,7 @@ const handleAddToCart = async () => {
 											onDesignFileChange={setStickerDesignFile} // ✅
 										/>
 									) : (
-										<div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-600 font-bold">لا توجد خيارات لهذا المنتج.</div>
+										<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4 text-slate-600 font-bold">لا توجد خيارات لهذا المنتج.</div>
 									))}
 
 								{activeTab === "reviews" && (
@@ -2170,7 +2275,7 @@ const handleAddToCart = async () => {
 										{reviewsLoading ? (
 											<ReviewsSkeleton />
 										) : reviewsError ? (
-											<div className="rounded-2xl border border-slate-200 bg-white p-5">
+											<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-5">
 												<p className="font-extrabold text-slate-900">تعذر تحميل التقييمات</p>
 												<p className="text-sm text-slate-600 mt-1">{reviewsError}</p>
 												<button
@@ -2218,7 +2323,7 @@ const handleAddToCart = async () => {
 																value={myComment}
 																onChange={(e) => setMyComment(e.target.value)}
 																rows={4}
-																className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold outline-none focus:ring-2 focus:ring-amber-300 disabled:opacity-50"
+																className="w-full md:rounded-2xl rounded-lg border border-slate-200 bg-white px-4 py-3 font-semibold outline-none focus:ring-2 focus:ring-amber-300 disabled:opacity-50"
 																placeholder="اكتب رأيك في المنتج بكل صراحة..."
 															/>
 														</div>
@@ -2227,7 +2332,7 @@ const handleAddToCart = async () => {
 													<button
 														disabled={!token}
 														onClick={submitReview}
-														className="mt-5 w-full md:w-auto rounded-2xl bg-[#14213d] text-white px-8 py-3 font-extrabold hover:opacity-95 transition disabled:opacity-50"
+														className="mt-5 w-full md:w-auto md:rounded-2xl rounded-lg bg-[#14213d] text-white px-8 py-3 font-extrabold hover:opacity-95 transition disabled:opacity-50"
 													>
 														إرسال التقييم
 													</button>
@@ -2239,7 +2344,7 @@ const handleAddToCart = async () => {
 													{reviewsData?.reviews?.length ? (
 														<div className="space-y-3">
 															{reviewsData.reviews.map((r: any) => (
-																<div key={r.id} className="rounded-2xl border border-slate-200 p-4">
+																<div key={r.id} className="md:rounded-2xl rounded-lg border border-slate-200 p-4">
 																	<div className="flex items-start justify-between gap-3">
 																		<div className="flex items-center gap-3">
 																			<div className="relative w-10 h-10 rounded-full overflow-hidden bg-slate-100 border border-slate-200">
@@ -2277,14 +2382,14 @@ const handleAddToCart = async () => {
 															))}
 														</div>
 													) : (
-														<div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center text-slate-600 font-bold">
+														<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5 text-center text-slate-600 font-bold">
 															لا توجد تقييمات حتى الآن.
 														</div>
 													)}
 
 													{reviewsData?.pagination?.last_page > 1 && (
 														<div className="mt-6 flex items-center justify-center">
-															<div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+															<div className="flex items-center gap-2 md:rounded-2xl rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
 																<button
 																	onClick={() => setReviewsPage((p) => Math.max(1, p - 1))}
 																	disabled={reviewsPage === 1}
@@ -2384,7 +2489,7 @@ const handleAddToCart = async () => {
 									</div>
 
 									{/* price breakdown */}
-									<div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+									<div className="mt-4 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4">
 										<div className="flex items-center justify-between text-sm font-extrabold text-slate-700">
 											<span>السعر الأساسي (المقاس × الكمية)</span>
 											<span>{basePrice.toFixed(2)} ر.س</span>
@@ -2443,12 +2548,12 @@ const handleAddToCart = async () => {
 							<div className="flex max-md:flex-col items-center justify-between gap-3">
 								{/* Left */}
 								<div className="max-md:w-full flex items-center gap-3 min-w-0">
-									<div className="relative w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden bg-slate-100 ring-1 ring-slate-200 shrink-0">
+									<div className="relative w-14 h-14 md:w-16 md:h-16 md:rounded-2xl rounded-lg overflow-hidden bg-slate-100 ring-1 ring-slate-200 shrink-0">
 										<Image src={product.image || "/images/not.jpg"} alt={product.name} fill className="object-cover" />
 									</div>
 
 									<div className="min-w-0">
-										<div className="flex items-center gap-2 flex-wrap">
+										{/* <div className="flex items-center gap-2 flex-wrap">
 											<p className="text-[12px] text-slate-500 font-extrabold">{product?.includes_tax ? "السعر شامل الضريبة" : "السعر"}</p>
 
 											<span
@@ -2463,7 +2568,7 @@ const handleAddToCart = async () => {
 											<span className="text-[11px] font-extrabold px-2 py-1 rounded-full border bg-slate-50 text-slate-700 border-slate-200">
 												{product?.includes_shipping ? "شامل الشحن" : "بدون شحن"}
 											</span>
-										</div>
+										</div> */}
 
 										<p className="text-sm md:text-base font-black text-slate-900 line-clamp-2">{product.name}</p>
 
@@ -2477,7 +2582,7 @@ const handleAddToCart = async () => {
 								<div className="flex max-md:w-full max-md:justify-between items-center gap-3">
 									<div className="hidden sm:flex flex-col items-end">
 										<div className="flex items-center gap-2 justify-end">
-											<p className="text-[12px] text-slate-500 font-extrabold">الإجمالي</p>
+											<p className="text-[12px] text-slate-500 font-extrabold">السعر شامل الضريبة</p>
 										
 										</div>
 
@@ -2488,7 +2593,7 @@ const handleAddToCart = async () => {
 									</div>
 
 									<div className="sm:hidden flex flex-col items-end">
-										<p className="text-[11px] text-slate-500 font-extrabold">الإجمالي</p>
+										<p className="text-[10px] text-slate-500 font-extrabold">السعر شامل الضريبة</p>
 										<div className="flex items-end gap-1">
 											<p className="text-lg font-black text-slate-900 leading-none">{displayTotal.toFixed(2)}</p>
 											<span className="text-[12px] font-extrabold text-slate-700">ر.س</span>

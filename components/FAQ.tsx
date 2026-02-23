@@ -30,14 +30,14 @@ function FAQSkeleton({ count = 6 }: { count?: number }) {
 		<div dir="rtl" className="container py-6 space-y-5">
 			<div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 md:p-6">
 				<Sk className="h-7 w-40" />
-				<Sk className="mt-3 h-11 w-full rounded-2xl" />
+				<Sk className="mt-3 h-11 w-full md:rounded-2xl rounded-lg" />
 			</div>
 
 			<div className="space-y-4">
 				{Array.from({ length: count }).map((_, i) => (
 					<div
 						key={i}
-						className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4"
+						className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4"
 					>
 						<div className="flex items-center justify-between gap-3">
 							<Sk className="h-5 w-3/4" />
@@ -119,7 +119,7 @@ export default function FAQPage() {
 								onChange={(e) => setQ(e.target.value)}
 								placeholder="ابحث: استرجاع، شحن، ضمان..."
 								className="
-                  w-full rounded-2xl border border-slate-200 bg-white
+                  w-full md:rounded-2xl rounded-lg border border-slate-200 bg-white
                   pl-10 pr-4 py-3 text-sm font-semibold text-slate-900
                   placeholder:text-slate-400 outline-none transition
                   focus:border-pro focus:ring-2 focus:ring-pro/20  duration-200
@@ -127,7 +127,7 @@ export default function FAQPage() {
 							/>
 						</div>
 
-						<div className="inline-flex items-center justify-center rounded-2xl bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-700 ring-1 ring-slate-200">
+						<div className="inline-flex items-center justify-center md:rounded-2xl rounded-lg bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-700 ring-1 ring-slate-200">
 							{filteredFaqs.length} نتيجة
 						</div>
 					</div>
@@ -146,7 +146,7 @@ export default function FAQPage() {
 
 					<button
 						onClick={() => setQ("")}
-						className="mt-4 rounded-2xl bg-pro px-6 py-3 text-sm font-extrabold text-white hover:opacity-95 transition"
+						className="mt-4 md:rounded-2xl rounded-lg bg-pro px-6 py-3 text-sm font-extrabold text-white hover:opacity-95 transition"
 					>
 						مسح البحث
 					</button>
@@ -160,7 +160,7 @@ export default function FAQPage() {
 							<div
 								key={faq.id}
 								className="
-                  rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden
+                  md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden
                   hover:border-slate-200 transition
                 "
 							>
@@ -207,7 +207,7 @@ export default function FAQPage() {
 											className="overflow-hidden"
 										>
 											<div className="px-4 md:px-5 py-3 ">
-												<div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
+												<div className="md:rounded-2xl rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200">
 													<p className="text-slate-700 text-sm md:text-base leading-7 whitespace-pre-line">
 														{faq.answer}
 													</p>

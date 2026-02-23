@@ -295,7 +295,7 @@ export default function StickerForm({
 
 	if (apiError || !apiData) {
 		return (
-			<div className="rounded-2xl border border-slate-200 bg-white p-4 text-center">
+			<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 text-center">
 				<p className="text-slate-700 font-extrabold">{apiError || "لا توجد بيانات للمنتج"}</p>
 			</div>
 		);
@@ -324,7 +324,7 @@ export default function StickerForm({
 							جاري حفظ الخيارات...
 						</div>
 					) : savedSuccessfully ? (
-						<Alert severity="success" className="rounded-2xl py-1" icon={<CheckCircle />}>
+						<Alert severity="success" className="md:rounded-2xl rounded-lg py-1" icon={<CheckCircle />}>
 							تم حفظ الخيارات
 						</Alert>
 					) : null}
@@ -491,7 +491,7 @@ export default function StickerForm({
 			</div>
 
 			{apiData?.options_note && (
-				<div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-2xl">
+				<div className="mt-6 p-3 bg-blue-50 border border-blue-200 md:rounded-2xl rounded-lg">
 					<div className="flex items-start gap-2">
 						<Info className="text-blue-500 text-sm mt-0.5" />
 						<p className="text-sm text-blue-700 font-semibold">{apiData.options_note}</p>

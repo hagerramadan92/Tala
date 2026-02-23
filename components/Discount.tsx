@@ -13,7 +13,7 @@ export default function Discount({ src, href }:DiscountProps) {
           alt="Slide discount"
           width={1200}
           height={300}
-          className="object-cover rounded-2xl w-full h-40"
+          className="object-cover md:rounded-2xl rounded-lg w-full h-40"
           loading="lazy"
           decoding="async"
         />
