@@ -2603,7 +2603,7 @@ const handleAddToCart = async () => {
 									<div className="min-w-[170px]">
 										<ButtonComponent
 											className="scale-[.8]"
-											title={showMissingBadge ? "اختر الخيارات أولاً" : uploadingDesign ? "جاري الرفع..." : "اضافة للسلة"}
+											title={showMissingBadge ? "اختر الخيارات أولاً" : uploadingDesign ? "جاري الاضافة..." : "اضافة للسلة"}
 											onClick={handleAddToCart}
 										/>
 									</div>

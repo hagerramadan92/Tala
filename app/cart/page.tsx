@@ -2223,6 +2223,8 @@ const StickerForm = forwardRef(function StickerForm(
     !!designServiceValue &&
     (String(designServiceValue).includes("لدى تصميم") ||
       String(designServiceValue).includes("تصميم خاص") ||
+      String(designServiceValue).includes("رفع") ||
+      String(designServiceValue).includes("لدي") ||
       String(designServiceValue).includes("رفع تصميم خاص"));
 
   return (
