@@ -8,7 +8,7 @@ export default function Navbar() {
 	return (
 
 		<div className=" h-fit  z-888 bg-white/80 fixed top-0 start-0 end-0 w-full  ">
-			<HeaderAdsSlider />
+			{/* <HeaderAdsSlider /> */}
 			<SearchNavbar />
 			{/* <CateNavbar /> */}
 		</div>
