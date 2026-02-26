@@ -338,7 +338,7 @@ export const StickerForm = forwardRef<StickerFormHandle, StickerFormProps>(funct
 				setSavedSuccessfully(true);
 				setShowSaveButton(false);
 				setTimeout(() => setSavedSuccessfully(false), 2500);
-				toast.success("تم حفظ التغييرات ✅");
+				// toast.success("تم حفظ التغييرات ✅");
 			}
 		} finally {
 			setSaving(false);

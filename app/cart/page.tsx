@@ -810,8 +810,8 @@ export default function CartPage() {
 											: "التصميم"}
                             </div>
                             <Image
-							width={220}
-							height={160}
+                                width={220}
+                                height={160}
                               src={
                                 item.image_design ||
                                 draftById[item.cart_item_id]
@@ -1134,7 +1134,70 @@ function getSocialValue(socialMedia: any, key: "whatsapp" | "email") {
   const value = String(item?.value || "").trim();
   return value || null;
 }
+// أضف هذه الدالة في بداية ملف cart/page.tsx (قبل StickerForm)
+// أضف هذه الدالة في بداية ملف cart/page.tsx (قبل StickerForm)
+async function uploadDesignImage(file: File, cartItemId?: number): Promise<string | null> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    // إضافة cart_item_id إذا كان موجوداً
+    if (cartItemId) {
+      formData.append('cart_item_id', String(cartItemId));
+    }
 
+    const response = await fetch('https://dashboard.talaaljazeera.com/api/v1/cart/upload-image', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: formData,
+    });
+
+    // محاولة تحليل الاستجابة كـ JSON
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (parseError) {
+      console.error('خطأ في تحليل استجابة الـ API:', parseError);
+      throw new Error('استجابة غير صالحة من الخادم');
+    }
+
+    // التحقق من نجاح الطلب
+    if (!response.ok) {
+      // التحقق من وجود رسالة خطأ في الاستجابة
+      const errorMessage = responseData?.message || responseData?.error || 'فشل رفع الصورة';
+      throw new Error(errorMessage);
+    }
+
+    // التحقق من حالة الـ API (بعض الـ APIs ترجع status: false حتى مع 200 OK)
+    if (responseData && responseData.status === false) {
+      throw new Error(responseData.message || 'فشل رفع الصورة');
+    }
+
+    // محاولة الحصول على رابط الصورة من مسارات مختلفة حسب استجابة الـ API
+    const imageUrl = 
+      responseData?.url || 
+      responseData?.image_url || 
+      responseData?.path || 
+      responseData?.data?.url ||
+      responseData?.data?.image_url ||
+      responseData?.data?.path ||
+      null;
+
+    if (!imageUrl) {
+      console.warn('تم رفع الصورة ولكن لم يتم العثور على رابط الصورة في الاستجابة:', responseData);
+      // قد يكون الـ API يرجع بيانات مختلفة، يمكن إرجاع null أو محاولة استخراج الرابط بطريقة أخرى
+    }
+
+    return imageUrl;
+
+  } catch (error) {
+    console.error('خطأ في رفع الصورة:', error);
+    // إعادة رمي الخطأ ليتم معالجته في المستوى الأعلى
+    throw error;
+  }
+}
 const StickerForm = forwardRef(function StickerForm(
   {
     cartItemId,
@@ -1873,11 +1936,12 @@ const StickerForm = forwardRef(function StickerForm(
   };
 
   const saveAllOptions = async () => {
-    if (!cartItemId || !apiData) return;
+  if (!cartItemId || !apiData) return;
 
-    setSaving(true);
-    setSavedSuccessfully(false);
+  setSaving(true);
+  setSavedSuccessfully(false);
 
+  try {
     const sizeObj = apiData?.sizes?.find(
       (s: any) => String(s.name).trim() === String(size).trim(),
     );
@@ -2028,6 +2092,23 @@ const StickerForm = forwardRef(function StickerForm(
       });
     }
 
+    // ✅ **جديد: رفع الصورة أولاً إذا كان هناك ملف تصميم جديد**
+    let uploadedImageUrl = existingDesignUrl; // استخدم الصورة الموجودة كقيمة افتراضية
+    
+    const shouldUploadFile = designSendMethod === "upload" && !!designFile;
+    
+    if (shouldUploadFile) {
+      toast.loading("جاري رفع الصورة...", { id: "upload-design" });
+      try {
+        uploadedImageUrl = await uploadDesignImage(designFile, cartItemId);
+        toast.success("تم رفع الصورة بنجاح", { id: "upload-design" });
+      } catch (error: any) {
+        toast.error(error.message || "فشل رفع الصورة", { id: "upload-design" });
+        setSaving(false);
+        return; // أوقف العملية إذا فشل رفع الصورة
+      }
+    }
+
     const payload: any = {
       selected_options,
       size_id: sizeObj?.id ?? null,
@@ -2039,11 +2120,7 @@ const StickerForm = forwardRef(function StickerForm(
       design_send_method: designSendMethod,
     };
 
-    if (needSizeTier && sizeTierQty) {
-      payload.quantity = Number(sizeTierQty);
-    }
-
-    // ✅ حفظ معلومات التصميم
+    // ✅ **جديد: إضافة رابط الصورة المرفوعة إلى الـ payload**
     const designServiceValue =
       optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
     const isHasDesign =
@@ -2056,142 +2133,123 @@ const StickerForm = forwardRef(function StickerForm(
       payload.has_design = true;
       payload.design_option = designServiceValue;
 
-      if (existingDesignUrl) {
-        payload.existing_design_url = existingDesignUrl;
-      }
-
-      if (designPreview) {
-        payload.design_uploaded = true;
+      // ✅ استخدام رابط الصورة المرفوعة بدلاً من إرسال الملف
+      if (uploadedImageUrl) {
+        payload.image_design = uploadedImageUrl;
       }
     }
+     if (uploadedImageUrl) {
+      payload.image_design = uploadedImageUrl;
+    }
 
-    // ✅ If user uploaded new design file -> send FormData
-    const shouldUploadFile =
-      isHasDesign && designSendMethod === "upload" && !!designFile;
+    if (needSizeTier && sizeTierQty) {
+      payload.quantity = Number(sizeTierQty);
+    }
 
-    try {
-      let success: any;
-      let responseData: any = null;
+    // ✅ الآن نرسل البيانات إلى الـ API (بدون FormData)
+    const success = await updateCartItem(cartItemId, payload);
 
-      if (shouldUploadFile) {
-        const form = new FormData();
-        Object.entries(payload).forEach(([k, v]) => {
-          if (k === "selected_options") form.append(k, JSON.stringify(v));
-          else if (Array.isArray(v)) form.append(k, JSON.stringify(v));
-          else
-            form.append(
-              k,
-              v === null || typeof v === "undefined" ? "" : String(v),
-            );
+    // ✅ الحصول على الرد من updateCartItem
+    if (success && typeof success === "object" && (success as any).data) {
+        await refreshCart();
+      const responseData = (success as any).data;
+      
+      // تحديث local state ببيانات الخادم الجديدة
+      if (responseData) {
+        // تحديث الصورة إذا كانت موجودة في الرد
+        if (responseData.image_design) {
+          setExistingDesignUrl(responseData.image_design);
+        }
+
+        // تحديث الأسعار في الـ UI
+        const updatedPricing = computePricingWithDraft(cartItem, {
+          size,
+          color,
+          material,
+          optionGroups,
+          optionChildren,
+          printing_method: printingMethod,
+          print_locations: printLocations,
+          size_tier_id: sizeTierId,
+          size_tier_qty: sizeTierQty,
+          size_tier_unit: sizeTierUnit,
+          size_tier_total: sizeTierTotal,
+          image_design: uploadedImageUrl,
         });
 
-        form.append("image_design", designFile as File);
-
-        success = await updateCartItem(cartItemId, form);
-      } else {
-        success = await updateCartItem(cartItemId, payload);
+        // تحديث cartItem في الذاكرة
+        cartItem = {
+          ...cartItem,
+          ...responseData,
+          image_design: uploadedImageUrl || responseData.image_design,
+          _unit: updatedPricing.unit,
+          _line: updatedPricing.line,
+          _real: updatedPricing.showRealProductPrice,
+          _effectiveQty: updatedPricing.effectiveQty,
+        };
       }
-
-      // ✅ الحصول على الرد من updateCartItem
-      if (success && typeof success === "object" && success.data) {
-        responseData = success.data;
-        
-        // ✅ تحديث local state ببيانات الخادم الجديدة
-        if (responseData) {
-          // تحديث الصورة إذا كانت موجودة في الرد
-          if (responseData.image_design) {
-            setExistingDesignUrl(responseData.image_design);
-          }
-
-          // تحديث الأسعار في الـ UI
-          const updatedPricing = computePricingWithDraft(cartItem, {
-            size,
-            color,
-            material,
-            optionGroups,
-            optionChildren,
-            printing_method: printingMethod,
-            print_locations: printLocations,
-            size_tier_id: sizeTierId,
-            size_tier_qty: sizeTierQty,
-            size_tier_unit: sizeTierUnit,
-            size_tier_total: sizeTierTotal,
-          });
-
-          // ✅ تحديث cartItem في الذاكرة
-          cartItem = {
-            ...cartItem,
-            ...responseData,
-            _unit: updatedPricing.unit,
-            _line: updatedPricing.line,
-            _real: updatedPricing.showRealProductPrice,
-            _effectiveQty: updatedPricing.effectiveQty,
-          };
-        }
-      }
-
-      const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
-      if (success && qty && typeof updateQuantity === "function") {
-        try {
-          await updateQuantity(cartItemId, qty);
-        } catch {}
-      }
-
-      if (success) {
-        setSavedSuccessfully(true);
-        setHasUnsavedChanges(false);
-        setShowSaveButton(false);
-
-        toast.success(`تم حفظ التغييرات ✅`);
-
-        // ✅ تحديث draftById بالقيم الجديدة بعد الحفظ مباشرة
-        if (cartItemId && onOptionsChange) {
-          onOptionsChange(cartItemId, {
-            size: size,
-            color: color,
-            material: material,
-            optionGroups: optionGroups,
-            optionChildren: optionChildren,
-            printing_method: printingMethod,
-            print_locations: printLocations,
-            size_tier_id: sizeTierId,
-            size_tier_qty: sizeTierQty,
-            size_tier_unit: sizeTierUnit,
-            size_tier_total: sizeTierTotal,
-            existing_design_url: existingDesignUrl || (responseData?.image_design),
-            has_new_design_file: false,
-            design_send_method: designSendMethod,
-            isValid: true,
-          });
-        }
-
-        // ✅ تنظيف المعاينة المؤقتة
-        if (designPreview && cartItemId) {
-          localStorage.removeItem(`design_temp_${cartItemId}`);
-        }
-
-        // ✅ تحديث السلة مباشرة
-        await refreshCart();
-
-        setTimeout(() => setSavedSuccessfully(false), 2500);
-      }
-
-    } catch (error: any) {
-      console.error("❌ خطأ في حفظ الخيارات:", error);
-      
-      let errorMessage = "حدث خطأ أثناء حفظ التغييرات";
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage);
-
-    } finally {
-      setSaving(false);
     }
-  };
+
+    const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
+    if (success && qty && typeof updateQuantity === "function") {
+      try {
+        await updateQuantity(cartItemId, qty);
+      } catch {}
+    }
+
+    if (success) {
+      setSavedSuccessfully(true);
+      setHasUnsavedChanges(false);
+      setShowSaveButton(false);
+
+      // ✅ تحديث draftById بالقيم الجديدة بعد الحفظ مباشرة
+      if (cartItemId && onOptionsChange) {
+        onOptionsChange(cartItemId, {
+          size: size,
+          color: color,
+          material: material,
+          optionGroups: optionGroups,
+          optionChildren: optionChildren,
+          printing_method: printingMethod,
+          print_locations: printLocations,
+          size_tier_id: sizeTierId,
+          size_tier_qty: sizeTierQty,
+          size_tier_unit: sizeTierUnit,
+          size_tier_total: sizeTierTotal,
+          existing_design_url: uploadedImageUrl || existingDesignUrl,
+          has_new_design_file: false,
+          design_send_method: designSendMethod,
+          isValid: true,
+        });
+      }
+
+      // ✅ تنظيف المعاينة المؤقتة
+      if (designPreview && cartItemId) {
+        localStorage.removeItem(`design_temp_${cartItemId}`);
+      }
+
+      // ✅ تحديث السلة مباشرة
+      await refreshCart();
+
+      setTimeout(() => setSavedSuccessfully(false), 2500);
+    }
+
+  } catch (error: any) {
+    console.error("❌ خطأ في حفظ الخيارات:", error);
+    
+    let errorMessage = "حدث خطأ أثناء حفظ التغييرات";
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    toast.error(errorMessage);
+
+  } finally {
+    setSaving(false);
+  }
+};
 
   if (formLoading) return <StickerFormSkeleton />;
 
