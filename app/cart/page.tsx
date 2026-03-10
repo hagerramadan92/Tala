@@ -813,9 +813,7 @@ export default function CartPage() {
                                 width={220}
                                 height={160}
                               src={
-                                item.image_design ||
-                                draftById[item.cart_item_id]
-                                  ?.existing_design_url
+                                item.image_design
                               }
                               alt="تصميم المرفوع"
                               className="w-full h-full object-cover"
@@ -2971,13 +2969,7 @@ const StickerForm = forwardRef(function StickerForm(
                                   <p className="text-xs font-bold text-emerald-700">
                                     {designFile ? designFile.name : "تم رفع التصميم"}
                                   </p>
-                                  {(designPreview || existingDesignUrl) && (
-                                    <img
-                                      src={designPreview || existingDesignUrl || ""}
-                                      alt="تصميم"
-                                      className="w-32 h-20 object-contain mt-2 rounded border border-slate-200"
-                                    />
-                                  )}
+                                 
                                 </>
                               )}
                             </label>
