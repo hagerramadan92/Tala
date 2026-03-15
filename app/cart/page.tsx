@@ -828,7 +828,7 @@ export default function CartPage() {
                             />
 
                             {/* ✅ إضافة زر لتغيير التصميم */}
-                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            {/* <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <label
                                 htmlFor={`design-change-${item.cart_item_id}`}
                                 className="text-white text-xs bg-blue-600 px-2 py-1 rounded cursor-pointer hover:bg-blue-700"
@@ -864,7 +864,7 @@ export default function CartPage() {
                                   }
                                 }}
                               />
-                            </div>
+                            </div> */}
                           </div>
                         )}
 
