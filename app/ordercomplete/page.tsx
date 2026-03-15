@@ -201,10 +201,10 @@ function SummaryBlock({ summary, orderData }: { summary: CheckoutSummaryV1 | nul
 		<div className="my-2 gap-2 flex flex-col">
 			<div className="flex text-sm items-center justify-between text-black">
 				<p className="font-semibold">المجموع ({totalItems} عناصر)</p>
-				<p>
+				{/* <p>
 					{money(subtotal)}
 					<span className="text-sm ms-1">ريال</span>
-				</p>
+				</p> */}
 			</div>
 
 			<div className="flex items-center justify-between">
@@ -541,11 +541,11 @@ export default function OrderCompletePage() {
 										</p>
 									</div>
 
-									{order?.notes && (
+									{/* {order?.notes && (
 										<span className="text-xs font-extrabold rounded-full px-3 py-1 border border-slate-200 bg-slate-50 text-slate-700">
 											{order.notes}
 										</span>
-									)}
+									)} */}
 								</div>
 							</div>
 
