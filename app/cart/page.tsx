@@ -941,7 +941,7 @@ export default function CartPage() {
                         </div>
                       </div>
 
-                      <div className="flex max-md:mt-6 max-md:justify-end items-center gap-2">
+                      {/* <div className="flex max-md:mt-6 max-md:justify-end items-center gap-2">
                         <div
                           className={`flex items-center gap-3 border border-slate-200 md:rounded-2xl rounded-lg overflow-hidden ${hasTierQty ? "opacity-50 pointer-events-none" : ""}`}
                         >
@@ -1019,7 +1019,7 @@ export default function CartPage() {
                             size={40}
                           />
                         </button>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
