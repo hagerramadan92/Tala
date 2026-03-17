@@ -415,13 +415,13 @@ export default function PaymentPage() {
 		try {
 			// ✅ coupon_code from sessionStorage (key: coupon_code)
 			const codeFromSession = (typeof window !== "undefined" ? sessionStorage.getItem("coupon_code") : "") || "";
-			const normalizedCoupon = String(codeFromSession || couponCode || checkoutSummary?.coupon_name || "").trim();
+			// const normalizedCoupon = String(codeFromSession || couponCode || checkoutSummary?.coupon_name || "").trim();
 
 			// ✅ optional coupon value (if exists)
-			const couponValue =
-				typeof (checkoutSummary as any)?.coupon_value !== "undefined"
-					? n((checkoutSummary as any)?.coupon_value)
-					: n(checkoutSummary?.coupon_discount);
+			// const couponValue =
+			// 	typeof (checkoutSummary as any)?.coupon_value !== "undefined"
+			// 		? n((checkoutSummary as any)?.coupon_value)
+			// 		: n(checkoutSummary?.coupon_discount);
 			
 			// ✅ create order payload with requested fields
 			const orderData: any = {
@@ -434,7 +434,7 @@ export default function PaymentPage() {
 				notes: notes?.trim() || `تم اختيار ${paymentLabel}`,
 
 				// ✅ send coupon code for discount
-				coupon_code: normalizedCoupon || "",
+				// coupon_code: normalizedCoupon || "",
 
 				// ✅ Shipping fields requested
 				deliveryOptionId: String(selectedShipping?.deliveryOptionId || ""),
@@ -443,7 +443,7 @@ export default function PaymentPage() {
 				deliveryOptionName: selectedShipping?.deliveryOptionName || "",
 
 				// ✅ include if backend expects a value (you said: "and also if there copupon_value")
-				...(couponValue > 0 ? { coupon_value: couponValue } : {}),
+				// ...(couponValue > 0 ? { coupon_value: couponValue } : {}),
 			};
 
 			// keep compatibility with existing backend that uses address_id

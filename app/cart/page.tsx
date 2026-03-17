@@ -941,11 +941,11 @@ export default function CartPage() {
                         </div>
                       </div>
 
-                      {/* <div className="flex max-md:mt-6 max-md:justify-end items-center gap-2">
+                      <div className="flex max-md:mt-6 max-md:justify-end items-center gap-2">
                         <div
                           className={`flex items-center gap-3 border border-slate-200 md:rounded-2xl rounded-lg overflow-hidden ${hasTierQty ? "opacity-50 pointer-events-none" : ""}`}
                         >
-                          <button
+                          {/* <button
                             onClick={() => {
                               // ✅ تعديل: تغيير الحد الأقصى من 10 إلى 1000
                               if (item.quantity >= 1000) {
@@ -963,13 +963,13 @@ export default function CartPage() {
                             className="w-10 h-9 text-slate-600 cursor-pointer border-slate-200 border-l transition flex items-center justify-center hover:bg-slate-50"
                           >
                             <FaPlus size={16} />
-                          </button>
+                          </button> */}
 
-                          <span className="font-extrabold w-6 text-lg text-center bg-white text-slate-900">
+                          {/* <span className="font-extrabold w-6 text-lg text-center bg-white text-slate-900">
                             {item._effectiveQty}
-                          </span>
+                          </span> */}
 
-                          <button
+                          {/* <button
                             onClick={() => {
                               if (item.quantity <= 1)
                                 removeFromCart(item.cart_item_id);
@@ -986,7 +986,7 @@ export default function CartPage() {
                             ) : (
                               <FaMinus className="text-slate-600" size={14} />
                             )}
-                          </button>
+                          </button> */}
                         </div>
 
                         <button
@@ -1019,7 +1019,7 @@ export default function CartPage() {
                             size={40}
                           />
                         </button>
-                      </div> */}
+                      </div>
                     </div>
                   </div>
 
