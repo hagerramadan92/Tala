@@ -14,6 +14,7 @@ const handler = NextAuth({
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  
   callbacks: {
     async jwt({ token, account }) {
       if (account?.provider === "google" && account?.access_token) {

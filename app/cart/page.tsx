@@ -882,7 +882,7 @@ export default function CartPage() {
 
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                               <span className="text-sm font-extrabold text-slate-900">
-                                {money(n(item._unit))}{" "}
+                              {item.line_total}
                                 <span className="text-xs">ريال</span>
                               </span>
 
