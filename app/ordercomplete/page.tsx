@@ -382,11 +382,11 @@ export default function OrderCompletePage() {
 					<span className="text-slate-600 font-semibold">إتمام الطلب</span>
 				</div>
 
-				{orderId && (
+				{/* {orderId && (
 					<span className="text-xs font-extrabold rounded-full px-3 py-1 border border-slate-200 bg-slate-50 text-slate-700">
 						Order ID: {orderId}
 					</span>
-				)}
+				)} */}
 			</div>
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -463,7 +463,7 @@ export default function OrderCompletePage() {
 											</button>
 										</div>
 
-										<span
+										{/* <span
 											className={`text-xs font-extrabold rounded-full px-3 py-1 border ${
 												isCancelled
 													? "bg-rose-50 border-rose-200 text-rose-700"
@@ -471,7 +471,7 @@ export default function OrderCompletePage() {
 											}`}
 										>
 											{isCancelled ? "تم إلغاء الطلب" : order.status || "قيد المتابعة"}
-										</span>
+										</span> */}
 									</div>
 								</div>
 
@@ -604,10 +604,10 @@ export default function OrderCompletePage() {
 
 												<div className="flex-1">
 													<p className="font-extrabold text-slate-900">{name}</p>
-													<p className="text-sm text-slate-600 font-semibold mt-1">الكمية: {qty}</p>
+													{/* <p className="text-sm text-slate-600 font-semibold mt-1">الكمية: {qty}</p> */}
 
 													<p className="mt-2 font-extrabold text-slate-900">
-														{money(n(it._line))} <span className="text-xs text-slate-600">ر.س</span>
+														{it.price} <span className="text-xs text-slate-600">ر.س</span>
 													</p>
 
 													{opts.length > 0 && (
