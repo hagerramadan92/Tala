@@ -33,6 +33,15 @@ export type SelectedOptions = {
   printing_method: string;
   print_locations: string[];
   isValid: boolean;
+  
+  // ✅ أضف هذه الأسطر الجديدة (اختيارية عشان الكود القديم يشتغل)
+  flatOptions?: Array<{
+    name: string;
+    value: string;
+    price: number;
+  }>;
+  flatOptionsTotal?: number;
+  fullOptions?: Record<string, string[]>;
 };
 
 export type DesignSendMethod = "whatsapp" | "email" | "upload" | null;

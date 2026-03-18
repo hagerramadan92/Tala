@@ -11,9 +11,6 @@ export function getQty(opts: SelectedOptions): number {
   return q > 0 ? q : 1;
 }
 
-// utils/productHelpers.ts
-// تأكد من دالة computeSizeBaseTotal
-
 export function computeSizeBaseTotal(opts: SelectedOptions): number {
   console.log("🔢 computeSizeBaseTotal input:", opts);
   
@@ -72,7 +69,37 @@ export function buildIdsPayload(apiData: any, opts: SelectedOptions) {
   };
 }
 
+// ✅ دالة جديدة لبناء selected_options من flatOptions (لجميع المستويات)
+export function buildSelectedOptionsFromFlat(flatOptions: any[], qty: number) {
+  return flatOptions.map(opt => ({
+    option_name: opt.name,
+    option_value: opt.value,
+    additional_price: opt.price || 0
+  }));
+}
+
+// ✅ تحديث buildSelectedOptionsWithPrice لدعم flatOptions
 export function buildSelectedOptionsWithPrice(apiData: any, opts: SelectedOptions) {
+  // ✅ إذا كان في flatOptions، استخدمها مباشرة (للجيل الثالث وما فوق)
+  if (opts.flatOptions && opts.flatOptions.length > 0) {
+    const qty = getQty(opts);
+    console.log("📦 Using flatOptions for price calculation:", opts.flatOptions);
+    
+    return opts.flatOptions.map(opt => {
+      // التحقق إذا كان هذا الخيار خدمة لمرة واحدة
+      const oneTime = isOneTimeServiceOption(opt.name, opt.value);
+      
+      return {
+        option_name: opt.name,
+        option_value: opt.value,
+        additional_price: oneTime ? opt.price : (opt.price * qty)
+      };
+    });
+  }
+  
+  // ⬇️ الكود القديم كنسخة احتياطية (للمستويين الأول والثاني)
+  console.log("⚠️ Using old method for price calculation (no flatOptions)");
+  
   const selected_options: Array<{ option_name: string; option_value: string; additional_price: number }> = [];
   const qty = getQty(opts);
 
@@ -94,11 +121,17 @@ export function buildSelectedOptionsWithPrice(apiData: any, opts: SelectedOption
       additional_price: oneTime ? perUnit : perUnit * qty,
     });
 
-    const childKey = `${group}::${value}`;
-    const childValue = opts.optionChildren?.[childKey];
-    
-    if (childValue && childValue !== "اختر") {
-      const childItem = optionItem.children?.find((child: any) => child.value === childValue);
+    // دالة متكررة لجمع كل المستويات (للكود القديم)
+    const collectChildren = (parentKey: string, currentValue: string, items: any[]) => {
+      const childKey = `${parentKey}::${currentValue}`;
+      const childValue = opts.optionChildren?.[childKey];
+      
+      if (!childValue || childValue === "اختر") return;
+      
+      const currentItem = items.find((item: any) => item.value === currentValue);
+      if (!currentItem?.children) return;
+      
+      const childItem = currentItem.children.find((child: any) => child.value === childValue);
       if (childItem) {
         const childPerUnit = num(childItem.base_price);
         const childOneTime = isOneTimeServiceOption(childItem.name || group, childValue);
@@ -108,8 +141,16 @@ export function buildSelectedOptionsWithPrice(apiData: any, opts: SelectedOption
           option_value: childValue,
           additional_price: childOneTime ? childPerUnit : childPerUnit * qty,
         });
+        
+        // استمر في البحث عن أطفال أعمق
+        if (childItem.children && childItem.children.length > 0) {
+          collectChildren(childKey, childValue, childItem.children);
+        }
       }
-    }
+    };
+    
+    // ابدأ جمع الأطفال
+    collectChildren(group, value, optionGroup.items);
   });
 
   return selected_options;
@@ -155,9 +196,7 @@ export function getPages(current: number, total: number): Array<number | "…"> 
   return out;
 }
 
-// components/utils/productHelpers.ts
-// أضف/استبدل دالة validateOptions بهذا الكود
-
+// ✅ تحديث validateOptions لدعم flatOptions
 export function validateOptions(
   options: SelectedOptions, 
   data: any, 
@@ -230,20 +269,40 @@ export function validateOptions(
           missingOptions.push(groupName);
           console.log(`Missing required group: ${groupName}`);
         } else {
-          // التحقق من children إذا كانت موجودة
+          // ✅ إذا كان في flatOptions، نثق إنها شايلة كل حاجة
+          if (options.flatOptions && options.flatOptions.length > 0) {
+            console.log(`✅ Using flatOptions, skipping deep validation for ${groupName}`);
+            return;
+          }
+          
+          // التحقق من children إذا كانت موجودة (للكود القديم)
           const item = items.find((i: any) => i.value === v);
           if (item?.children && item.children.length > 0) {
             const childKey = `${groupName}::${v}`;
             const childValue = options.optionChildren?.[childKey];
             
-            // التحقق إذا كان أي child مطلوب
-            const hasRequiredChild = item.children.some((child: any) => Boolean(child?.is_required));
+            // دالة متكررة للتحقق من كل المستويات
+            const validateRecursive = (currentItems: any[], currentKey: string, currentValue: string) => {
+              const currentItem = currentItems.find((i: any) => i.value === currentValue);
+              if (!currentItem?.children || currentItem.children.length === 0) return;
+              
+              const nextKey = `${currentKey}::${currentValue}`;
+              const nextValue = options.optionChildren?.[nextKey];
+              
+              // التحقق إذا كان أي child مطلوب
+              const hasRequiredChild = currentItem.children.some((child: any) => Boolean(child?.is_required));
+              
+              if (hasRequiredChild && (!nextValue || nextValue === "اختر" || nextValue === "")) {
+                isValid = false;
+                missingOptions.push(`${currentItem.children[0]?.name || "تفاصيل إضافية"}`);
+                console.log(`Missing required child at level ${currentKey}`);
+              } else if (nextValue && nextValue !== "اختر") {
+                // استمر في التحقق من المستوى التالي
+                validateRecursive(currentItem.children, nextKey, nextValue);
+              }
+            };
             
-            if (hasRequiredChild && (!childValue || childValue === "اختر" || childValue === "")) {
-              isValid = false;
-              missingOptions.push(`${groupName} - ${item.children[0]?.name || "تفاصيل"}`);
-              console.log(`Missing required child for ${groupName}`);
-            }
+            validateRecursive(item.children, childKey, childValue);
           }
         }
       }

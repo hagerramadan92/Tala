@@ -386,6 +386,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	// في ملف CartContext
+// في ملف CartContext.tsx - تحديث دالة updateCartItem
+
+// في CartContext.tsx - تعديل دالة updateCartItem
+
 const updateCartItem = async (
     cartItemId: number,
     updates: any
@@ -393,6 +397,17 @@ const updateCartItem = async (
     if (!token) return false;
 
     try {
+		console.log("📤 Sending to API:", {
+            url: `${API_URL}/cart/items/${cartItemId}`,
+            updates: JSON.parse(JSON.stringify(updates)) // لعمل نسخة للتأكد من عدم وجود مراجع
+        });
+        console.log("📤 Sending updates to API:", JSON.stringify(updates, null, 2));
+        
+        // تأكد من أن selected_options هي مصفوفة وليست string
+        if (updates.selected_options && !Array.isArray(updates.selected_options)) {
+            updates.selected_options = [updates.selected_options];
+        }
+        
         const response = await fetch(`${API_URL}/cart/items/${cartItemId}`, {
             method: "PUT",
             headers: {
@@ -404,7 +419,8 @@ const updateCartItem = async (
         });
 
         const data = await response.json();
- 
+        console.log("📥 API Response:", data);
+
         if (response.ok && data.status) {
             // ✅ تحديث السلة المحلية بالبيانات الجديدة من الخادم
             if (data.data) {
@@ -415,11 +431,16 @@ const updateCartItem = async (
                             const updatedItem = {
                                 ...item,
                                 ...data.data,
-                                selected_options: parseSelectedOptions(data.data.selected_options || data.data.selected_options_json),
+                                selected_options: Array.isArray(data.data.selected_options) 
+                                    ? data.data.selected_options 
+                                    : (typeof data.data.selected_options === 'string'
+                                        ? JSON.parse(data.data.selected_options)
+                                        : item.selected_options),
                                 image_design: data.data.image_design || item.image_design,
                                 price_per_unit: data.data.price_per_unit || item.price_per_unit,
                                 line_total: data.data.line_total || item.line_total,
                             };
+                            console.log("✅ Updated cart item:", updatedItem);
                             return updatedItem;
                         }
                         return item;
@@ -428,13 +449,15 @@ const updateCartItem = async (
             }
             
             toast.success("تم تحديث العنصر بنجاح");
-            return data; // ✅ إرجاع البيانات الكاملة بدلاً من boolean
+            return data;
         } else {
+            console.error("❌ API Error:", data);
             await refreshCart();
             toast.error(data.message || "فشل تحديث العنصر");
             return false;
         }
     } catch (err) {
+        console.error("❌ Error updating cart item:", err);
         await refreshCart();
         toast.error("خطأ في الاتصال، حاول مرة أخرى");
         return false;

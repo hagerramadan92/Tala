@@ -18,7 +18,7 @@ export default function CartSkeleton() {
 				<div className="col-span-1 lg:col-span-2 space-y-4">
 					{[1, 2].map((i) => (
 						<div key={i} className="bg-white border border-slate-200 md:rounded-2xl rounded-lg p-5 shadow-sm">
-							<div className="flex gap-4">
+							<div className="flex gap-4 flex-col md:flex-row">
 								<Skel className="w-24 h-20 md:rounded-2xl rounded-lg" />
 								<div className="flex-1 space-y-3">
 									<Skel className="h-5 w-2/3" />

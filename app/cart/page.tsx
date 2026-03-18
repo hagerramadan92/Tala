@@ -463,7 +463,167 @@ function missingRequiredFields(item: any) {
 
   return miss;
 }
+// دالة لعرض جميع الخيارات المختارة بشكل متسلسل
+function renderSelectedOptions(item: any) {
+  const selectedOptions = safeParseSelectedOptions(item.selected_options);
+  if (!selectedOptions || selectedOptions.length === 0) return null;
 
+  // تجميع الخيارات حسب المجموعة
+  const groupedSelections: Record<string, any[]> = {};
+  
+  selectedOptions.forEach(opt => {
+    const name = String(opt.option_name || "").trim();
+    if (!name) return;
+    
+    if (!groupedSelections[name]) {
+      groupedSelections[name] = [];
+    }
+    groupedSelections[name].push(opt);
+  });
+
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="text-xs font-bold text-slate-700 mb-2">الخيارات المختارة:</p>
+      {Object.entries(groupedSelections).map(([groupName, options]) => (
+        <div key={groupName} className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+          <p className="text-xs font-extrabold text-slate-800 mb-1">{groupName}:</p>
+          <div className="space-y-1">
+            {options.map((opt, idx) => {
+              const isChild = groupName.includes("تفاصيل") || opt.option_name.includes("المستوى");
+              return (
+                <div 
+                  key={`${groupName}-${idx}`}
+                  className={`flex items-center justify-between text-xs ${isChild ? 'mr-3' : ''}`}
+                >
+                  <span className="font-medium text-slate-600">
+                    {isChild ? '↳ ' : '• '}{opt.option_value}
+                  </span>
+                  {Number(opt.additional_price) > 0 && (
+                    <span className="text-amber-600 font-bold">
+                      + {Number(opt.additional_price).toFixed(2)} ريال
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// دالة لعرض التسلسل الهرمي للخيارات
+function renderHierarchicalOptions(item: any, productData: any) {
+  const selectedOptions = safeParseSelectedOptions(item.selected_options);
+  if (!selectedOptions || selectedOptions.length === 0) return null;
+
+  // بناء شجرة الخيارات
+  const buildOptionTree = () => {
+    const tree: any[] = [];
+    const optionsMap = new Map();
+
+    // أولاً: إيجاد الخيارات الرئيسية (التي لها أطفال)
+    selectedOptions.forEach(opt => {
+      const name = String(opt.option_name || "").trim();
+      const value = String(opt.option_value || "").trim();
+      
+      // البحث في product data عن هذا الخيار
+      const productOption = productData?.options?.find((o: any) => o.name === name);
+      if (productOption) {
+        const item = productOption.items?.find((i: any) => i.value === value);
+        if (item?.children?.length > 0) {
+          // هذا خيار رئيسي له أطفال
+          optionsMap.set(name, {
+            name,
+            value,
+            price: opt.additional_price,
+            children: []
+          });
+        }
+      }
+    });
+
+    // ثانياً: إضافة الأطفال
+    selectedOptions.forEach(opt => {
+      const name = String(opt.option_name || "").trim();
+      const value = String(opt.option_value || "").trim();
+      
+      // البحث إذا كان هذا الخيار طفل لأي خيار رئيسي
+      let isChild = false;
+      optionsMap.forEach((parent, parentName) => {
+        const productOption = productData?.options?.find((o: any) => o.name === parentName);
+        const parentItem = productOption?.items?.find((i: any) => i.value === parent.value);
+        
+        if (parentItem) {
+          const findChild = (items: any[]): boolean => {
+            for (const item of items) {
+              if (item.value === value) return true;
+              if (item.children) return findChild(item.children);
+            }
+            return false;
+          };
+          
+          if (findChild([parentItem])) {
+            parent.children.push({
+              name,
+              value,
+              price: opt.additional_price
+            });
+            isChild = true;
+          }
+        }
+      });
+
+      // إذا لم يكن طفل وليس في الخيارات الرئيسية، أضفه كخيار عادي
+      if (!isChild && !optionsMap.has(name)) {
+        optionsMap.set(name, {
+          name,
+          value,
+          price: opt.additional_price,
+          children: []
+        });
+      }
+    });
+
+    return Array.from(optionsMap.values());
+  };
+
+  const optionTree = buildOptionTree();
+
+  const renderTree = (nodes: any[], level: number = 0) => {
+    return nodes.map((node, idx) => (
+      <div key={`${node.name}-${idx}`} className={`${level > 0 ? 'mr-4' : ''}`}>
+        <div className={`flex items-center justify-between py-1 ${level === 0 ? 'border-b border-slate-100' : ''}`}>
+          <div className="flex items-center gap-1">
+            {level > 0 && <span className="text-slate-400">↳</span>}
+            <span className={`${level === 0 ? 'font-bold text-slate-800' : 'text-slate-600'}`}>
+              {node.name}: 
+            </span>
+            <span className="font-medium text-slate-700">{node.value}</span>
+          </div>
+          {Number(node.price) > 0 && (
+            <span className="text-xs font-bold text-amber-600">
+              + {Number(node.price).toFixed(2)} ريال
+            </span>
+          )}
+        </div>
+        {node.children.length > 0 && renderTree(node.children, level + 1)}
+      </div>
+    ));
+  };
+
+  return (
+    <div className="mt-3 bg-white p-3 rounded-lg border border-slate-200">
+      <p className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1">
+        <span>📋</span> ملخص الخيارات المختارة:
+      </p>
+      <div className="space-y-1 text-xs">
+        {renderTree(optionTree)}
+      </div>
+    </div>
+  );
+}
 export default function CartPage() {
   const router = useRouter();
   const {
@@ -783,8 +943,8 @@ export default function CartPage() {
                   className="p-5 relative border md:rounded-2xl rounded-lg border-slate-200 bg-white shadow-sm mb-4"
                 >
                   <div className="relative md:border-0 border-b border-slate-200 pb-4">
-                    <div className="md:flex justify-between items-start md:flex-row flex-col gap-3">
-                      <div className="flex gap-3 w-full md:w-fit">
+                    <div className="grid grid-cols-1 md:grid-cols-2">
+                      <div className="flex items-center gap-4">
                         <div className="w-24 h-20 bg-slate-100 md:rounded-2xl rounded-lg overflow-hidden border border-slate-200">
                           <Link
                             href={`/product/${item.product.slug || item.product.id}`}
@@ -803,7 +963,7 @@ export default function CartPage() {
                         {(item.image_design ||
                           draftById[item.cart_item_id]
                             ?.existing_design_url) && (
-                          <div className="w-24 h-20 bg-slate-100 md:rounded-2xl rounded-lg overflow-hidden border border-slate-200 relative group">
+                          <div className="md:flex hidden w-24 h-20 bg-slate-100 md:rounded-2xl rounded-lg overflow-hidden border border-slate-200 relative group">
                             <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded z-10">
                                {draftById[item.cart_item_id]?.existing_design_url && !item.image_design
 											? "معاينة"
@@ -814,6 +974,9 @@ export default function CartPage() {
                                 height={160}
                               src={
                                 item.image_design
+                                  ? item.image_design
+                                  : draftById[item.cart_item_id]?.existing_design_url ||
+                                    "/images/not.jpg"
                               }
                               alt="تصميم المرفوع"
                               className="w-full h-full object-cover"
@@ -870,7 +1033,7 @@ export default function CartPage() {
 
                         <div className="flex flex-col justify-between">
                           <div>
-                            <h3 className="font-extrabold text-[15px] text-slate-900">
+                            <h3 className="font-extrabold text-xs md:text-[15px] text-slate-900">
                               {item.product.name}
                             </h3>
 
@@ -910,7 +1073,7 @@ export default function CartPage() {
                               draftById[item.cart_item_id]
                                 ?.existing_design_url) && (
                               <div className="mt-2">
-                                <span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-200">
+                                <span className="text-[10px] md:text-xs font-extrabold text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-200">
                                   ✓{" "}
                                   {draftById[item.cart_item_id]
                                     ?.existing_design_url && !item.image_design
@@ -989,7 +1152,10 @@ export default function CartPage() {
                           </button> */}
                         </div>
 
-                        <button
+                       
+                      </div>
+                      <div className="absolute top-2 left-[-10px] md:left-0">
+                         <button
                           onClick={async () => {
                             const result = await Swal.fire({
                               title: "هل أنت متأكد؟",
@@ -1015,8 +1181,8 @@ export default function CartPage() {
                           aria-label="remove"
                         >
                           <IoIosCloseCircle
-                            className="text-rose-500"
-                            size={40}
+                            className="text-rose-500 md:w-10 md:h-10 w-8 h-8"
+                            size={20}
                           />
                         </button>
                       </div>
@@ -1090,17 +1256,18 @@ export default function CartPage() {
 
             <h4 className="text-md font-extrabold text-pro my-5">ملخص الطلب</h4>
 
-            <TotalOrder
-              items_count={cartCount}
-              subtotal={backendSubtotal}
-              total={currentTotal} // <-- التغيير الأهم هنا: استخدام currentTotal بدلاً من backendTotal
-              items={cart}
-              couponDiscount={couponDiscount}
-              couponNewTotal={couponNewTotal}
-              hasUnsavedChanges={Object.keys(draftById).length > 0}
-              unsavedChangesCount={Object.keys(draftById).length}
-              originalTotal={backendTotal}
-            />
+        
+<TotalOrder
+  items_count={cartCount}
+  subtotal={backendSubtotal} // هذا هو subtotal من الـ API
+  total={backendTotal} // هذا هو total من الـ API (وليس currentTotal)
+  items={cart}
+  couponDiscount={couponDiscount}
+  couponNewTotal={couponNewTotal}
+  hasUnsavedChanges={Object.keys(draftById).length > 0}
+  unsavedChangesCount={Object.keys(draftById).length}
+  originalTotal={backendTotal}
+/>
             <Button
               variant="contained"
               onClick={handleClick}
@@ -1208,7 +1375,6 @@ const StickerForm = forwardRef(function StickerForm(
   ref,
 ) {
   const { updateCartItem, updateQuantity, refreshCart } = useCart();
-  // ✅ إضافة useAppContext للحصول على socialMedia
   const { socialMedia } = useAppContext() as any;
   
   const [size, setSize] = useState("اختر");
@@ -1239,18 +1405,160 @@ const StickerForm = forwardRef(function StickerForm(
   const [designFile, setDesignFile] = useState<File | null>(null);
   const [designPreview, setDesignPreview] = useState<string | null>(null);
 
-  // ✅ إضافة designSendMethod
   const [designSendMethod, setDesignSendMethod] = useState<"whatsapp" | "email" | "upload" | null>(null);
 
-  // ✅ إضافة whatsapp و email من socialMedia
   const whatsappFromSocial = getSocialValue(socialMedia, "whatsapp");
   const emailFromSocial = getSocialValue(socialMedia, "email");
+
+  // دالة للحصول على children لأي مستوى
+ // دالة للحصول على children لأي مستوى
+const getChildrenForOption = useCallback(
+  (groupName: string, optionValue: string, level: number = 0) => {
+    if (!apiData || !apiData.options) return [];
+
+    const optionGroup = apiData.options.find(
+      (o: any) => o.name === groupName,
+    );
+    if (!optionGroup) return [];
+
+    // دالة مساعدة للبحث عن الخيار في العمق
+    const findItemWithValue = (items: any[], targetValue: string): any | null => {
+      for (const item of items) {
+        if (item.value === targetValue) {
+          return item;
+        }
+        if (item.children && item.children.length > 0) {
+          const found = findItemWithValue(item.children, targetValue);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const foundItem = findItemWithValue(optionGroup.items || [], optionValue);
+    return foundItem?.children || [];
+  },
+  [apiData],
+);
+
+  // دالة متكررة لعرض الـ children
+  const renderOptionChildren = (
+    groupName: string,
+    parentValue: string,
+    childrenItems: any[],
+    level: number = 0
+  ) => {
+    if (!childrenItems || childrenItems.length === 0) return null;
+
+    const parentKey = level === 0 
+      ? `${groupName}::${parentValue}`
+      : `${groupName}::${parentValue}::level-${level}`;
+    
+    const currentChildValue = optionChildren?.[parentKey] || "اختر";
+    const selectedChild = childrenItems.find(
+      (child: any) => child.value === currentChildValue
+    );
+
+    return (
+      <div key={parentKey} className={`mt-3 ${level > 0 ? 'mr-4' : ''}`}>
+        <FormControl fullWidth size="small" required>
+          <InputLabel>
+            {childrenItems[0]?.name || `خيارات إضافية المستوى ${level + 1}`}
+          </InputLabel>
+          <Select
+            value={currentChildValue}
+            onChange={(e) => {
+              const newValue = e.target.value as string;
+              
+              // تحديث الـ child الحالي
+              setOptionChildren((prev) => ({ ...prev, [parentKey]: newValue }));
+              
+              // إزالة أي أطفال سابقة عند تغيير الخيار
+              Object.keys(optionChildren).forEach((key) => {
+                if (key.startsWith(parentKey + '::')) {
+                  setOptionChildren((prev) => {
+                    const newChildren = { ...prev };
+                    delete newChildren[key];
+                    return newChildren;
+                  });
+                }
+              });
+              
+              markDirty();
+            }}
+            label={childrenItems[0]?.name || `خيارات إضافية المستوى ${level + 1}`}
+            className="bg-white"
+            displayEmpty
+            renderValue={(selected) => {
+              if (!selected || selected === "اختر") {
+                return <em className="text-gray-400">اختر</em>;
+              }
+              const childItem = childrenItems.find(
+                (c: any) => c.value === selected
+              );
+              return (
+                <div className="flex items-center justify-between gap-3 w-full">
+                  <span className="font-semibold">{selected}</span>
+                  {childItem && Number(childItem.base_price || 0) > 0 ? (
+                    <span className="text-xs font-black text-amber-700">
+                      + {childItem.base_price.toFixed(2)}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-black text-slate-500"></span>
+                  )}
+                </div>
+              );
+            }}
+          >
+            <MenuItem value="اختر" disabled>
+              <em className="text-gray-600">اختر</em>
+            </MenuItem>
+
+            {childrenItems.map((child: any) => (
+              <MenuItem key={child.id} value={child.value}>
+                <div className="flex items-center justify-between gap-3 w-full">
+                  <span className="font-medium">{child.value}</span>
+                  {Number(child.base_price || 0) > 0 ? (
+                    <span className="text-xs font-black text-amber-700">
+                      + {child.base_price.toFixed(2)}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-black text-slate-500"></span>
+                  )}
+                </div>
+                {child.children && child.children.length > 0 && (
+                  <div className="text-xs text-slate-500 mt-1 mr-2">
+                    ({child.children.length} خيار فرعي)
+                  </div>
+                )}
+              </MenuItem>
+            ))}
+          </Select>
+
+          {currentChildValue !== "اختر" && (
+            <FormHelperText className="text-green-600 text-xs">
+              ✓ تم اختيار: {currentChildValue}
+            </FormHelperText>
+          )}
+        </FormControl>
+
+        {/* عرض الأطفال بشكل متكرر إذا كان الخيار المحدد يحتوي على أطفال */}
+        {selectedChild?.children && selectedChild.children.length > 0 && (
+          renderOptionChildren(
+            groupName,
+            selectedChild.value,
+            selectedChild.children,
+            level + 1
+          )
+        )}
+      </div>
+    );
+  };
 
   const waText = encodeURIComponent(`مرحباً، لدي تصميم للمنتج رقم ${productId}${cartItemId ? ` - عنصر سلة: ${cartItemId}` : ""}`);
 
   const whatsappHref = useMemo(() => {
     if (!whatsappFromSocial) return null;
-
     if (/^https?:\/\//i.test(whatsappFromSocial)) {
       if (/wa\.me\//i.test(whatsappFromSocial) && !/text=/i.test(whatsappFromSocial)) {
         const join = whatsappFromSocial.includes("?") ? "&" : "?";
@@ -1258,7 +1566,6 @@ const StickerForm = forwardRef(function StickerForm(
       }
       return whatsappFromSocial;
     }
-
     const phone = whatsappFromSocial.replace(/[^\d]/g, "");
     if (!phone) return null;
     return `https://wa.me/${phone}?text=${waText}`;
@@ -1271,7 +1578,7 @@ const StickerForm = forwardRef(function StickerForm(
     )}`;
   }, [emailFromSocial, productId, cartItemId]);
 
-  // ✅ استخراج القيم من cartItem
+  // استخراج القيم من cartItem
   const cartSelectedOptionsRaw = cartItem?.selected_options;
   const cartSizeRaw = cartItem?.size;
   const cartColorRaw = cartItem?.color?.name || cartItem?.color;
@@ -1294,26 +1601,6 @@ const StickerForm = forwardRef(function StickerForm(
 
     return out;
   }, [apiData]);
-
-  // ✅ دالة للحصول على children لخيار محدد
-  const getChildrenForOption = useCallback(
-    (groupName: string, optionValue: string) => {
-      if (!apiData || !apiData.options) return [];
-
-      const optionGroup = apiData.options.find(
-        (o: any) => o.name === groupName,
-      );
-      if (!optionGroup) return [];
-
-      const optionItem = optionGroup.items?.find(
-        (item: any) => item.value === optionValue,
-      );
-      if (!optionItem) return [];
-
-      return optionItem.children || [];
-    },
-    [apiData],
-  );
 
   const requiredOptionGroups = useMemo(() => {
     const required: string[] = [];
@@ -1345,6 +1632,7 @@ const StickerForm = forwardRef(function StickerForm(
     );
   }, [apiData, size, sizeTiers]);
 
+  // دالة للتحقق من صحة جميع الخيارات بما في ذلك الأطفال
   const validateCurrentOptions = useCallback(() => {
     if (!apiData) return false;
 
@@ -1360,17 +1648,40 @@ const StickerForm = forwardRef(function StickerForm(
     if (Array.isArray(apiData?.options) && apiData.options.length > 0) {
       requiredOptionGroups.forEach((g) => {
         const v = optionGroups?.[g];
-        if (!v || v === "اختر") isValid = false;
-
-        // ✅ التحقق من children إذا كانت مطلوبة
-        const children = getChildrenForOption(g, v);
-        if (children && children.length > 0) {
-          const childKey = `${g}::${v}`;
-          const childValue = optionChildren?.[childKey];
-          if (!childValue || childValue === "اختر") {
-            isValid = false;
-          }
+        if (!v || v === "اختر") {
+          isValid = false;
+          return;
         }
+
+        // التحقق من جميع مستويات الأطفال بشكل متكرر
+        const validateChildren = (
+          groupName: string,
+          parentValue: string,
+          level: number = 0
+        ) => {
+          const children = getChildrenForOption(groupName, parentValue);
+          if (children && children.length > 0) {
+            const parentKey = level === 0
+              ? `${groupName}::${parentValue}`
+              : `${groupName}::${parentValue}::level-${level}`;
+            
+            const childValue = optionChildren?.[parentKey];
+            if (!childValue || childValue === "اختر") {
+              isValid = false;
+              return;
+            }
+
+            // التحقق من الأطفال التاليين
+            const selectedChild = children.find(
+              (c: any) => c.value === childValue
+            );
+            if (selectedChild?.children?.length > 0) {
+              validateChildren(groupName, childValue, level + 1);
+            }
+          }
+        };
+
+        validateChildren(g, v);
       });
     }
 
@@ -1428,11 +1739,10 @@ const StickerForm = forwardRef(function StickerForm(
     validate: () => validateCurrentOptions(),
   }));
 
-  // ✅ تحديث cartItem عند تغيير draft
+  // تحديث cartItem عند تغيير draft
   useEffect(() => {
     if (!cartItemId || !onOptionsChange) return;
     
-    // تحديث draft بالقيم الحالية
     onOptionsChange(cartItemId, {
       size,
       color,
@@ -1470,247 +1780,266 @@ const StickerForm = forwardRef(function StickerForm(
     onOptionsChange,
   ]);
 
-  // ✅ Prefill (stable deps) - معدل ليدعم الـ children بشكل صحيح
-  useEffect(() => {
-    setApiError(null);
-    setFormLoading(true);
+  // Prefill البيانات من cartItem
+ // Prefill البيانات من cartItem - نسخة محدثة
+useEffect(() => {
+  setApiError(null);
+  setFormLoading(true);
 
-    try {
-      if (!productData) throw new Error("لا توجد بيانات للمنتج");
-      setApiData(productData);
+  try {
+    if (!productData) throw new Error("لا توجد بيانات للمنتج");
+    setApiData(productData);
 
-      let out: Record<string, string> = {};
-      let childrenOut: Record<string, string> = {};
+    let out: Record<string, string> = {};
+    let childrenOut: Record<string, string> = {};
 
-      // ✅ تهيئة جميع المجموعات بـ "اختر"
-      if (Array.isArray(productData?.options)) {
-        productData.options.forEach((o: any) => {
-          const k = String(o.name || "").trim();
-          if (!k) return;
-          out[k] = "اختر";
-        });
+    // تهيئة جميع المجموعات بـ "اختر"
+    if (Array.isArray(productData?.options)) {
+      productData.options.forEach((o: any) => {
+        const k = String(o.name || "").trim();
+        if (!k) return;
+        out[k] = "اختر";
+      });
+    }
+
+    const selected = safeParseSelectedOptions(cartSelectedOptionsRaw);
+    
+    // إنشاء خريطة للخيارات حسب الاسم لتسهيل الوصول
+    const selectedMap = new Map();
+    selected.forEach((opt: any) => {
+      selectedMap.set(opt.option_name, opt);
+    });
+
+    const cartSize = String(cartSizeRaw || "").trim();
+    const cartColor = String(cartColorRaw || "").trim();
+
+    // استرجاع طريقة الطباعة
+    let cartPrinting = "";
+    if (cartPrintingRaw) {
+      cartPrinting = String(cartPrintingRaw).trim();
+    }
+    if (!cartPrinting) {
+      const printingFromSel = selected.find(
+        (o) =>
+          String(o.option_name).trim() === "طريقة الطباعة" ||
+          String(o.option_name).toLowerCase().includes("طريقة"),
+      );
+      if (printingFromSel) {
+        cartPrinting = String(printingFromSel.option_value).trim();
       }
+    }
+    if (
+      !cartPrinting &&
+      Array.isArray(productData?.printing_methods) &&
+      productData.printing_methods.length === 1
+    ) {
+      cartPrinting = String(
+        productData.printing_methods[0]?.name || "",
+      ).trim();
+    }
 
-      const selected = safeParseSelectedOptions(cartSelectedOptionsRaw);
-
-      const cartSize = String(cartSizeRaw || "").trim();
-      const cartColor = String(cartColorRaw || "").trim();
-
-      // ✅ **FIX: استرجاع طريقة الطباعة بشكل صحيح**
-      let cartPrinting = "";
-
-      // المحاولة الأولى: من cartItem.printing_method
-      if (cartPrintingRaw) {
-        cartPrinting = String(cartPrintingRaw).trim();
-      }
-
-      // المحاولة الثانية: من selected_options
-      if (!cartPrinting) {
-        const printingFromSel = selected.find(
-          (o) =>
-            String(o.option_name).trim() === "طريقة الطباعة" ||
-            String(o.option_name).toLowerCase().includes("طريقة"),
+    // استرجاع المادة
+    let cartMaterial = String(cartMaterialRaw?.name || "").trim();
+    if (!cartMaterial) {
+      const mid = n(cartMaterialIdRaw);
+      if (mid > 0 && Array.isArray(productData?.materials)) {
+        const matObj = productData.materials.find(
+          (m: any) => n(m?.id) === mid,
         );
-        if (printingFromSel) {
-          cartPrinting = String(printingFromSel.option_value).trim();
+        if (matObj?.name) cartMaterial = String(matObj.name).trim();
+      }
+    }
+
+    const sizeFromSel = selected.find(
+      (o) => String(o.option_name).trim() === "المقاس",
+    )?.option_value;
+    const colorFromSel = selected.find(
+      (o) => String(o.option_name).trim() === "اللون",
+    )?.option_value;
+    const materialFromSel = selected.find(
+      (o) => String(o.option_name).trim() === "الخامة",
+    )?.option_value;
+
+    setSize(cartSize || (sizeFromSel ? String(sizeFromSel).trim() : "اختر"));
+    setColor(
+      cartColor || (colorFromSel ? String(colorFromSel).trim() : "اختر"),
+    );
+    setMaterial(
+      cartMaterial ||
+        (materialFromSel ? String(materialFromSel).trim() : "اختر"),
+    );
+    setPrintingMethod(cartPrinting || "اختر");
+
+    const tierQtyFromSel = selected.find(
+      (o) => String(o.option_name).trim() === "كمية المقاس",
+    )?.option_value;
+    const tierTotalFromSel = selected.find(
+      (o) => String(o.option_name).trim() === "سعر المقاس الإجمالي",
+    )?.option_value;
+
+    const qFromCart = n(cartQuantityRaw);
+    setSizeTierQty(
+      tierQtyFromSel ? n(tierQtyFromSel) : qFromCart > 0 ? qFromCart : null,
+    );
+    setSizeTierTotal(tierTotalFromSel ? n(tierTotalFromSel) : null);
+
+    // print locations: ids -> names
+    const locIds = safeParseIds(cartPrintLocationsRaw);
+    const locList = Array.isArray(productData?.print_locations)
+      ? productData.print_locations
+      : [];
+    const namesByIds = locIds
+      .map((id) => locList.find((x: any) => n(x?.id) === n(id))?.name)
+      .filter(Boolean)
+      .map((x: any) => String(x).trim());
+
+    setPrintLocations(Array.from(new Set(namesByIds)));
+
+    // دالة مساعدة للبحث عن الخيار في الهيكل المتداخل
+    const findOptionInStructure = (
+      groupName: string,
+      value: string,
+      items: any[]
+    ): { found: boolean; path: string[] } => {
+      for (const item of items) {
+        if (item.value === value) {
+          return { found: true, path: [value] };
+        }
+        if (item.children && item.children.length > 0) {
+          const result = findOptionInStructure(groupName, value, item.children);
+          if (result.found) {
+            return { found: true, path: [item.value, ...result.path] };
+          }
         }
       }
+      return { found: false, path: [] };
+    };
 
-      // المحاولة الثالثة: من productData.printing_methods إذا كان هناك واحد فقط
-      if (
-        !cartPrinting &&
-        Array.isArray(productData?.printing_methods) &&
-        productData.printing_methods.length === 1
-      ) {
-        cartPrinting = String(
-          productData.printing_methods[0]?.name || "",
-        ).trim();
-      }
+    // معالجة الخيارات المتداخلة
+    if (Array.isArray(productData?.options)) {
+      // إنشاء خريطة للخيارات حسب القيمة
+      const valueToGroupMap = new Map();
+      
+      // بناء الخريطة
+      productData.options.forEach((group: any) => {
+        const groupName = group.name;
+        
+        const mapItems = (items: any[], parentPath: string[] = []) => {
+          items.forEach((item: any) => {
+            const fullPath = [...parentPath, item.value];
+            valueToGroupMap.set(item.value, {
+              groupName,
+              path: fullPath,
+              item
+            });
+            
+            if (item.children?.length > 0) {
+              mapItems(item.children, fullPath);
+            }
+          });
+        };
+        
+        mapItems(group.items || []);
+      });
 
-      // ✅ material: from material value OR material_id mapping (FIX #2)
-      let cartMaterial = String(cartMaterialRaw?.name || "").trim();
-      if (!cartMaterial) {
-        const mid = n(cartMaterialIdRaw);
-        if (mid > 0 && Array.isArray(productData?.materials)) {
-          const matObj = productData.materials.find(
-            (m: any) => n(m?.id) === mid,
-          );
-          if (matObj?.name) cartMaterial = String(matObj.name).trim();
-        }
-      }
-
-      const sizeFromSel = selected.find(
-        (o) => String(o.option_name).trim() === "المقاس",
-      )?.option_value;
-      const colorFromSel = selected.find(
-        (o) => String(o.option_name).trim() === "اللون",
-      )?.option_value;
-      const materialFromSel = selected.find(
-        (o) => String(o.option_name).trim() === "الخامة",
-      )?.option_value;
-
-      setSize(cartSize || (sizeFromSel ? String(sizeFromSel).trim() : "اختر"));
-      setColor(
-        cartColor || (colorFromSel ? String(colorFromSel).trim() : "اختر"),
-      );
-      setMaterial(
-        cartMaterial ||
-          (materialFromSel ? String(materialFromSel).trim() : "اختر"),
-      );
-      setPrintingMethod(cartPrinting || "اختر");
-
-      const tierQtyFromSel = selected.find(
-        (o) => String(o.option_name).trim() === "كمية المقاس",
-      )?.option_value;
-      const tierTotalFromSel = selected.find(
-        (o) => String(o.option_name).trim() === "سعر المقاس الإجمالي",
-      )?.option_value;
-
-      const qFromCart = n(cartQuantityRaw);
-      setSizeTierQty(
-        tierQtyFromSel ? n(tierQtyFromSel) : qFromCart > 0 ? qFromCart : null,
-      );
-      setSizeTierTotal(tierTotalFromSel ? n(tierTotalFromSel) : null);
-
-      // print locations: ids -> names
-      const locIds = safeParseIds(cartPrintLocationsRaw);
-      const locList = Array.isArray(productData?.print_locations)
-        ? productData.print_locations
-        : [];
-      const namesByIds = locIds
-        .map((id) => locList.find((x: any) => n(x?.id) === n(id))?.name)
-        .filter(Boolean)
-        .map((x: any) => String(x).trim());
-
-      setPrintLocations(Array.from(new Set(namesByIds)));
-
-      // ✅ **FIXED: استرجاع الـ children من selected_options بشكل صحيح**
-      selected.forEach((opt) => {
-        const name = String(opt.option_name || "").trim();
-        const value = String(opt.option_value || "").trim();
-        if (!name || !value) return;
-
-        // ✅ البحث في المجموعات للعثور على المجموعة الأصلية
-        if (Array.isArray(productData?.options)) {
-          for (const group of productData.options) {
-            const groupName = String(group.name || "").trim();
-
-            // ✅ المحاولة الأولى: البحث في الـ items الرئيسية
-            for (const item of group.items || []) {
-              const itemValue = String(item.value || "").trim();
-
-              // إذا تطابقت القيمة مع item رئيسي
-              if (value === itemValue) {
-                out[groupName] = value;
-
-                // ✅ البحث عن children لهذا الـ item في الـ selected_options
-                // نبحث عن خيارات children التي قد تكون مخزنة بشكل منفصل
-                if (item.children && item.children.length > 0) {
-                  // نبحث في الـ selected_options عن child يحمل نفس الاسم أو اسم مشتق
-                  for (const childOpt of selected) {
-                    const childName = String(childOpt.option_name || "").trim();
-                    const childValue = String(
-                      childOpt.option_value || "",
-                    ).trim();
-
-                    // التحقق إذا كان هذا child للـ item الحالي
-                    const childItem = item.children.find(
-                      (c: any) =>
-                        c.value === childValue ||
-                        String(c.name).trim() === childName,
-                    );
-
-                    if (childItem) {
-                      const childKey = `${groupName}::${value}`;
-                      childrenOut[childKey] = childValue;
-                      break;
-                    }
-                  }
-                }
+      // معالجة كل خيار من selected_options
+      const processedGroups = new Set();
+      
+      selected.forEach((opt: any) => {
+        const value = opt.option_value;
+        const valueInfo = valueToGroupMap.get(value);
+        
+        if (valueInfo) {
+          const { groupName, path } = valueInfo;
+          
+          // تعيين الخيار الرئيسي (أول عنصر في المسار)
+          if (!processedGroups.has(groupName)) {
+            out[groupName] = path[0];
+            processedGroups.add(groupName);
+          }
+          
+          // تعيين الأطفال إذا كان المسار أطول من 1
+          if (path.length > 1) {
+            // إنشاء المفاتيح للأطفال
+            let currentPath = path[0];
+            for (let i = 1; i < path.length; i++) {
+              const parentKey = i === 1 
+                ? `${groupName}::${currentPath}`
+                : `${groupName}::${currentPath}::level-${i-1}`;
+              
+              childrenOut[parentKey] = path[i];
+              currentPath = path[i];
+            }
+          }
+        } else {
+          // إذا لم نجد الخيار في الهيكل، نضيفه مباشرة
+          // هذا قد يحدث للخيارات التي ليس لها هيكل متداخل
+          const name = opt.option_name;
+          if (name && !out[name] && !name.includes("::")) {
+            // نتأكد أنه ليس خياراً للطفل
+            let isChild = false;
+            for (const key in childrenOut) {
+              if (childrenOut[key] === value) {
+                isChild = true;
                 break;
               }
             }
-
-            // ✅ المحاولة الثانية: التحقق إذا كان الاسم يتطابق مع اسم المجموعة مباشرة
-            if (name === groupName) {
-              out[groupName] = value;
-
-              // البحث عن child لهذه المجموعة
-              const item = group.items?.find((i: any) => i.value === value);
-              if (item?.children && item.children.length > 0) {
-                // البحث عن child في الـ selected_options
-                for (const childOpt of selected) {
-                  const childName = String(childOpt.option_name || "").trim();
-                  const childValue = String(childOpt.option_value || "").trim();
-
-                  // التحقق إذا كان هذا child للـ item الحالي
-                  const childItem = item.children.find(
-                    (c: any) =>
-                      c.value === childValue ||
-                      String(c.name).trim() === childName,
-                  );
-
-                  if (childItem) {
-                    const childKey = `${groupName}::${value}`;
-                    childrenOut[childKey] = childValue;
-                    break;
-                  }
-                }
-              }
+            if (!isChild) {
+              out[name] = value;
             }
           }
         }
       });
-
-      // ✅ design existing image
-      const imgDesign = cartImageDesignRaw ? String(cartImageDesignRaw) : null;
-      setExistingDesignUrl(imgDesign || null);
-
-      // if backend already has design image => default delivery upload
-      setDesignSendMethod("upload");
-
-      if (
-        imgDesign &&
-        Object.prototype.hasOwnProperty.call(out, "خدمة تصميم")
-      ) {
-        out["خدمة تصميم"] = "لدى تصميم";
-      }
-
-      setOptionGroups(out);
-      setOptionChildren(childrenOut);
-
-      // reset local file (but keep server image)
-      setDesignFile(null);
-      if (designPreview) URL.revokeObjectURL(designPreview);
-      setDesignPreview(null);
-
-      setHasUnsavedChanges(false);
-      setShowSaveButton(false);
-      setSavedSuccessfully(false);
-    } catch (err: any) {
-      console.error("❌ خطأ في تحميل الخيارات:", err);
-      setApiError(err?.message || "حدث خطأ أثناء تحميل الخيارات");
-      setApiData(null);
-    } finally {
-      setFormLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    productData,
-    cartItemId,
-    // ✅ إضافة هذه المتغيرات المستخرجة من cartItem
-    cartSelectedOptionsRaw,
-    cartSizeRaw,
-    cartColorRaw,
-    cartMaterialRaw,
-    cartMaterialIdRaw,
-    cartPrintingRaw,
-    cartPrintLocationsRaw,
-    cartQuantityRaw,
-    cartImageDesignRaw,
-  ]);
 
-  // ✅ restore tier meta (id/unit/total) from qty when tiers exist
+    // design existing image
+    const imgDesign = cartImageDesignRaw ? String(cartImageDesignRaw) : null;
+    setExistingDesignUrl(imgDesign || null);
+
+    setDesignSendMethod("upload");
+
+    if (
+      imgDesign &&
+      Object.prototype.hasOwnProperty.call(out, "خدمة تصميم")
+    ) {
+      out["خدمة تصميم"] = "لدى تصميم";
+    }
+
+    setOptionGroups(out);
+    setOptionChildren(childrenOut);
+
+    setDesignFile(null);
+    if (designPreview) URL.revokeObjectURL(designPreview);
+    setDesignPreview(null);
+
+    setHasUnsavedChanges(false);
+    setShowSaveButton(false);
+    setSavedSuccessfully(false);
+    
+    console.log("✅ Loaded options:", out);
+    console.log("✅ Loaded children:", childrenOut);
+    
+  } catch (err: any) {
+    console.error("❌ خطأ في تحميل الخيارات:", err);
+    setApiError(err?.message || "حدث خطأ أثناء تحميل الخيارات");
+    setApiData(null);
+  } finally {
+    setFormLoading(false);
+  }
+}, [
+  productData,
+  cartItemId,
+  cartSelectedOptionsRaw,
+  cartSizeRaw,
+  cartColorRaw,
+  cartMaterialRaw,
+  cartMaterialIdRaw,
+  cartPrintingRaw,
+  cartPrintLocationsRaw,
+  cartQuantityRaw,
+  cartImageDesignRaw,
+]);
+
   useEffect(() => {
     if (!needSizeTier) {
       setSizeTierId(null);
@@ -1759,7 +2088,6 @@ const StickerForm = forwardRef(function StickerForm(
     setSizeTierUnit(null);
     setSizeTierTotal(null);
 
-    // design reset
     setExistingDesignUrl(null);
     setDesignFile(null);
     if (designPreview) URL.revokeObjectURL(designPreview);
@@ -1824,54 +2152,33 @@ const StickerForm = forwardRef(function StickerForm(
     markDirty();
   };
 
-  // ✅ دالة لمعالجة تغيير الخيار الرئيسي
   const handleGroupChange = (groupName: string, value: string) => {
     const oldValue = optionGroups[groupName];
 
-    // تحديث الخيار الرئيسي
     setOptionGroups((prev) => ({ ...prev, [groupName]: value }));
 
-    // ✅ مسح children القديم لهذا الخيار
+    // مسح كل الـ children القديمة لهذا الخيار
     if (oldValue && oldValue !== value) {
-      const oldChildKey = `${groupName}::${oldValue}`;
-      if (optionChildren[oldChildKey]) {
-        setOptionChildren((prev) => {
-          const newChildren = { ...prev };
-          delete newChildren[oldChildKey];
-          return newChildren;
-        });
-      }
-    }
-
-    // ✅ إذا كان الخيار الجديد يحتوي على children، نضيف خانة اختيار لهم
-    const newChildren = getChildrenForOption(groupName, value);
-    if (newChildren && newChildren.length > 0) {
-      const newChildKey = `${groupName}::${value}`;
-      setOptionChildren((prev) => ({
-        ...prev,
-        [newChildKey]: optionChildren[newChildKey] || "اختر",
-      }));
-    } else {
-      // ✅ إذا لم يكن هناك children، نزيل الخيار إذا كان موجودًا
-      const newChildKey = `${groupName}::${value}`;
-      if (optionChildren[newChildKey]) {
-        setOptionChildren((prev) => {
-          const newChildren = { ...prev };
-          delete newChildren[newChildKey];
-          return newChildren;
-        });
-      }
+      // مسح جميع المفاتيح التي تبدأ بهذا الخيار
+      Object.keys(optionChildren).forEach((key) => {
+        if (key.startsWith(`${groupName}::${oldValue}`)) {
+          setOptionChildren((prev) => {
+            const newChildren = { ...prev };
+            delete newChildren[key];
+            return newChildren;
+          });
+        }
+      });
     }
 
     markDirty();
 
-    // ✅ design toggles
+    // design toggles
     if (
       String(groupName).trim() === "خدمة تصميم" ||
       String(groupName).trim() === "خدمة التصميم"
     ) {
       const v = String(value || "");
-      // ✅ **FIX: عند اختيار "رفع تصميم خاص" نعرض قسم التصميم**
       if (
         v.includes("تصميم خاص") ||
         v.includes("رفع تصميم خاص") ||
@@ -1887,12 +2194,6 @@ const StickerForm = forwardRef(function StickerForm(
     }
   };
 
-  // ✅ دالة لمعالجة تغيير child
-  const handleChildChange = (parentKey: string, value: string) => {
-    setOptionChildren((prev) => ({ ...prev, [parentKey]: value }));
-    markDirty();
-  };
-
   const handlePrintLocationsChange = (value: string[]) => {
     setPrintLocations(value);
     markDirty();
@@ -1902,16 +2203,13 @@ const StickerForm = forwardRef(function StickerForm(
     setDesignFile(file);
 
     if (file) {
-      // ✅ إنشاء URL للمعاينة
       const previewUrl = URL.createObjectURL(file);
       setDesignPreview(previewUrl);
 
-      // ✅ حفظ المعاينة مؤقتاً في localStorage
       if (cartItemId) {
         localStorage.setItem(`design_temp_${cartItemId}`, previewUrl);
       }
 
-      // ✅ تحديث draftById لعرض الصورة فوراً
       if (cartItemId && onOptionsChange) {
         onOptionsChange(cartItemId, {
           existing_design_url: previewUrl,
@@ -1920,7 +2218,6 @@ const StickerForm = forwardRef(function StickerForm(
         });
       }
 
-      // ✅ إظهار معاينة فورية للصورة
       toast.success("تم اختيار ملف التصميم بنجاح", {
         icon: "📷",
         duration: 2000,
@@ -1933,321 +2230,332 @@ const StickerForm = forwardRef(function StickerForm(
     markDirty();
   };
 
+  // دالة لجمع جميع خيارات الأطفال بشكل متكرر
+  const getAllChildrenOptions = (
+    groupName: string,
+    optionValue: string,
+    items: any[],
+    level: number = 0
+  ): any[] => {
+    const options: any[] = [];
+    const item = items.find((i: any) => i.value === optionValue);
+    if (!item) return options;
+
+    const parentKey = level === 0
+      ? `${groupName}::${optionValue}`
+      : `${groupName}::${optionValue}::level-${level}`;
+    
+    const childValue = optionChildren?.[parentKey];
+
+    if (childValue && childValue !== "اختر") {
+      const childItem = item.children?.find(
+        (c: any) => c.value === childValue
+      );
+      if (childItem) {
+        options.push({
+          option_name: childItem.name || `${groupName} - تفاصيل المستوى ${level + 1}`,
+          option_value: childValue,
+          additional_price: n(childItem.base_price),
+        });
+
+        // جمع الأطفال التاليين
+        if (childItem.children?.length > 0) {
+          const nextLevelOptions = getAllChildrenOptions(
+            groupName,
+            childValue,
+            [childItem],
+            level + 1
+          );
+          options.push(...nextLevelOptions);
+        }
+      }
+    }
+
+    return options;
+  };
+
   const saveAllOptions = async () => {
-  if (!cartItemId || !apiData) return;
+    if (!cartItemId || !apiData) return;
 
-  setSaving(true);
-  setSavedSuccessfully(false);
+    setSaving(true);
+    setSavedSuccessfully(false);
 
-  try {
-    const sizeObj = apiData?.sizes?.find(
-      (s: any) => String(s.name).trim() === String(size).trim(),
-    );
-    const colorObj = apiData?.colors?.find(
-      (c: any) => String(c.name).trim() === String(color).trim(),
-    );
-    const materialObj = apiData?.materials?.find(
-      (m: any) => String(m.name).trim() === String(material).trim(),
-    );
-
-    // ✅ البحث الصحيح لطريقة الطباعة
-    let methodObj = null;
-    if (printingMethod && printingMethod !== "اختر") {
-      methodObj = apiData?.printing_methods?.find(
-        (p: any) => String(p.name).trim() === String(printingMethod).trim(),
+    try {
+      const sizeObj = apiData?.sizes?.find(
+        (s: any) => String(s.name).trim() === String(size).trim(),
       );
-    }
-
-    const locList = Array.isArray(apiData?.print_locations)
-      ? apiData.print_locations
-      : [];
-    const selectedLocObjs = (printLocations || [])
-      .map((name) =>
-        locList.find((l: any) => String(l.name).trim() === String(name).trim()),
-      )
-      .filter(Boolean);
-
-    let print_location_ids: number[] = [];
-    let embroider_location_ids: number[] = [];
-
-    for (const locObj of selectedLocObjs as any[]) {
-      const id = locObj?.id;
-      if (typeof id !== "number") continue;
-      const t = String(locObj?.type || "").toLowerCase();
-      if (t === "embroider" || t === "embroidery")
-        embroider_location_ids.push(id);
-      else print_location_ids.push(id);
-    }
-
-    // ✅ بناء selected_options مع دعم الـ children بشكل صحيح
-    const selected_options: any[] = [];
-
-    // ✅ دالة للحصول على جميع خيارات الـ child مع الأسعار
-    const getAllChildrenOptions = (groupName: string, optionValue: string) => {
-      const options: any[] = [];
-      const optionGroup = apiData.options?.find(
-        (o: any) => o.name === groupName,
+      const colorObj = apiData?.colors?.find(
+        (c: any) => String(c.name).trim() === String(color).trim(),
       );
-      if (!optionGroup) return options;
-
-      const optionItem = optionGroup.items?.find(
-        (item: any) => item.value === optionValue,
+      const materialObj = apiData?.materials?.find(
+        (m: any) => String(m.name).trim() === String(material).trim(),
       );
-      if (!optionItem) return options;
 
-      // ✅ إضافة الخيار الرئيسي
-      options.push({
-        option_name: groupName,
-        option_value: optionValue,
-        additional_price: n(optionItem.base_price),
+      let methodObj = null;
+      if (printingMethod && printingMethod !== "اختر") {
+        methodObj = apiData?.printing_methods?.find(
+          (p: any) => String(p.name).trim() === String(printingMethod).trim(),
+        );
+      }
+
+      const locList = Array.isArray(apiData?.print_locations)
+        ? apiData.print_locations
+        : [];
+      const selectedLocObjs = (printLocations || [])
+        .map((name) =>
+          locList.find((l: any) => String(l.name).trim() === String(name).trim()),
+        )
+        .filter(Boolean);
+
+      let print_location_ids: number[] = [];
+      let embroider_location_ids: number[] = [];
+
+      for (const locObj of selectedLocObjs as any[]) {
+        const id = locObj?.id;
+        if (typeof id !== "number") continue;
+        const t = String(locObj?.type || "").toLowerCase();
+        if (t === "embroider" || t === "embroidery")
+          embroider_location_ids.push(id);
+        else print_location_ids.push(id);
+      }
+
+      const selected_options: any[] = [];
+
+      // جمع جميع الخيارات مع الأطفال
+      Object.entries(optionGroups || {}).forEach(([group, value]) => {
+        if (!value || value === "اختر") return;
+
+        const optionGroup = apiData.options?.find(
+          (o: any) => o.name === group
+        );
+        if (!optionGroup) return;
+
+        const mainItem = optionGroup.items?.find(
+          (item: any) => item.value === value
+        );
+        if (!mainItem) return;
+
+        // إضافة الخيار الرئيسي
+        selected_options.push({
+          option_name: group,
+          option_value: value,
+          additional_price: n(mainItem.base_price),
+        });
+
+        // إضافة جميع مستويات الأطفال
+        if (mainItem.children?.length > 0) {
+          const childOptions = getAllChildrenOptions(
+            group,
+            value,
+            [mainItem]
+          );
+          selected_options.push(...childOptions);
+        }
       });
 
-      // ✅ إضافة الـ child إذا تم اختياره
-      const childKey = `${groupName}::${optionValue}`;
-      const childValue = optionChildren?.[childKey];
-      if (childValue && childValue !== "اختر") {
-        const childItem = optionItem.children?.find(
-          (child: any) => child.value === childValue,
+      // إضافة طريقة الطباعة
+      if (printingMethod && printingMethod !== "اختر" && methodObj) {
+        const hasPrintingInOptions = selected_options.some(
+          (opt) => String(opt.option_name).trim() === "طريقة الطباعة",
         );
-        if (childItem) {
-          options.push({
-            option_name: childItem.name || `${groupName} - تفاصيل`,
-            option_value: childValue,
-            additional_price: n(childItem.base_price),
+
+        if (!hasPrintingInOptions) {
+          const printingPrice = n(
+            methodObj.base_price || methodObj.pivot_price || 0,
+          );
+
+          selected_options.push({
+            option_name: "طريقة الطباعة",
+            option_value: printingMethod,
+            additional_price: printingPrice,
           });
         }
       }
 
-      return options;
-    };
-
-    // ✅ بناء selected_options مع الـ children
-    Object.entries(optionGroups || {}).forEach(([group, value]) => {
-      if (!value || value === "اختر") return;
-      const groupOptions = getAllChildrenOptions(group, value);
-      groupOptions.forEach((opt) => {
-        selected_options.push(opt);
-      });
-    });
-
-    // ✅ إضافة طريقة الطباعة إلى selected_options إذا لم تكن موجودة بالفعل
-    if (printingMethod && printingMethod !== "اختر" && methodObj) {
-      const hasPrintingInOptions = selected_options.some(
-        (opt) => String(opt.option_name).trim() === "طريقة الطباعة",
-      );
-
-      if (!hasPrintingInOptions) {
-        const printingPrice = n(
-          methodObj.base_price || methodObj.pivot_price || 0,
+      // إضافة الخيارات الأساسية
+      const addSystemOptionIfMissing = (
+        name: string,
+        value: string,
+        price: number = 0,
+      ) => {
+        const exists = selected_options.some(
+          (opt) => String(opt.option_name).trim() === name,
         );
+        if (!exists && value && value !== "اختر") {
+          selected_options.push({
+            option_name: name,
+            option_value: value,
+            additional_price: price,
+          });
+        }
+      };
 
-        selected_options.push({
-          option_name: "طريقة الطباعة",
-          option_value: printingMethod,
-          additional_price: printingPrice,
+      if (size && size !== "اختر") {
+        addSystemOptionIfMissing("المقاس", size, 0);
+      }
+      if (color && color !== "اختر") {
+        addSystemOptionIfMissing("اللون", color, 0);
+      }
+      if (material && material !== "اختر") {
+        const materialPrice = materialObj ? n(materialObj.additional_price) : 0;
+        addSystemOptionIfMissing("الخامة", material, materialPrice);
+      }
+      if (printLocations.length > 0) {
+        printLocations.forEach((loc) => {
+          const locObj = locList.find(
+            (l: any) => String(l.name).trim() === String(loc).trim(),
+          );
+          const locPrice = locObj
+            ? n(locObj.pivot_price ?? locObj.additional_price)
+            : 0;
+          addSystemOptionIfMissing("مكان الطباعة", loc, locPrice);
         });
       }
-    }
 
-    // إضافة الخيارات الأساسية إذا كانت مطلوبة
-    const addSystemOptionIfMissing = (
-      name: string,
-      value: string,
-      price: number = 0,
-    ) => {
-      const exists = selected_options.some(
-        (opt) => String(opt.option_name).trim() === name,
-      );
-      if (!exists && value && value !== "اختر") {
-        selected_options.push({
-          option_name: name,
-          option_value: value,
-          additional_price: price,
-        });
+      let uploadedImageUrl = existingDesignUrl;
+      const shouldUploadFile = designSendMethod === "upload" && !!designFile;
+
+      if (shouldUploadFile) {
+        toast.loading("جاري رفع الصورة...", { id: "upload-design" });
+        try {
+          uploadedImageUrl = await uploadDesignImage(designFile, cartItemId);
+          toast.success("تم رفع الصورة بنجاح", { id: "upload-design" });
+        } catch (error: any) {
+          toast.error(error.message || "فشل رفع الصورة", { id: "upload-design" });
+          setSaving(false);
+          return;
+        }
       }
-    };
 
-    // إضافة الخيارات الأساسية
-    if (size && size !== "اختر") {
-      addSystemOptionIfMissing("المقاس", size, 0);
-    }
-    if (color && color !== "اختر") {
-      addSystemOptionIfMissing("اللون", color, 0);
-    }
-    if (material && material !== "اختر") {
-      const materialPrice = materialObj ? n(materialObj.additional_price) : 0;
-      addSystemOptionIfMissing("الخامة", material, materialPrice);
-    }
-    if (printLocations.length > 0) {
-      printLocations.forEach((loc) => {
-        const locObj = locList.find(
-          (l: any) => String(l.name).trim() === String(loc).trim(),
-        );
-        const locPrice = locObj
-          ? n(locObj.pivot_price ?? locObj.additional_price)
-          : 0;
-        addSystemOptionIfMissing("مكان الطباعة", loc, locPrice);
-      });
-    }
+      const payload: any = {
+        selected_options,
+        size_id: sizeObj?.id ?? null,
+        color_id: colorObj?.id ?? null,
+        material_id: materialObj?.id ?? null,
+        printing_method_id: methodObj?.id ?? null,
+        print_locations: print_location_ids,
+        embroider_locations: embroider_location_ids,
+        design_send_method: designSendMethod,
+      };
 
-    // ✅ **جديد: رفع الصورة أولاً إذا كان هناك ملف تصميم جديد**
-    let uploadedImageUrl = existingDesignUrl; // استخدم الصورة الموجودة كقيمة افتراضية
-    
-    const shouldUploadFile = designSendMethod === "upload" && !!designFile;
-    
-    if (shouldUploadFile) {
-      toast.loading("جاري رفع الصورة...", { id: "upload-design" });
-      try {
-        uploadedImageUrl = await uploadDesignImage(designFile, cartItemId);
-        toast.success("تم رفع الصورة بنجاح", { id: "upload-design" });
-      } catch (error: any) {
-        toast.error(error.message || "فشل رفع الصورة", { id: "upload-design" });
-        setSaving(false);
-        return; // أوقف العملية إذا فشل رفع الصورة
+      const designServiceValue =
+        optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
+      const isHasDesign =
+        !!designServiceValue &&
+        (String(designServiceValue).includes("لدى تصميم") ||
+          String(designServiceValue).includes("تصميم خاص") ||
+          String(designServiceValue).includes("رفع تصميم خاص"));
+
+      if (isHasDesign) {
+        payload.has_design = true;
+        payload.design_option = designServiceValue;
+        if (uploadedImageUrl) {
+          payload.image_design = uploadedImageUrl;
+        }
       }
-    }
-
-    const payload: any = {
-      selected_options,
-      size_id: sizeObj?.id ?? null,
-      color_id: colorObj?.id ?? null,
-      material_id: materialObj?.id ?? null,
-      printing_method_id: methodObj?.id ?? null,
-      print_locations: print_location_ids,
-      embroider_locations: embroider_location_ids,
-      design_send_method: designSendMethod,
-    };
-
-    // ✅ **جديد: إضافة رابط الصورة المرفوعة إلى الـ payload**
-    const designServiceValue =
-      optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
-    const isHasDesign =
-      !!designServiceValue &&
-      (String(designServiceValue).includes("لدى تصميم") ||
-        String(designServiceValue).includes("تصميم خاص") ||
-        String(designServiceValue).includes("رفع تصميم خاص"));
-
-    if (isHasDesign) {
-      payload.has_design = true;
-      payload.design_option = designServiceValue;
-
-      // ✅ استخدام رابط الصورة المرفوعة بدلاً من إرسال الملف
       if (uploadedImageUrl) {
         payload.image_design = uploadedImageUrl;
       }
-    }
-     if (uploadedImageUrl) {
-      payload.image_design = uploadedImageUrl;
-    }
 
-    if (needSizeTier && sizeTierQty) {
-      payload.quantity = Number(sizeTierQty);
-    }
+      if (needSizeTier && sizeTierQty) {
+        payload.quantity = Number(sizeTierQty);
+      }
 
-    // ✅ الآن نرسل البيانات إلى الـ API (بدون FormData)
-    const success = await updateCartItem(cartItemId, payload);
+      const success = await updateCartItem(cartItemId, payload);
 
-    // ✅ الحصول على الرد من updateCartItem
-    if (success && typeof success === "object" && (success as any).data) {
+      if (success && typeof success === "object" && (success as any).data) {
         await refreshCart();
-      const responseData = (success as any).data;
-      
-      // تحديث local state ببيانات الخادم الجديدة
-      if (responseData) {
-        // تحديث الصورة إذا كانت موجودة في الرد
-        if (responseData.image_design) {
-          setExistingDesignUrl(responseData.image_design);
+        const responseData = (success as any).data;
+
+        if (responseData) {
+          if (responseData.image_design) {
+            setExistingDesignUrl(responseData.image_design);
+          }
+
+          const updatedPricing = computePricingWithDraft(cartItem, {
+            size,
+            color,
+            material,
+            optionGroups,
+            optionChildren,
+            printing_method: printingMethod,
+            print_locations: printLocations,
+            size_tier_id: sizeTierId,
+            size_tier_qty: sizeTierQty,
+            size_tier_unit: sizeTierUnit,
+            size_tier_total: sizeTierTotal,
+            image_design: uploadedImageUrl,
+          });
+
+          cartItem = {
+            ...cartItem,
+            ...responseData,
+            image_design: uploadedImageUrl || responseData.image_design,
+            _unit: updatedPricing.unit,
+            _line: updatedPricing.line,
+            _real: updatedPricing.showRealProductPrice,
+            _effectiveQty: updatedPricing.effectiveQty,
+          };
+        }
+      }
+
+      const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
+      if (success && qty && typeof updateQuantity === "function") {
+        try {
+          await updateQuantity(cartItemId, qty);
+        } catch {}
+      }
+
+      if (success) {
+        setSavedSuccessfully(true);
+        setHasUnsavedChanges(false);
+        setShowSaveButton(false);
+
+        if (cartItemId && onOptionsChange) {
+          onOptionsChange(cartItemId, {
+            size: size,
+            color: color,
+            material: material,
+            optionGroups: optionGroups,
+            optionChildren: optionChildren,
+            printing_method: printingMethod,
+            print_locations: printLocations,
+            size_tier_id: sizeTierId,
+            size_tier_qty: sizeTierQty,
+            size_tier_unit: sizeTierUnit,
+            size_tier_total: sizeTierTotal,
+            existing_design_url: uploadedImageUrl || existingDesignUrl,
+            has_new_design_file: false,
+            design_send_method: designSendMethod,
+            isValid: true,
+          });
         }
 
-        // تحديث الأسعار في الـ UI
-        const updatedPricing = computePricingWithDraft(cartItem, {
-          size,
-          color,
-          material,
-          optionGroups,
-          optionChildren,
-          printing_method: printingMethod,
-          print_locations: printLocations,
-          size_tier_id: sizeTierId,
-          size_tier_qty: sizeTierQty,
-          size_tier_unit: sizeTierUnit,
-          size_tier_total: sizeTierTotal,
-          image_design: uploadedImageUrl,
-        });
+        if (designPreview && cartItemId) {
+          localStorage.removeItem(`design_temp_${cartItemId}`);
+        }
 
-        // تحديث cartItem في الذاكرة
-        cartItem = {
-          ...cartItem,
-          ...responseData,
-          image_design: uploadedImageUrl || responseData.image_design,
-          _unit: updatedPricing.unit,
-          _line: updatedPricing.line,
-          _real: updatedPricing.showRealProductPrice,
-          _effectiveQty: updatedPricing.effectiveQty,
-        };
-      }
-    }
+        await refreshCart();
 
-    const qty = needSizeTier && sizeTierQty ? Number(sizeTierQty) : null;
-    if (success && qty && typeof updateQuantity === "function") {
-      try {
-        await updateQuantity(cartItemId, qty);
-      } catch {}
-    }
-
-    if (success) {
-      setSavedSuccessfully(true);
-      setHasUnsavedChanges(false);
-      setShowSaveButton(false);
-
-      // ✅ تحديث draftById بالقيم الجديدة بعد الحفظ مباشرة
-      if (cartItemId && onOptionsChange) {
-        onOptionsChange(cartItemId, {
-          size: size,
-          color: color,
-          material: material,
-          optionGroups: optionGroups,
-          optionChildren: optionChildren,
-          printing_method: printingMethod,
-          print_locations: printLocations,
-          size_tier_id: sizeTierId,
-          size_tier_qty: sizeTierQty,
-          size_tier_unit: sizeTierUnit,
-          size_tier_total: sizeTierTotal,
-          existing_design_url: uploadedImageUrl || existingDesignUrl,
-          has_new_design_file: false,
-          design_send_method: designSendMethod,
-          isValid: true,
-        });
+        setTimeout(() => setSavedSuccessfully(false), 2500);
       }
 
-      // ✅ تنظيف المعاينة المؤقتة
-      if (designPreview && cartItemId) {
-        localStorage.removeItem(`design_temp_${cartItemId}`);
+    } catch (error: any) {
+      console.error("❌ خطأ في حفظ الخيارات:", error);
+
+      let errorMessage = "حدث خطأ أثناء حفظ التغييرات";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
 
-      // ✅ تحديث السلة مباشرة
-      await refreshCart();
+      toast.error(errorMessage);
 
-      setTimeout(() => setSavedSuccessfully(false), 2500);
+    } finally {
+      setSaving(false);
     }
-
-  } catch (error: any) {
-    console.error("❌ خطأ في حفظ الخيارات:", error);
-    
-    let errorMessage = "حدث خطأ أثناء حفظ التغييرات";
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    toast.error(errorMessage);
-
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   if (formLoading) return <StickerFormSkeleton />;
 
@@ -2274,7 +2582,6 @@ const StickerForm = forwardRef(function StickerForm(
 
   const designServiceValue =
     optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
-  // ✅ **FIX: عرض قسم التصميم عند اختيار "رفع تصميم خاص" أو "لدى تصميم"**
   const showDesignSection =
     !!designServiceValue &&
     (String(designServiceValue).includes("لدى تصميم") ||
@@ -2296,20 +2603,20 @@ const StickerForm = forwardRef(function StickerForm(
           animate={{ opacity: 1, y: 0 }}
           className="mb-4 p-3 bg-yellow-50 border border-yellow-200 md:rounded-2xl rounded-lg"
         >
-          <div className="flex items-center justify-between gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="flex items-center gap-2">
               <Warning className="text-yellow-600 text-sm" />
-              <p className="text-sm text-yellow-800 font-bold">
+              <p className="text-[10px] md:text-sm text-yellow-800 font-bold">
                 لديك تغييرات غير محفوظة
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex md:gap-2 gap-1">
               <Button
                 variant="outlined"
                 size="small"
                 onClick={resetAllOptions}
                 startIcon={<Refresh />}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-[10px] md:text-sm whitespace-nowrap"
                 sx={{
                   borderRadius: "14px",
                   borderColor: "#e2e8f0",
@@ -2326,7 +2633,7 @@ const StickerForm = forwardRef(function StickerForm(
                 onClick={saveAllOptions}
                 disabled={saving}
                 startIcon={saving ? <CircularProgress size={16} /> : <Save />}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-[10px] md:text-sm"
                 sx={{
                   borderRadius: "14px",
                   backgroundColor: "#f59e0b",
@@ -2448,7 +2755,7 @@ const StickerForm = forwardRef(function StickerForm(
 
                   return (
                     <MenuItem key={t.id} value={String(t.id)}>
-                      <div className="flex items-center justify-between gap-3 w-full">
+                      <div className="flex items-center justify-between gap-3 w-full text-xs">
                         <span className="font-medium">{qty} قطعة</span>
                         <span className="text-xs font-black text-slate-700">
                           {money(showTotal)} ر.س
@@ -2509,7 +2816,9 @@ const StickerForm = forwardRef(function StickerForm(
                           title={colorObj.hex_code}
                         />
                       )}
-                      <span className="font-semibold">{selected}</span>
+                      <span className="font-semibold text-[10px] md:text-sm">
+                        {selected}
+                      </span>
                     </div>
                   );
                 }}
@@ -2620,7 +2929,7 @@ const StickerForm = forwardRef(function StickerForm(
           </Box>
         )}
 
-        {/* option groups - مع دعم الـ children */}
+        {/* option groups - مع دعم الأطفال المتعددين */}
         {Object.keys(groupedOptions).map((groupName) => {
           const items = groupedOptions[groupName] || [];
           const required = items.some((x: any) => Boolean(x?.is_required));
@@ -2628,12 +2937,8 @@ const StickerForm = forwardRef(function StickerForm(
           const fieldError =
             showValidation && required && currentValue === "اختر";
 
-          // ✅ الحصول على children للخيار المحدد
+          // الحصول على الأطفال للخيار المحدد
           const children = getChildrenForOption(groupName, currentValue);
-          const childKey = `${groupName}::${currentValue}`;
-          const childValue = optionChildren?.[childKey] || "اختر";
-          const childFieldError =
-            showValidation && children.length > 0 && childValue === "اختر";
 
           return (
             <Box key={groupName}>
@@ -2711,83 +3016,12 @@ const StickerForm = forwardRef(function StickerForm(
                 )}
               </FormControl>
 
-              {/* ✅ عرض children إذا كان للخيار المحدد children */}
+              {/* عرض جميع مستويات الأطفال بشكل متكرر */}
               {children && children.length > 0 && currentValue !== "اختر" && (
-                <div className="mt-3">
-                  <FormControl
-                    fullWidth
-                    size="small"
-                    required
-                    error={childFieldError}
-                  >
-                    <InputLabel>
-                      {children[0]?.name || "تفاصيل إضافية"}
-                    </InputLabel>
-                    <Select
-                      value={childValue}
-                      onChange={(e) =>
-                        handleChildChange(childKey, e.target.value as string)
-                      }
-                      label={children[0]?.name || "تفاصيل إضافية"}
-                      className="bg-white"
-                      displayEmpty
-                      renderValue={(selected) => {
-                        if (!selected || selected === "اختر") {
-                          return <em className="text-gray-400">اختر</em>;
-                        }
-                        const childItem = children.find(
-                          (c: any) => c.value === selected,
-                        );
-                        return (
-                          <div className="flex items-center justify-between gap-3 w-full">
-                            <span className="font-semibold">{selected}</span>
-                            {childItem &&
-                            Number(childItem.base_price || 0) > 0 ? (
-                              <span className="text-xs font-black text-amber-700">
-                                + {childItem.base_price.toFixed(2)}
-                              </span>
-                            ) : (
-                              <span className="text-xs font-black text-slate-500"></span>
-                            )}
-                          </div>
-                        );
-                      }}
-                    >
-                      <MenuItem value="اختر" disabled>
-                        <em className="text-gray-600">اختر</em>
-                      </MenuItem>
-
-                      {children.map((child: any) => (
-                        <MenuItem key={child.id} value={child.value}>
-                          <div className="flex items-center justify-between gap-3 w-full">
-                            <span className="font-medium">{child.value}</span>
-                            {Number(child.base_price || 0) > 0 ? (
-                              <span className="text-xs font-black text-amber-700">
-                                + {child.base_price.toFixed(2)}
-                              </span>
-                            ) : (
-                              <span className="text-xs font-black text-slate-500"></span>
-                            )}
-                          </div>
-                        </MenuItem>
-                      ))}
-                    </Select>
-
-                    {childFieldError && (
-                      <FormHelperText className="text-red-500 text-xs">
-                        يجب اختيار {children[0]?.name || "التفاصيل الإضافية"}
-                      </FormHelperText>
-                    )}
-                    {childValue !== "اختر" && (
-                      <FormHelperText className="text-green-600 text-xs">
-                        ✓ تم اختيار: {childValue}
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </div>
+                renderOptionChildren(groupName, currentValue, children)
               )}
 
-              {/* ✅ Design section مع جميع الخيارات - واتساب، ايميل، رفع مباشر */}
+              {/* Design section مع جميع الخيارات */}
               {(groupName === "خدمة تصميم" || groupName === "خدمة التصميم") &&
                 showDesignSection && (
                   <div className="mt-3 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -2969,7 +3203,6 @@ const StickerForm = forwardRef(function StickerForm(
                                   <p className="text-xs font-bold text-emerald-700">
                                     {designFile ? designFile.name : "تم رفع التصميم"}
                                   </p>
-                                 
                                 </>
                               )}
                             </label>
@@ -3173,7 +3406,7 @@ const StickerForm = forwardRef(function StickerForm(
 function TotalOrder({
   items_count,
   subtotal,
-  total, // <-- هذا هو currentTotal الذي سيتم استخدامه الآن
+  total, // هذا هو total من الـ API
   items,
   couponDiscount = 0,
   couponNewTotal = null,
@@ -3182,8 +3415,8 @@ function TotalOrder({
   originalTotal = null,
 }: {
   items_count: number;
-  subtotal: number;
-  total: number; // <-- سيكون currentTotal
+  subtotal: number; // هذا هو subtotal من الـ API
+  total: number; // هذا هو total من الـ API
   items: any[];
   couponDiscount?: number;
   couponNewTotal?: number | null;
@@ -3194,11 +3427,12 @@ function TotalOrder({
   const shippingFree = true;
   const shippingFee = shippingFree ? 0 : 48;
 
-  // ✅ التصحيح: استخدام prop `total` (الذي هو currentTotal) لحساب الإجمالي بعد الكوبون
+  // ✅ استخدام total من الـ API مباشرة
+  // إذا كان هناك كوبون مطبق، نستخدم couponNewTotal أو نطرح الخصم
   const totalAfterCoupon =
     couponNewTotal !== null && couponNewTotal !== undefined
       ? Math.max(0, n(couponNewTotal))
-      : Math.max(0, n(total) - n(couponDiscount)); // <-- هنا تم استخدام `total`
+      : Math.max(0, n(total) - n(couponDiscount));
 
   const TAX_RATE = 0.15;
 
@@ -3206,22 +3440,32 @@ function TotalOrder({
   const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
   const totalWithoutTax = totalWithShipping - taxAmount;
 
+  // تنسيق الأرقام
   const formattedSubtotal = n(subtotal).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  
+  const formattedTotal = n(total).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  
   const formattedTax = n(taxAmount).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  
   const formattedTotalWithoutTax = n(totalWithoutTax).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  
   const formattedGrandTotal = n(totalWithShipping).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  
   const formattedCoupon = n(couponDiscount).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -3232,10 +3476,18 @@ function TotalOrder({
 
   return (
     <div className="my-4 gap-2 flex flex-col">
-         <div className="flex text-sm items-center justify-between text-black">
-                <p className="font-semibold">المجموع ({items_count} عناصر)</p>
-				</div>
+      {/* عرض المجموع الفرعي */}
+      {/* <div className="flex text-sm items-center justify-between text-black">
+        <p className="font-semibold">المجموع الفرعي</p>
+        <p className="font-semibold">
+          {formattedSubtotal}
+          <span className="text-xs me-1">ريال</span>
+        </p>
+      </div> */}
 
+  
+
+      {/* عرض خصم الكوبون إذا وجد */}
       {(n(couponDiscount) > 0 ||
         (couponNewTotal !== null && couponNewTotal !== undefined)) && (
         <div className="flex items-center justify-between text-sm">
@@ -3247,24 +3499,21 @@ function TotalOrder({
         </div>
       )}
 
-      <div className="flex items-center justify-between text-sm">
-        <p>الإجمالي بعد الخصم</p>
-        <p className="font-semibold">
-          {n(totalAfterCoupon).toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-          <span className="text-xs me-1">ريال</span>
-        </p>
-      </div>
+      {/* عرض الإجمالي بعد الخصم */}
+      {totalAfterCoupon !== n(total) && (
+        <div className="flex items-center justify-between text-sm">
+          <p>الإجمالي بعد الخصم</p>
+          <p className="font-semibold">
+            {n(totalAfterCoupon).toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+            <span className="text-xs me-1">ريال</span>
+          </p>
+        </div>
+      )}
 
-      <div className="flex items-center justify-between text-sm">
-        <p>الإجمالي بدون الضريبة</p>
-        <p className="font-semibold">
-          {formattedTotalWithoutTax}
-          <span className="text-xs me-1">ريال</span>
-        </p>
-      </div>
+      {/* عرض الضريبة */}
       <div className="flex items-center justify-between text-sm">
         <p>ضريبة القيمة المضافة (15%)</p>
         <p className="font-semibold">
@@ -3273,10 +3522,20 @@ function TotalOrder({
         </p>
       </div>
 
+      {/* عرض الإجمالي بدون الضريبة */}
+      <div className="flex items-center justify-between text-sm">
+        <p>الإجمالي بدون الضريبة</p>
+        <p className="font-semibold">
+          {formattedTotalWithoutTax}
+          <span className="text-xs me-1">ريال</span>
+        </p>
+      </div>
+
+      {/* عرض الإجمالي الكلي مع الشحن */}
       <div className="flex items-center justify-between pb-3 pt-2 border-t border-slate-200 mt-2">
         <div className="flex gap-1 items-center">
           <p className="text-nowrap text-md text-pro font-semibold">
-            الإجمالي الكلي:
+            الإجمالي الكلي :
           </p>
         </div>
         <p className="text-lg text-pro font-bold">
@@ -3284,6 +3543,9 @@ function TotalOrder({
           <span className="text-sm me-1">ريال</span>
         </p>
       </div>
+
+      {/* إظهار رسالة إذا كان هناك تغييرات غير محفوظة */}
+    
     </div>
   );
 }

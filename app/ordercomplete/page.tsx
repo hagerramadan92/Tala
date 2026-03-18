@@ -423,7 +423,7 @@ export default function OrderCompletePage() {
 						<>
 							{/* Header */}
 							<div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6">
-								<div className="flex items-start justify-between gap-4">
+								<div className="flex-col flex items-start md:flex-row justify-between gap-4">
 									<div className="flex items-center gap-3">
 										<div className="w-14 h-14 md:rounded-2xl rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
 											<FiCheckCircle className="text-emerald-600" size={26} />
@@ -447,11 +447,11 @@ export default function OrderCompletePage() {
 
 									<div className="flex flex-col items-end gap-2">
 										<div className="flex items-center gap-2">
-											<span className="text-xs font-extrabold rounded-full px-3 py-1 border border-slate-200 bg-slate-50 text-slate-700">
+											<span className="text-xs whitespace-nowrap font-extrabold rounded-full px-3 py-1 border border-slate-200 bg-slate-50 text-slate-700">
 												رقم الطلب
 											</span>
 
-											<span className="font-extrabold text-slate-900">{order.order_number}</span>
+											<span className="font-extrabold whitespace-nowrap text-sm text-slate-900">{order.order_number}</span>
 
 											<button
 												onClick={copyOrderNumber}

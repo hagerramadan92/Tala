@@ -1,7 +1,7 @@
 // components/product/StickerForm/index.tsx
 "use client";
 
-import React, { useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { motion } from "framer-motion";
 import InfoIcon from "@mui/icons-material/Info";
 import toast from "react-hot-toast";
@@ -42,6 +42,7 @@ const StickerFormContent = forwardRef<StickerFormHandle, StickerFormProps>(funct
   const { 
     getOptionsObj, 
     validateCurrentOptions,
+    getAllFlatOptions,
     designFile,
     setDesignFile,
     showSaveButton,
@@ -58,16 +59,36 @@ const StickerFormContent = forwardRef<StickerFormHandle, StickerFormProps>(funct
 
   // ✅ تعريف الدوال التي ستكون متاحة عبر ref
   useImperativeHandle(ref, () => ({
-    getOptions: getOptionsObj,
+    getOptions: () => {
+      const baseOptions = getOptionsObj();
+      const flatOptions = getAllFlatOptions();
+      const flatOptionsTotal = flatOptions.reduce((sum, opt) => sum + (opt.price || 0), 0);
+      
+      return {
+        ...baseOptions,
+        flatOptions,
+        flatOptionsTotal
+      };
+    },
     validate: validateCurrentOptions,
-  }), [getOptionsObj, validateCurrentOptions]);
+  }), [getOptionsObj, validateCurrentOptions, getAllFlatOptions]);
 
   const saveAllOptions = async () => {
     if (!cartItemId || !apiData) return;
 
     const opts = getOptionsObj();
-    const selected_options = buildSelectedOptionsWithPrice(apiData, opts);
-    const idsPayload = buildIdsPayload(apiData, opts);
+    const flatOptions = getAllFlatOptions();
+    const flatOptionsTotal = flatOptions.reduce((sum, opt) => sum + (opt.price || 0), 0);
+    
+    const optsWithFlat = {
+      ...opts,
+      flatOptions,
+      flatOptionsTotal
+    };
+    
+    // ✅ استخدام buildSelectedOptionsWithPrice مع flatOptions
+    const selected_options = buildSelectedOptionsWithPrice(apiData, optsWithFlat);
+    const idsPayload = buildIdsPayload(apiData, optsWithFlat);
 
     const qty = Math.max(1, Number(opts?.size_quantity || 1));
 
@@ -77,6 +98,14 @@ const StickerFormContent = forwardRef<StickerFormHandle, StickerFormProps>(funct
       quantity: qty,
     };
 
+    console.log("💾 Saving options with payload:", {
+      idsPayload,
+      selected_options,
+      flatOptions,
+      flatOptionsTotal,
+      qty
+    });
+
     try {
       setSaving(true);
       const success = await updateCartItem(cartItemId, payload);
@@ -84,7 +113,7 @@ const StickerFormContent = forwardRef<StickerFormHandle, StickerFormProps>(funct
         setSavedSuccessfully(true);
         setShowSaveButton(false);
         setTimeout(() => setSavedSuccessfully(false), 2500);
-        // toast.success("تم حفظ التغييرات ✅");
+        toast.success("تم حفظ التغييرات ✅");
       }
     } finally {
       setSaving(false);
