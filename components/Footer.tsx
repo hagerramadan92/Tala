@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppContext } from "@/src/context/AppContext";
+import { fetchApi } from "@/lib/api";
 import {
   FaPhone,
   FaWhatsapp,
@@ -55,10 +56,26 @@ function normalizeSocialHref(key: string, value: string) {
     return `https://wa.me/${wa}`;
   }
 
+  if (key === "snapchat") {
+    if (v.startsWith("http")) return v;
+    const username = v.replace(/^@/, "");
+    return `https://www.snapchat.com/add/${username}`;
+  }
+
   if (key === "address") return "";
 
   if (v.startsWith("http")) return v;
   return `https://${v}`;
+}
+
+function normalizeSocialKey(key: string) {
+  const normalizedKey = key.trim().toLowerCase().replace(/[_-]+/g, "");
+
+  if (normalizedKey === "snap" || normalizedKey === "snapchat" || normalizedKey === "snapchaturl") {
+    return "snapchat";
+  }
+
+  return key;
 }
 
 // خريطة لربط أسماء طرق الدفع بالصور
@@ -70,6 +87,19 @@ const paymentImagesMap: Record<string, string> = {
   "Tabby": "/images/payments/tabby.jpeg",
   "tamara": "/images/payments/tamara.png",
   "Tamara": "/images/payments/tamara.png",
+  "sbc": "/images/sbc.avif",
+  "SBC": "/images/sbc.avif",
+  "stc pay": "/images/stc_pay_mini.webp",
+  "STC Pay": "/images/stc_pay_mini.webp",
+  "stcPay": "/images/stc_pay_mini.webp",
+  "اس تي سي باي": "/images/stc_pay_mini.webp",
+  "mada": "/images/mada_mini.png",
+  "Mada": "/images/mada_mini.png",
+  "مدى": "/images/mada_mini.png",
+  "apple pay": "/images/applepay.png",
+  "Apple Pay": "/images/applepay.png",
+  "applePay": "/images/applepay.png",
+  "ابل باي": "/images/applepay.png",
 };
 
 // خريطة لتحويل أيقونات Font Awesome إلى صور
@@ -93,9 +123,17 @@ const paymentIconsMap: Record<string, any> = {
   money: FaMoneyBill,
 };
 
+function getPaymentImagePath(paymentName: string) {
+  const exactPath = paymentImagesMap[paymentName];
+  if (exactPath) return exactPath;
+
+  const normalizedName = paymentName.trim().toLowerCase().replace(/[_-]+/g, " ");
+  return paymentImagesMap[normalizedName] || paymentImagesMap[paymentName.trim()];
+}
+
 function getPaymentIcon(iconName: string | undefined, paymentName: string) {
   // أولاً: البحث في خريطة الصور حسب اسم طريقة الدفع
-  const imagePath = paymentImagesMap[paymentName];
+  const imagePath = getPaymentImagePath(paymentName);
   if (imagePath) {
     return () => (
       <div className="relative h-5 w-8">
@@ -164,9 +202,16 @@ function getPaymentIcon(iconName: string | undefined, paymentName: string) {
 
 export default function Footer() {
   const { socialMedia, paymentMethods } = useAppContext() as any;
+  const [footerPaymentMethods, setFooterPaymentMethods] = useState<PaymentMethod[] | null>(null);
 
-  const socials: SocialItem[] = Array.isArray(socialMedia) ? socialMedia : [];
-  const payments: PaymentMethod[] = Array.isArray(paymentMethods) ? paymentMethods : [];
+  const socials: SocialItem[] = useMemo(() => (
+    Array.isArray(socialMedia) ? socialMedia : []
+  ), [socialMedia]);
+  const payments: PaymentMethod[] = useMemo(() => (
+    footerPaymentMethods !== null
+      ? footerPaymentMethods
+      : Array.isArray(paymentMethods) ? paymentMethods : []
+  ), [footerPaymentMethods, paymentMethods]);
 
   const socialIcons: Record<string, any> = {
     phone: FaPhone,
@@ -207,6 +252,16 @@ export default function Footer() {
 
   // ✅ tax_id_number extracted separately
   const taxNumber = socials.find((s) => s.key === "tax_id_number")?.value;
+
+  useEffect(() => {
+    fetchApi("payment-methods")
+      .then((res) => {
+        setFooterPaymentMethods(Array.isArray(res) ? res : []);
+      })
+      .catch((err) => {
+        console.error("Error loading footer payment methods:", err);
+      });
+  }, []);
 
   // ✅ show socials with value, except address + tax_id_number
   const socialButtons = useMemo(() => {
@@ -368,7 +423,7 @@ export default function Footer() {
                   const isImageComponent = typeof PaymentIcon === 'function' && 
                     (PaymentIcon.toString().includes('Image') || 
                      PaymentIcon.toString().includes('img') ||
-                     paymentImagesMap[p.name] ||
+                     getPaymentImagePath(p.name) ||
                      (p.icon && p.icon.startsWith('fas ')));
                   
                   return (
@@ -406,6 +461,19 @@ export default function Footer() {
                     نسخ
                   </button>
                 </div>
+
+                                <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm ring-1 ring-white/10">
+                  <span className="text-white/80"> السجل التجاري:</span>
+                  <span className="font-extrabold tabular-nums">{String(7002362528)}</span>
+
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard?.writeText(String(7002362528))}
+                    className="ms-2 rounded-lg bg-white/10 px-2 py-1 text-xs hover:bg-white/15 transition"
+                  >
+                    نسخ
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -419,10 +487,11 @@ export default function Footer() {
                 <span className="text-white/70 text-sm">لا توجد روابط اجتماعية حالياً</span>
               ) : (
                 socialButtons.map((social, idx) => {
-                  const Icon = socialIcons[social.key];
+                  const socialKey = normalizeSocialKey(social.key);
+                  const Icon = socialIcons[socialKey];
                   if (!Icon) return null;
 
-                  const href = normalizeSocialHref(social.key, String(social.value));
+                  const href = normalizeSocialHref(socialKey, String(social.value));
                   const isExternal = href.startsWith("http");
                   const target = isExternal ? "_blank" : undefined;
 
@@ -433,7 +502,7 @@ export default function Footer() {
                       target={target}
                       rel={isExternal ? "noreferrer" : undefined}
                       className="group inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/15 transition ring-1 ring-white/10"
-                      aria-label={social.key}
+                      aria-label={socialKey}
                     >
                       <Icon className="text-white group-hover:scale-110 transition" size={18} />
                     </Link>
