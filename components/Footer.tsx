@@ -102,6 +102,12 @@ const paymentImagesMap: Record<string, string> = {
   "ابل باي": "/images/applepay.png",
 };
 
+// خريطة لربط طرق الدفع برابط خارجي إذا لزم الأمر
+const paymentLinksMap: Record<string, string> = {
+  "sbc": "https://qr.saudibusiness.gov.sa/viewcr?nCrNumber=khRFqz0XWeB9RSyhLP7KdQ==",
+  "SBC": "https://qr.saudibusiness.gov.sa/viewcr?nCrNumber=khRFqz0XWeB9RSyhLP7KdQ==",
+};
+
 // خريطة لتحويل أيقونات Font Awesome إلى صور
 const faIconToImageMap: Record<string, string> = {
   'fa-money-bill-wave': '/images/payments/cod.png',
@@ -426,11 +432,20 @@ export default function Footer() {
                      getPaymentImagePath(p.name) ||
                      (p.icon && p.icon.startsWith('fas ')));
                   
+                  const paymentLink = paymentLinksMap[p.name];
+                  const Element = paymentLink ? 'a' : 'span';
+                  const elementProps = paymentLink ? {
+                    href: paymentLink,
+                    target: '_blank',
+                    rel: 'noreferrer',
+                  } : {};
+                  
                   return (
-                    <span
+                    <Element
                       key={p.id}
                       className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-xs font-bold ring-1 ring-white/10 hover:bg-white/15 transition"
                       title={p.name}
+                      {...elementProps}
                     >
                       {isImageComponent ? (
                         <PaymentIcon />
@@ -438,7 +453,7 @@ export default function Footer() {
                         <PaymentIcon className="text-sm opacity-90" />
                       )}
                       <span>{p.name}</span>
-                    </span>
+                    </Element>
                   );
                 })}
               </div>
