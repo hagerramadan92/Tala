@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "npx -y -p node@20.11.1 -c 'node node_modules/next/dist/bin/next dev'",
+    "build": "npx -y -p node@20.11.1 -c 'node node_modules/next/dist/bin/next build'",
+    "start": "npx -y -p node@20.11.1 -c 'node node_modules/next/dist/bin/next start'",
     "lint": "eslint"
   },
   "dependencies": {

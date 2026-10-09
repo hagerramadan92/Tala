@@ -41,44 +41,42 @@ export default function InStockSlider({
 					{hiddenArrow && <div className="flex items-center gap-2">
 						<button
 							ref={nextRef}
-							className="w-9 h-9 rounded-full border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition"
+							className="w-9 h-9 rounded-full border border-[#006C35]/20 bg-white text-[#006C35] hover:bg-[#EAF5EF] hover:border-[#006C35] flex items-center justify-center transition shadow-sm"
 							aria-label="التالي"
 						>
-							<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+							<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[#006C35]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
 							</svg>
 						</button>
 						<button
 							ref={prevRef}
-							className="w-9 h-9 rounded-full border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition"
+							className="w-9 h-9 rounded-full border border-[#006C35]/20 bg-white text-[#006C35] hover:bg-[#EAF5EF] hover:border-[#006C35] flex items-center justify-center transition shadow-sm"
 							aria-label="السابق"
 						>
-							<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+							<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[#006C35]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
 							</svg>
 						</button>
-
-
 					</div>}
 				</div>
 			) : (
 				hiddenArrow &&  <div className="flex justify-end gap-2 mb-3">
 					<button
 						ref={prevRef}
-						className="w-9 h-9 rounded-full border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition"
+						className="w-9 h-9 rounded-full border border-[#006C35]/20 bg-white text-[#006C35] hover:bg-[#EAF5EF] hover:border-[#006C35] flex items-center justify-center transition shadow-sm"
 						aria-label="السابق"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+						<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[#006C35]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
 						</svg>
 					</button>
 					<button
 						ref={nextRef}
-						className="w-9 h-9 rounded-full border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition"
+						className="w-9 h-9 rounded-full border border-[#006C35]/20 bg-white text-[#006C35] hover:bg-[#EAF5EF] hover:border-[#006C35] flex items-center justify-center transition shadow-sm"
 						aria-label="التالي"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+						<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[#006C35]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
 						</svg>
 					</button>
 				</div>

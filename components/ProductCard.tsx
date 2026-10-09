@@ -32,6 +32,7 @@ export default function ProductCard({
 	classNameCate = '',
 	average_rating,
 	reviews,
+	total_reviews,
 	is_favorite,
 	selectedSizeId,
 	selectedColorId,
@@ -45,6 +46,8 @@ export default function ProductCard({
 	const [showImage, setShowImage] = useState(false);
 	const [isAdding, setIsAdding] = useState(false);
 	const [quickViewOpen, setQuickViewOpen] = useState(false);
+	const [quickViewProduct, setQuickViewProduct] = useState(product);
+	const [loadingQuickView, setLoadingQuickView] = useState(false);
 
 	const { authToken: token, favoriteIdsSet, setFavoriteProducts } = useAuth();
 
@@ -61,6 +64,26 @@ export default function ProductCard({
 	}, [favoriteIdsSet, id, is_favorite]);
 
 	const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+	const openQuickView = async () => {
+		if (loadingQuickView) return;
+
+		if (product?.is_summary && API_URL) {
+			setLoadingQuickView(true);
+			try {
+				const res = await fetch(`${API_URL}/products/${slug || id}`, {
+					headers: { Accept: 'application/json' },
+				});
+				const json = await res.json();
+				if (res.ok && json?.status && json?.data) setQuickViewProduct(json.data);
+			} catch { }
+			finally {
+				setLoadingQuickView(false);
+			}
+		}
+
+		setQuickViewOpen(true);
+	};
 
 	const inStock = (stock ?? 0) > 0;
 
@@ -227,10 +250,10 @@ export default function ProductCard({
 
 					<motion.button
 						aria-label="quick view"
-						onClick={(e) => {
+						onClick={async (e) => {
 							e.preventDefault();
 							e.stopPropagation();
-							setQuickViewOpen(true);
+							await openQuickView();
 						}}
 						whileHover={{ scale: 1.08 }}
 						whileTap={{ scale: 0.92 }}
@@ -242,7 +265,7 @@ export default function ProductCard({
 					<QuickViewModal
 						open={quickViewOpen}
 						onClose={() => setQuickViewOpen(false)}
-						product={product}
+						product={quickViewProduct}
 
 						onAddToCart={handleAddToCart}
 						isAdding={isAdding}
@@ -308,7 +331,7 @@ export default function ProductCard({
 						) : null}
 					</div> */}
 
-					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} />
+					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} reviewCount={total_reviews} />
 
 					{/* Divider */}
 					<div className="h-px bg-gray-200/70" />

@@ -7,6 +7,7 @@ import React, {
 	useState,
 	ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 
 import { fetchHomeData } from "@/lib/api";
 import { fetchApi } from "@/lib/api";
@@ -29,7 +30,6 @@ interface HomeData {
 interface AppContextType {
 	homeData: HomeData | null;
 	parentCategories: CategoryI[];
-	childCategories: CategoryI[];
 	socialMedia: SocialMediaI[];
 	paymentMethods: any
 	loading: boolean;
@@ -41,7 +41,6 @@ interface AppContextType {
 const AppContext = createContext<AppContextType>({
 	homeData: null,
 	parentCategories: [],
-	childCategories: [],
 	socialMedia: [],
 	paymentMethods: [],
 	loading: true,
@@ -55,59 +54,61 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 	const [loadingHome, setLoadingHome] = useState<any>(null);
 	const [parentCategories, setParentCategories] = useState<CategoryI[]>([]);
 	const [loadingCategories, setLoadingCategories] = useState<any>([]);
-	const [childCategories, setChildCategories] = useState<CategoryI[]>([]);
 	const [socialMedia, setSocialMedia] = useState<SocialMediaI[]>([]);
 	const [paymentMethods, setPaymentMethods] = useState<any>([]);
 
 
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const pathname = usePathname();
 
 	useEffect(() => {
-		const loadAllData = async () => {
+		const loadSharedData = async () => {
 			try {
 				setLoading(true);
-				setLoadingHome(true)
 				setLoadingCategories(true)
 
-				fetchHomeData().then(res => {
-					setHomeData(res)
-					setLoadingHome(true)
-				}).finally(() => {
-					setLoadingHome(false)
-				})
+				const [categoriesResult, socialResult, paymentResult] = await Promise.allSettled([
+					fetchApi("categories?type=parent"),
+					fetchApi("social-media"),
+					fetchApi("payment-methods?is_payment=true"),
+				]);
 
-				// 2) Categories Parent
-				fetchApi("categories?type=parent").then(res => {
-					setParentCategories(Array.isArray(res) ? res : []);
-					setLoadingCategories(true)
-				}).finally(() => {
-					setLoadingCategories(false)
-				})
-
-				// 3) Categories Child
-				fetchApi("categories?type=child").then(res => {
-					setChildCategories(Array.isArray(res) ? res : []);
-				})
-				
-				// 4) socialMedia
-				const socialMedia = await fetchApi("social-media");
-				setSocialMedia(Array.isArray(socialMedia) ? socialMedia : []);
-
-				const paymentMethods = await fetchApi("payment-methods?is_payment=true");
-				setPaymentMethods(Array.isArray(paymentMethods) ? paymentMethods : []);
+				if (categoriesResult.status === "fulfilled") {
+					setParentCategories(Array.isArray(categoriesResult.value) ? categoriesResult.value : []);
+				}
+				if (socialResult.status === "fulfilled") {
+					setSocialMedia(Array.isArray(socialResult.value) ? socialResult.value : []);
+				}
+				if (paymentResult.status === "fulfilled") {
+					setPaymentMethods(Array.isArray(paymentResult.value) ? paymentResult.value : []);
+				}
 
 			} catch (err: any) {
 				setError(err.message || "فشل تحميل البيانات");
 				console.error("Error loading data:", err);
 
 			} finally {
+				setLoadingCategories(false)
 				setLoading(false);
 			}
 		};
 
-		loadAllData();
+		loadSharedData();
 	}, []);
+
+	useEffect(() => {
+		if (!pathname.startsWith("/product/")) {
+			setLoadingHome(false);
+			return;
+		}
+
+		setLoadingHome(true);
+		fetchHomeData()
+			.then(setHomeData)
+			.catch(() => setHomeData(null))
+			.finally(() => setLoadingHome(false));
+	}, [pathname]);
 
 
 	return (
@@ -115,7 +116,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 			value={{
 				homeData,
 				parentCategories,
-				childCategories,
 				socialMedia,
 				paymentMethods,
 				loading,

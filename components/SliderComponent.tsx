@@ -12,6 +12,8 @@ import "swiper/css/pagination";
 
 type SliderResponse = any;
 
+const DEFAULT_SLIDER_IMAGE = "/images/saudi_nd_banner_1.png";
+
 export default function SliderComponent({ src }: { src: SliderResponse | null }) {
   const prevRef = useRef<HTMLButtonElement | null>(null);
   const nextRef = useRef<HTMLButtonElement | null>(null);
@@ -58,7 +60,7 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
       swiper.params.pagination.clickable = true;
       // @ts-ignore
       swiper.params.pagination.renderBullet = function (index, className) {
-        return `<span class="${className} w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white/60 inline-block mx-1 transition-all duration-250"></span>`;
+        return `<span class="${className} w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white/70 inline-block mx-1 transition-all duration-300"></span>`;
       };
       swiper.pagination?.destroy();
       swiper.pagination?.init();
@@ -70,7 +72,7 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
   if (!hasSlides) return null;
 
   return (
-    <div className="relative w-full h-[200px] md:h-[420px] group">
+    <div className="relative w-full h-[240px] sm:h-[340px] md:h-[500px] lg:h-[540px] group rounded-2xl overflow-hidden border border-[#006C35]/15 shadow-sm">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         spaceBetween={18}
@@ -85,20 +87,23 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
         className="w-full h-full"
       >
         {items.map((item: any, index: number) => {
-          const href = item?.is_link_active === false ? "/" : item?.link_url || "/";
-          const target = item?.link_target || "_self";
-          const alt = item?.alt || `Slide ${index + 1}`;
+          const href = item.url ? item.url : "#";
+          const target = item.url ? "_blank" : "_self";
+          const imageSrc = item.mobile_image || item.image || DEFAULT_SLIDER_IMAGE;
+          const alt = item.alt || `Slide ${index + 1}`;
 
           return (
             <SwiperSlide key={item.id ?? index}>
-              <div className="relative w-full h-[200px] md:h-[420px] overflow-hidden">
+              <div className="relative w-full h-[240px] sm:h-[340px] md:h-[500px] lg:h-[540px] overflow-hidden">
                 <Link href={href} target={target} aria-label={`Go to slide ${index + 1}`}>
                   <img
-                    src={item.mobile_image || item.image || ""}
+                    src={imageSrc}
                     alt={alt}
-                    className="object-fill w-full h-full"
-                    loading="lazy"
-                    decoding="async"
+                    className="object-cover w-full h-full"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    // @ts-ignore
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                    decoding={index === 0 ? "sync" : "async"}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
                 </Link>
@@ -108,51 +113,51 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
         })}
       </Swiper>
 
-      {/* White-themed navigation buttons with premium styling */}
+      {/* Navigation buttons with Saudi National Day Green styling */}
       {showNav && (
         <>
           <button
             ref={prevRef}
-            className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 
-                     w-11 h-11 md:w-12 md:h-12 rounded-full 
+            className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 z-20 
+                     w-9 h-9 md:w-11 md:h-11 rounded-full 
                      bg-white/90 backdrop-blur-sm
-                     border border-gray-200/80
-                     shadow-[0_8px_24px_rgba(0,0,0,0.15)]
+                     border border-[#006C35]/20
+                     shadow-md
                      flex items-center justify-center
-                     transition-all duration-250 
-                     hover:bg-white hover:scale-105 hover:shadow-[0_12px_28px_rgba(0,0,0,0.2)]
-                     active:scale-95"
+                     transition-all duration-200 
+                     hover:bg-[#006C35] hover:text-white hover:border-[#006C35]
+                     active:scale-95 text-[#006C35]"
             aria-label="Previous slide"
           >
             <svg 
-              className="w-5 h-5 md:w-6 md:h-6 text-gray-800" 
+              className="w-4 h-4 md:w-5 md:h-5 text-current" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
-              strokeWidth="2"
+              strokeWidth="2.5"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
             ref={nextRef}
-            className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20
-                     w-11 h-11 md:w-12 md:h-12 rounded-full
+            className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 z-20
+                     w-9 h-9 md:w-11 md:h-11 rounded-full
                      bg-white/90 backdrop-blur-sm
-                     border border-gray-200/80
-                     shadow-[0_8px_24px_rgba(0,0,0,0.15)]
+                     border border-[#006C35]/20
+                     shadow-md
                      flex items-center justify-center
-                     transition-all duration-250
-                      hover:bg-white hover:scale-105 hover:shadow-[0_12px_28px_rgba(0,0,0,0.2)]
-                     active:scale-95"
+                     transition-all duration-200
+                     hover:bg-[#006C35] hover:text-white hover:border-[#006C35]
+                     active:scale-95 text-[#006C35]"
             aria-label="Next slide"
           >
             <svg 
-              className="w-5 h-5 md:w-6 md:h-6 text-gray-800" 
+              className="w-4 h-4 md:w-5 md:h-5 text-current" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
-              strokeWidth="2"
+              strokeWidth="2.5"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -160,11 +165,11 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
         </>
       )}
 
-      {/* Pagination dots with working functionality */}
+      {/* Pagination dots */}
       {showPagination && (
         <div
           ref={paginationRef}
-          className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 
+          className="absolute bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 
                    flex items-center justify-center gap-1.5 md:gap-2 z-20"
         />
       )}

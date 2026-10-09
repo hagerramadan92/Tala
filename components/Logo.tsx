@@ -36,7 +36,7 @@ export default function Logo({
 						alt="Tala AlJazeera Logo"
 						width={size}
 						height={size}
-						className="object-contain max-md:w-[35px] w-[44px] "
+						className="object-contain max-md:w-[35px] w-[44px] h-auto"
 						priority
 					/>
 				</div>

@@ -411,7 +411,7 @@ export default function CategoryPage() {
         {/* Banner with fallback */}
         {category.category_banners?.[0]?.image && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
-            <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full h-[200px] md:h-[300px]">
+            <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full aspect-[2000/460]">
               <ImageWithFallback
                 src={category.category_banners[0].image}
                 alt={`${category.name} banner`}

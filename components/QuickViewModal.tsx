@@ -85,6 +85,9 @@ export default function QuickViewModal({
 
 	const safeDescription = useMemo(() => {
 		const html = product?.description || "";
+		if (typeof window === "undefined" || typeof DOMPurify?.sanitize !== "function") {
+			return html;
+		}
 		return DOMPurify.sanitize(html, {
 			USE_PROFILES: { html: true },
 		});

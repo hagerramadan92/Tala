@@ -181,7 +181,7 @@ export default function WhyAndFaqs() {
 		return (
 			<div className="flex items-center gap-1">
 				{Array.from({ length: 5 }).map((_, i) => (
-					<span key={i} className={`text-sm ${i < full ? "text-amber-500" : "text-slate-200"}`}>
+					<span key={i} className={`text-sm ${i < full ? "text-[#C9A54C]" : "text-slate-200"}`}>
 						★
 					</span>
 				))}
@@ -195,47 +195,50 @@ export default function WhyAndFaqs() {
 	};
 
 	return (
-		<div className="flex flex-col gap-10">
+		<div className="flex flex-col gap-6 md:gap-8">
 			{/* ✅ Why Tala */}
-			<section className="rounded-3xl border border-slate-100 bg-[#14213d] text-white shadow-sm overflow-hidden">
-				<div className="p-6 md:p-10">
-					<div className="flex items-end justify-between gap-6 flex-wrap">
+			<section className="rounded-2xl border border-[#006C35]/25 bg-gradient-to-br from-[#004D29] via-[#003B24] to-[#004D29] text-white shadow-sm overflow-hidden">
+				<div className="p-5 md:p-8">
+					<div className="flex items-end justify-between gap-4 flex-wrap">
 						<div>
-							<h2 className="text-xl md:text-3xl font-extrabold">
-								لماذا تالا؟
-							</h2>
-							<p className="mt-2 text-white/80 text-sm md:text-base max-w-2xl">
-							بخبرة ممتدة لعقدان من التميز جعلتنا نعتني بأدق التفاصيل اللتي تهمكم و نبتكر لكم تجربة شراء استثنائية تليق بكم.
+							<div className="flex items-center gap-2">
+								<h2 className="text-lg md:text-2xl font-extrabold text-white">
+									لماذا تالا؟
+								</h2>
+								<span className="h-1.5 w-6 rounded-full bg-[#C9A54C]" />
+							</div>
+							<p className="mt-1.5 text-white/85 text-xs md:text-sm max-w-2xl">
+								بخبرة ممتدة لعقدان من التميز جعلتنا نعتني بأدق التفاصيل اللتي تهمكم و نبتكر لكم تجربة شراء استثنائية تليق بكم.
 							</p>
 						</div>
 
-						<div className="flex gap-3">
+						<div className="flex gap-2">
 							<Link
 								href="/category"
-								className="inline-flex items-center justify-center rounded-lg md:md:rounded-2xl rounded-lg md:px-4 md:py-3 p-2 font-extrabold bg-white text-[#14213d] hover:bg-white/90 transition"
+								className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-xs md:text-sm font-extrabold bg-[#C9A54C] text-[#003B24] hover:bg-[#b8953f] transition shadow-xs"
 							>
 								ابدأ التسوق
 							</Link>
 							<Link
 								href="/contactUs"
-								className="inline-flex items-center justify-center rounded-lg md:md:rounded-2xl rounded-lg md:px-4 md:py-3 p-2  font-extrabold border border-white/20 bg-white/10 hover:bg-white/15 transition"
+								className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-xs md:text-sm font-extrabold border border-white/25 bg-white/10 text-white hover:bg-white/20 transition"
 							>
 								تواصل معنا
 							</Link>
 						</div>
 					</div>
 
-					<div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
 						{whyTala.map((x, idx) => (
 							<div
 								key={idx}
-								className="md:rounded-2xl rounded-lg border border-white/10 bg-white/5 p-6"
+								className="rounded-xl border border-white/15 bg-white/[0.07] backdrop-blur-sm p-4 md:p-5 hover:border-[#C9A54C]/40 transition duration-200"
 							>
-								<div className="text-sm font-extrabold text-white/70">
+								<div className="text-xs font-extrabold text-[#C9A54C]">
 									0{idx + 1}
 								</div>
-								<h3 className="mt-2 text-lg font-extrabold">{x.title}</h3>
-								<p className="mt-2 text-sm text-white/75 leading-relaxed">
+								<h3 className="mt-1.5 text-base font-extrabold text-white">{x.title}</h3>
+								<p className="mt-1.5 text-xs md:text-sm text-white/80 leading-relaxed">
 									{x.desc}
 								</p>
 							</div>
@@ -244,15 +247,18 @@ export default function WhyAndFaqs() {
 				</div>
 			</section>
 
-			{/* ✅ FAQS (Only Questions & Answers) */}
-			<section className="rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-				<div className="p-6 md:p-10">
-					<div className="flex items-end justify-between gap-6 flex-wrap">
+			{/* ✅ FAQS */}
+			<section className="rounded-2xl border border-[#006C35]/15 bg-white shadow-xs overflow-hidden">
+				<div className="p-5 md:p-8">
+					<div className="flex items-end justify-between gap-4 flex-wrap">
 						<div>
-							<h2 className="text-xl md:text-3xl font-extrabold text-[#14213d]">
-								الأسئلة الشائعة
-							</h2>
-							<p className="mt-2 text-slate-600 text-sm md:text-base max-w-2xl">
+							<div className="flex items-center gap-2">
+								<h2 className="text-lg md:text-2xl font-extrabold text-[#003B24]">
+									الأسئلة الشائعة
+								</h2>
+								<span className="h-1.5 w-5 rounded-full bg-[#006C35]" />
+							</div>
+							<p className="mt-1 text-[#004D29]/70 text-xs md:text-sm max-w-2xl">
 								إجابات سريعة لأكثر الأسئلة تكرارًا.
 							</p>
 						</div>
@@ -260,56 +266,54 @@ export default function WhyAndFaqs() {
 
 					{/* Loading / Error / Empty */}
 					{faqsLoading ? (
-						<div className="mt-8">
-							<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5 animate-pulse h-16" />
-							<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5 animate-pulse h-16 mt-3" />
-							<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5 animate-pulse h-16 mt-3" />
+						<div className="mt-5">
+							<div className="rounded-xl border border-[#006C35]/10 bg-[#EAF5EF]/40 p-4 animate-pulse h-14" />
+							<div className="rounded-xl border border-[#006C35]/10 bg-[#EAF5EF]/40 p-4 animate-pulse h-14 mt-2" />
 						</div>
 					) : faqsError ? (
-						<div className="mt-8 md:rounded-2xl rounded-lg border border-rose-200 bg-rose-50 p-5">
-							<p className="font-extrabold text-rose-700">تعذّر تحميل الأسئلة الشائعة</p>
-							<p className="mt-1 text-sm text-rose-700/80">{faqsError}</p>
+						<div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4">
+							<p className="font-bold text-rose-700 text-sm">تعذّر تحميل الأسئلة الشائعة</p>
 						</div>
 					) : faqs.length === 0 ? (
-						<div className="mt-8 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5">
-							<p className="font-bold text-slate-600">لا توجد أسئلة شائعة حالياً.</p>
+						<div className="mt-5 rounded-xl border border-[#006C35]/10 bg-[#EAF5EF]/40 p-4">
+							<p className="font-bold text-[#003B24] text-sm">لا توجد أسئلة شائعة حالياً.</p>
 						</div>
 					) : (
-						<div className="mt-8 flex flex-col gap-3">
+						<div className="mt-5 flex flex-col gap-2.5">
 							{faqs.map((item, idx) => {
 								const isOpen = openFaq === idx;
 
 								return (
 									<div
 										key={item.id}
-										className="md:rounded-2xl rounded-lg border border-slate-200 bg-white overflow-hidden"
+										className="rounded-xl border border-[#006C35]/15 bg-white overflow-hidden"
 									>
 										<button
 											type="button"
 											onClick={() => setOpenFaq(isOpen ? null : idx)}
-											className="w-full flex items-center justify-between gap-4 p-5 text-start"
+											className="w-full flex items-center justify-between gap-3 p-4 text-start"
 										>
-											<span className="font-extrabold text-[#14213d]">{item.question}</span>
+											<span className="font-extrabold text-[#003B24] text-sm md:text-base">{item.question}</span>
 
 											<span
-												className={`shrink-0 w-9 h-9 md:rounded-2xl rounded-lg border border-slate-200 flex items-center justify-center transition ${
-													isOpen ? "bg-[#14213d] text-white" : "bg-white text-slate-700"
+												className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center transition ${
+													isOpen ? "bg-[#006C35] text-white border-[#006C35]" : "bg-[#EAF5EF] text-[#006C35] border-[#006C35]/20"
 												}`}
 											>
 												<ChevronDown
-													size={18}
-													className={`transition ${isOpen ? "rotate-180" : ""}`}
+													size={16}
+													className={`transition duration-200 ${isOpen ? "rotate-180" : ""}`}
 												/>
 											</span>
 										</button>
 
 										<div
-											className={`grid transition-all duration-300 ease-out ${
+											className={`grid transition-all duration-200 ease-out ${
 												isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
 											}`}
 										>
 											<div className="overflow-hidden">
-												<p className="px-5 pb-5 text-sm text-slate-600 leading-relaxed">
+												<p className="px-4 pb-4 text-xs md:text-sm text-[#003B24]/80 leading-relaxed">
 													{item.answer}
 												</p>
 											</div>
@@ -322,43 +326,45 @@ export default function WhyAndFaqs() {
 				</div>
 			</section>
 
-			{/* ✅ Testimonials (Ar'a2 Al-3omala2) - Slider مع بيانات من API */}
-			<section className="rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-				<div className="p-6 md:p-10 relative">
-					<div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-50" />
+			{/* ✅ Testimonials */}
+			<section className="rounded-2xl border border-[#006C35]/15 bg-[#F7F4EC]/60 shadow-xs overflow-hidden">
+				<div className="p-5 md:p-8 relative">
 					<div className="relative">
-						<h2 className="text-xl md:text-3xl font-extrabold text-[#14213d]">
-							آراء العملاء
-						</h2>
-						<p className="mt-2 text-slate-600 text-sm md:text-base max-w-2xl">
-							بعض من تقييمات عملائنا اللي نفخر بيها 💛
+						<div className="flex items-center gap-2">
+							<h2 className="text-lg md:text-2xl font-extrabold text-[#003B24]">
+								آراء العملاء
+							</h2>
+							<span className="h-1.5 w-5 rounded-full bg-[#C9A54C]" />
+						</div>
+						<p className="mt-1 text-[#004D29]/70 text-xs md:text-sm max-w-2xl">
+							بعض من تقييمات عملائنا اللي نفخر بيها 💚
 						</p>
 
 						{/* حالات التحميل والخطأ والبيانات الفارغة */}
 						{testimonialsLoading ? (
 							<div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
 								{[1, 2, 3].map((i) => (
-									<div key={i} className="md:rounded-2xl rounded-lg border border-slate-100 bg-white/80 p-6 animate-pulse">
-										<div className="h-4 bg-slate-200 rounded w-24 mb-3"></div>
-										<div className="h-16 bg-slate-200 rounded mb-4"></div>
+									<div key={i} className="rounded-2xl border border-[#006C35]/10 bg-white p-6 animate-pulse">
+										<div className="h-4 bg-[#EAF5EF] rounded w-24 mb-3"></div>
+										<div className="h-16 bg-[#EAF5EF] rounded mb-4"></div>
 										<div className="flex items-center gap-3">
-											<div className="w-10 h-10 rounded-lg bg-slate-200"></div>
+											<div className="w-10 h-10 rounded-xl bg-[#EAF5EF]"></div>
 											<div>
-												<div className="h-4 bg-slate-200 rounded w-16 mb-1"></div>
-												<div className="h-3 bg-slate-200 rounded w-12"></div>
+												<div className="h-4 bg-[#EAF5EF] rounded w-16 mb-1"></div>
+												<div className="h-3 bg-[#EAF5EF] rounded w-12"></div>
 											</div>
 										</div>
 									</div>
 								))}
 							</div>
 						) : testimonialsError ? (
-							<div className="mt-8 md:rounded-2xl rounded-lg border border-rose-200 bg-rose-50 p-5">
+							<div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5">
 								<p className="font-extrabold text-rose-700">تعذّر تحميل آراء العملاء</p>
 								<p className="mt-1 text-sm text-rose-700/80">{testimonialsError}</p>
 							</div>
 						) : testimonials.length === 0 ? (
-							<div className="mt-8 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-5">
-								<p className="font-bold text-slate-600">لا توجد آراء عملاء حالياً.</p>
+							<div className="mt-8 rounded-2xl border border-[#006C35]/10 bg-white p-5">
+								<p className="font-bold text-[#003B24]">لا توجد آراء عملاء حالياً.</p>
 							</div>
 						) : (
 							/* ✅ Slider باستخدام Swiper مع البيانات الحقيقية */
@@ -387,36 +393,35 @@ export default function WhyAndFaqs() {
 										dynamicBullets: true,
 									}}
 									navigation={true}
-									loop={testimonials.length >= 3} // التشغيل التكراري فقط إذا كان هناك 3 عناصر أو أكثر
+									loop={testimonials.length >= 3}
 									className="testimonials-swiper !pb-12"
-									dir="ltr" // للحفاظ على اتجاه السلايدر
+									dir="ltr"
 								>
 									{testimonials.map((t) => (
 										<SwiperSlide key={t.id} dir="rtl">
 											<div className="h-full" dir="rtl">
-												<div className="md:rounded-2xl rounded-lg border border-slate-100 bg-white/80 backdrop-blur p-6 shadow-sm hover:shadow-md transition h-full flex flex-col">
+												<div className="rounded-2xl border border-[#006C35]/10 bg-white p-6 shadow-sm hover:shadow-md transition h-full flex flex-col">
 													<Stars value={t.rating} />
-													<p className="mt-3 text-sm text-slate-700 leading-relaxed flex-grow">
+													<p className="mt-3 text-sm text-[#003B24]/90 leading-relaxed flex-grow font-medium">
 														“{t.review}”
 													</p>
 
 													<div className="mt-5 flex items-center justify-between">
 														<div className="flex items-center gap-3">
-															{/* عرض الصورة الرمزية إذا وجدت، وإلا عرض الحرف الأول */}
 															{t.avatar ? (
 																<img 
 																	src={t.avatar} 
 																	alt={t.name}
-																	className="w-10 h-10 md:rounded-2xl rounded-lg object-cover"
+																	className="w-10 h-10 rounded-xl object-cover"
 																/>
 															) : (
-																<div className="w-10 h-10 md:rounded-2xl rounded-lg bg-[#14213d] text-white flex items-center justify-center font-extrabold">
+																<div className="w-10 h-10 rounded-xl bg-[#003B24] text-white flex items-center justify-center font-extrabold">
 																	{getInitial(t.name)}
 																</div>
 															)}
 															<div>
-																<p className="font-extrabold text-[#14213d]">{t.name}</p>
-																<p className="text-xs text-slate-500">{t.city}</p>
+																<p className="font-extrabold text-[#006C35]">{t.name}</p>
+																<p className="text-xs text-[#004D29]/60">{t.city}</p>
 															</div>
 														</div>
 													</div>
@@ -428,25 +433,25 @@ export default function WhyAndFaqs() {
 							</div>
 						)}
 
-						{/* إضافة بعض التنسيقات المخصصة للـ Swiper */}
+						{/* Swiper National Day Styling */}
 						<style jsx>{`
 							:global(.testimonials-swiper .swiper-pagination-bullet) {
-								background: #14213d;
+								background: #006C35;
 								opacity: 0.3;
 							}
 							:global(.testimonials-swiper .swiper-pagination-bullet-active) {
 								opacity: 1;
-								background: #14213d;
+								background: #006C35;
 							}
 							:global(.testimonials-swiper .swiper-button-prev),
 							:global(.testimonials-swiper .swiper-button-next) {
-								color: #14213d;
+								color: #006C35;
 								background: white;
 								width: 40px;
 								height: 40px;
 								border-radius: 12px;
 								box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-								border: 1px solid #e2e8f0;
+								border: 1px solid rgba(0, 108, 53, 0.2);
 							}
 							:global(.testimonials-swiper .swiper-button-prev:after),
 							:global(.testimonials-swiper .swiper-button-next:after) {
@@ -454,7 +459,7 @@ export default function WhyAndFaqs() {
 							}
 							:global(.testimonials-swiper .swiper-button-prev:hover),
 							:global(.testimonials-swiper .swiper-button-next:hover) {
-								background: #f8fafc;
+								background: #EAF5EF;
 							}
 							@media (max-width: 640px) {
 								:global(.testimonials-swiper .swiper-button-prev),

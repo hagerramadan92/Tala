@@ -45,30 +45,18 @@ export default function CategoriesSlider({
 	if (!hasSlides) return null;
 
 	return (
-		<section className="relative w-full py-4 md:py-6">
+		<section className="relative w-full py-1 md:py-2">
 			{/* Header */}
-			<div className="mb-3 md:mb-4 flex items-end justify-between gap-3">
-				<div className="flex items-start gap-2">
-					<span
-						className={cn(
-							"mt-0.5 grid h-9 w-9 place-items-center md:rounded-2xl rounded-lg",
-							"bg-slate-50 border border-slate-200 text-slate-700"
-						)}
-						aria-hidden="true"
-					>
-						<Sparkles className="h-5 w-5" />
-					</span>
-
-					<div>
-						<h2 className="text-base md:text-lg font-extrabold text-slate-900">
-							{title}
-						</h2>
-						<p className="text-xs md:text-sm text-slate-500 mt-0.5">{subtitle}</p>
-					</div>
+			<div className="mb-2 md:mb-3 flex items-center justify-between gap-3">
+				<div className="flex items-center gap-2">
+					<span className="w-1.5 md:w-2 h-5 md:h-6 rounded-full bg-[#006C35]" />
+					<h2 className="text-base md:text-xl font-extrabold text-[#003B24]">
+						{title}
+					</h2>
 				</div>
 
 				{/* Desktop arrows */}
-				<div className="  flex items-center gap-2">
+				<div className="flex items-center gap-1.5">
 					<ArrowButton
 						refEl={prevRef}
 						dir="prev"
@@ -85,15 +73,10 @@ export default function CategoriesSlider({
 			</div>
 
 			<div className="relative">
-
-				{/* Soft fades */}
-				<div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white to-transparent z-10" />
-				<div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent z-10" />
-
 				<Swiper
 					modules={[Navigation, Pagination, FreeMode, A11y]}
 					dir="rtl"
-					spaceBetween={5}
+					spaceBetween={12}
 					slidesPerGroup={1}
 					watchOverflow
 					grabCursor
@@ -108,7 +91,6 @@ export default function CategoriesSlider({
 						el: paginationRef.current,
 					}}
 					onInit={(swiper) => {
-						// attach refs
 						// @ts-ignore
 						swiper.params.navigation.prevEl = prevRef.current;
 						// @ts-ignore
@@ -130,58 +112,42 @@ export default function CategoriesSlider({
 						setIsEnd(swiper.isEnd);
 					}}
 					breakpoints={{
-						0: { slidesPerView: 3  },
-						480: { slidesPerView: 3  },
-						640: { slidesPerView: 6  },
-						992: { slidesPerView: 8  },
-						1424: { slidesPerView: 10  },
+						0: { slidesPerView: 4.2, spaceBetween: 8 },
+						480: { slidesPerView: 5.2, spaceBetween: 10 },
+						640: { slidesPerView: 7, spaceBetween: 12 },
+						992: { slidesPerView: 9, spaceBetween: 14 },
+						1424: { slidesPerView: 11, spaceBetween: 16 },
 					}}
-					className="!px-2 md:!px-0"
+					className="!py-1"
 				>
 					{items.map((cat) => (
-						<SwiperSlide key={cat.id} className=" !h-auto">
+						<SwiperSlide key={cat.id} className="!h-auto">
 							<Link
 								href={`/category/${cat.slug || cat.id}`}
-								 onClick={onCategoryClick}
+								onClick={onCategoryClick}
 								aria-label={`Go to ${cat.name}`}
-								className="block"
+								className="block h-full"
 							>
-								<div className="group flex flex-col items-center gap-2 py-2">
-									{/* Card */}
-									<div
-										className={cn(
-											"relative grid place-items-center",
-											"w-16 h-16 md:w-[92px] md:h-[92px]",
-											"rounded-3xl overflow-hidden",
-											"bg-slate-100 ring-1 ring-slate-200",
-											"transition",
-											"group-hover:ring-slate-300"
-										)}
-									>
-										{/* image */}
+								<div className="group flex flex-col items-center gap-1.5 py-1">
+									{/* Category circle image */}
+									<div className="relative w-14 h-14 md:w-[84px] md:h-[84px] rounded-full overflow-hidden bg-[#EAF5EF] ring-2 ring-[#006C35]/15 transition duration-300 group-hover:ring-[#006C35] group-hover:scale-[1.05] shadow-xs">
 										<Image
 											src={cat.image || "/images/cat1.png"}
 											alt={cat.name}
 											fill
-											sizes="(max-width: 768px) 64px, 92px"
-											className="object-cover transition duration-300 group-hover:scale-[1.06]"
+											sizes="(max-width: 768px) 56px, 84px"
+											className="object-cover"
 										/>
-
-										{/* overlay gradient */}
-										<div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
 									</div>
 
-								<p className="text-[10.5px] md:text-[14px] font-extrabold text-slate-700 text-center leading-tight group-hover:text-pro transition 
-								truncate max-w-[80px] md:max-w-[120px]">
-  {cat.name}
-</p>
+									<p className="text-[10.5px] md:text-[13px] font-extrabold text-[#003B24] text-center leading-tight group-hover:text-[#006C35] transition truncate max-w-[75px] md:max-w-[105px]">
+										{cat.name}
+									</p>
 								</div>
 							</Link>
 						</SwiperSlide>
 					))}
 				</Swiper>
-
-
 			</div>
 		</section>
 	);

@@ -18,7 +18,7 @@ function Sk({ className = "" }: { className?: string }) {
 
 export function HeroSliderSkeleton() {
 	return (
-		<div className="relative  w-full h-[200px] md:h-[420px] overflow-hidden">
+		<div className="relative  w-full h-[240px] sm:h-[340px] md:h-[500px] lg:h-[540px] overflow-hidden">
 			<Sk className="absolute w-full h-full inset-0 rounded-none" />
 
 			<div className="absolute top-1/2 -translate-y-1/2  right-[30px] items-center justify-between w-[calc(100%-60px)] flex gap-2">
@@ -81,7 +81,7 @@ export function ProductCardSkeleton() {
 export function CategorySectionSkeleton() {
 	return (
 		<section className="rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-			<div className="relative w-full h-[120px] md:h-[160px]">
+			<div className="relative w-full aspect-[2000/460]">
 				<Sk className=" h-full w-full rounded-none" />
 			</div>
 

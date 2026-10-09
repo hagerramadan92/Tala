@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ButtonComponent from "@/components/ButtonComponent";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -10,12 +10,12 @@ import { useAuth } from "@/src/context/AuthContext";
 import LoginWithGoogle from "@/components/loginWithGoogle";
 import Swal from "sweetalert2";
 import { motion } from "framer-motion";
-import { FiMail, FiLock } from "react-icons/fi";
+import { FiPhone, FiLock } from "react-icons/fi";
 import Logo from "../../components/Logo";
 
 export default function Page() {
-	const [email, setEmail] = useState("");
-	const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
+	const [phone, setPhone] = useState("");
+	const [errors, setErrors] = useState<{ phone?: string; password?: string; form?: string }>({});
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [pending, setPending] = useState(false);
@@ -28,31 +28,24 @@ export default function Page() {
 
 	const validateInput = (input: string) => {
 		const trimmed = input.trim();
-		if (!trimmed) return "من فضلك أدخل البريد الإلكتروني أو رقم الهاتف";
+		if (!trimmed) return "من فضلك أدخل رقم الجوال";
 
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (emailRegex.test(trimmed)) return "";
-
-		const phoneRegex = /^(?:\+?20|0)?1[0-9]{9}$/;
+		const phoneRegex = /^(?:\+?966|00966)?0?5[03456789]\d{7}$/;
 		if (phoneRegex.test(trimmed)) return "";
 
-		return "من فضلك أدخل بريد إلكتروني أو رقم هاتف صالح";
+		return "من فضلك أدخل رقم جوال سعودي صالح";
 	};
 
-	const canSubmit = useMemo(() => {
-		return email.trim().length > 0 && password.trim().length > 0 && !pending;
-	}, [email, password, pending]);
-
-	const handleSubmit = async (e?: React.FormEvent) => {
+	const handleSubmit = async (e?: React.SyntheticEvent) => {
 		e?.preventDefault();
 		if (pending) return;
 
 		setErrors({});
 
-		const emailError = validateInput(email);
-		if (emailError) {
-			setErrors((p) => ({ ...p, email: emailError }));
-			Swal.fire({ icon: "error", title: "خطأ", text: emailError, confirmButtonText: "حسناً" });
+		const phoneError = validateInput(phone);
+		if (phoneError) {
+			setErrors((p) => ({ ...p, phone: phoneError }));
+			Swal.fire({ icon: "error", title: "خطأ", text: phoneError, confirmButtonText: "حسناً" });
 			return;
 		}
 
@@ -70,7 +63,7 @@ export default function Page() {
 				// credentials: "include", 
 				headers: { "Content-Type": "application/json", Accept: "application/json" },
 
-				body: JSON.stringify({ email, password }),
+				body: JSON.stringify({ phone: phone.trim(), password }),
 			});
 
 			const data = await res.json();
@@ -147,35 +140,37 @@ export default function Page() {
 						)}
 
 						<form className="space-y-4" onSubmit={handleSubmit}>
-							{/* Email / Phone */}
+							{/* Saudi phone */}
 							<div>
 								<label className="block text-sm font-extrabold text-slate-800 mb-2">
-									البريد الإلكتروني أو رقم الهاتف
+									رقم الجوال السعودي
 								</label>
 
 								<div className="relative">
 									<span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-										<FiMail />
+										<FiPhone />
 									</span>
 
 									<input
-										type="text"
-										value={email}
+										type="tel"
+										inputMode="tel"
+										autoComplete="tel"
+										value={phone}
 										onChange={(e) => {
-											setEmail(e.target.value);
-											if (errors.email) setErrors((p) => ({ ...p, email: "" }));
+											setPhone(e.target.value);
+											if (errors.phone) setErrors((p) => ({ ...p, phone: "" }));
 										}}
-										placeholder="example@email.com  "
+										placeholder="05XXXXXXXX"
 										className={[
 											fieldBase,
 											"pr-11",
-											errors.email ? fieldBad : fieldOk,
+											errors.phone ? fieldBad : fieldOk,
 										].join(" ")}
 									/>
 								</div>
 
-								{errors.email && (
-									<p className="mt-2 text-xs font-bold text-rose-600">{errors.email}</p>
+								{errors.phone && (
+									<p className="mt-2 text-xs font-bold text-rose-600">{errors.phone}</p>
 								)}
 							</div>
 
@@ -237,7 +232,7 @@ export default function Page() {
 									<ButtonComponent
 										type="submit"
 										title={pending ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
-										onClick={handleSubmit as any}
+										onClick={handleSubmit}
 									/>
 								</div>
 

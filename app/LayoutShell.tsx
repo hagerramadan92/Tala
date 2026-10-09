@@ -16,10 +16,11 @@ export default function LayoutShell({
 	const hideLayout = ["/login", "/signup", "/login/forgetPassword", "/login/resetpassword"].includes(
 		pathname
 	);
+	const isHome = pathname === "/";
 
 	return (
-		<>
- 			{!hideLayout && <Navbar />}
+		<div className={isHome ? "saudi-national-layout" : ""}>
+			{!hideLayout && <Navbar />}
 
 			<div className={`${!hideLayout ? "pt-[90px] lg:pt-[110px]" : ""}   min-h-[80vh]`}>
 				{children}
@@ -27,6 +28,6 @@ export default function LayoutShell({
 
 			{!hideLayout && <Footer />}
 			<FloatingWhatsAppButton />
-		</>
+		</div>
 	);
 }

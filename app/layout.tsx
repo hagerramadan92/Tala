@@ -16,6 +16,7 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL || "https://talaaljazeera.com"),
   title: {
     default: "Ecommerce | تسوق أذكى وأسهل",
     template: "%s | Ecommerce",
@@ -95,6 +96,8 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={cairo.className}>
       <head>
+        <link rel="preconnect" href="https://dashboard.talaaljazeera.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://dashboard.talaaljazeera.com" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
