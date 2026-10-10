@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingWhatsAppButton from "../components/WhatsappButton";
+import SpecialOrderButton from "../components/SpecialOrderButton";
 import HeaderAdsSlider from "../components/HeaderAdsSlider";
 
 export default function LayoutShell({
@@ -28,6 +29,7 @@ export default function LayoutShell({
 
 			{!hideLayout && <Footer />}
 			<FloatingWhatsAppButton />
+			<SpecialOrderButton />
 		</div>
 	);
 }

@@ -67,54 +67,83 @@ function normalizeCategoryImage(src: any) {
 	return `${origin}${path}`;
 }
 
-function getCategoryBanner(category: any) {
+function getCategoryBanner(category: any): { desktop: string; mobile: string } {
 	const banner = Array.isArray(category?.category_banners)
 		? category.category_banners.find(
 				(item: any) =>
-					item?.is_active !== false && item?.is_active !== 0 && getImageCandidate(item)
+					item?.is_active !== false && item?.is_active !== 0 && (item?.image || item?.mobile_image || getImageCandidate(item))
 		  )
 		: null;
 
-	return (
-		normalizeCategoryImage(banner) ||
+	const desktop =
+		normalizeCategoryImage(banner?.image || banner) ||
 		normalizeCategoryImage(category?.banner) ||
-		normalizeCategoryImage(category?.cover) ||
-		normalizeCategoryImage(category?.cover_image) ||
-		normalizeCategoryImage(category?.image) ||
-		DEFAULT_CATEGORY_BANNER
-	);
+		DEFAULT_CATEGORY_BANNER;
+
+	const mobile =
+		normalizeCategoryImage(banner?.mobile_image) ||
+		desktop;
+
+	return { desktop, mobile };
 }
 
 function CategoryBannerImage({
-	src,
+	desktopSrc,
+	mobileSrc,
 	alt,
 	priority,
 }: {
-	src: string;
+	desktopSrc: string;
+	mobileSrc?: string;
 	alt: string;
 	priority?: boolean;
 }) {
-	const [imageSrc, setImageSrc] = useState(src || DEFAULT_CATEGORY_BANNER);
+	const [desktopImg, setDesktopImg] = useState(desktopSrc || DEFAULT_CATEGORY_BANNER);
+	const [mobileImg, setMobileImg] = useState(mobileSrc || desktopSrc || DEFAULT_CATEGORY_BANNER);
 
 	useEffect(() => {
-		setImageSrc(src || DEFAULT_CATEGORY_BANNER);
-	}, [src]);
+		setDesktopImg(desktopSrc || DEFAULT_CATEGORY_BANNER);
+		setMobileImg(mobileSrc || desktopSrc || DEFAULT_CATEGORY_BANNER);
+	}, [desktopSrc, mobileSrc]);
 
 	return (
-		<Image
-			src={imageSrc}
-			alt={alt}
-			fill
-			sizes="(max-width: 768px) 100vw, 1200px"
-			className="object-cover object-center"
-			priority={priority}
-			loading={priority ? "eager" : "lazy"}
-			onError={() => {
-				if (imageSrc !== DEFAULT_CATEGORY_BANNER) {
-					setImageSrc(DEFAULT_CATEGORY_BANNER);
-				}
-			}}
-		/>
+		<>
+			{/* Mobile Banner (2:1 aspect ratio) */}
+			<div className="block md:hidden relative w-full h-full">
+				<Image
+					src={mobileImg}
+					alt={alt}
+					fill
+					sizes="100vw"
+					className="object-cover object-center"
+					priority={priority}
+					loading={priority ? "eager" : "lazy"}
+					onError={() => {
+						if (mobileImg !== DEFAULT_CATEGORY_BANNER) {
+							setMobileImg(DEFAULT_CATEGORY_BANNER);
+						}
+					}}
+				/>
+			</div>
+
+			{/* Desktop Banner (3:1 aspect ratio) */}
+			<div className="hidden md:block relative w-full h-full">
+				<Image
+					src={desktopImg}
+					alt={alt}
+					fill
+					sizes="(max-width: 1200px) 100vw, 1200px"
+					className="object-cover object-center"
+					priority={priority}
+					loading={priority ? "eager" : "lazy"}
+					onError={() => {
+						if (desktopImg !== DEFAULT_CATEGORY_BANNER) {
+							setDesktopImg(DEFAULT_CATEGORY_BANNER);
+						}
+					}}
+				/>
+			</div>
+		</>
 	);
 }
 
@@ -256,7 +285,7 @@ export default function HomePageClient({
 					) : sliderSrc.length > 0 ? (
 						<SliderComponent src={mainSlider?.[0]} />
 					) : (
-						<div className="relative h-[240px] sm:h-[340px] md:h-[500px] lg:h-[540px] rounded-2xl border border-[#006C35]/15 bg-white overflow-hidden shadow-sm">
+						<div className="relative h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] rounded-2xl border border-[#006C35]/15 bg-white overflow-hidden shadow-sm">
 							<Image
 								src={DEFAULT_HOME_BANNER}
 								alt="بنر اليوم الوطني السعودي"
@@ -319,14 +348,18 @@ export default function HomePageClient({
 									</div>
 
 									{/* Category Banner */}
-									<div className="relative w-full aspect-[2000/460] mb-3 rounded-lg md:rounded-xl overflow-hidden border border-[#006C35]/10 bg-[#F2F6F3]">
+									<Link
+										href={`/category/${category.slug || category.id}`}
+										className="block relative w-full aspect-[200/63] md:aspect-[100/21] mb-3 rounded-lg md:rounded-xl overflow-hidden border border-[#006C35]/10 bg-[#F2F6F3] group cursor-pointer"
+									>
 										<CategoryBannerImage
-											src={categoryBanner}
+											desktopSrc={categoryBanner.desktop}
+											mobileSrc={categoryBanner.mobile}
 											alt={`${category.name} banner`}
 											priority={index === 0}
 										/>
-										<div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent" />
-									</div>
+										<div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent group-hover:opacity-75 transition-opacity" />
+									</Link>
 
 									{/* Products Slider */}
 									<div>

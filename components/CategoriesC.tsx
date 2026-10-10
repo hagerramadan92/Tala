@@ -129,8 +129,8 @@ export default function CategoriesSlider({
 								className="block h-full"
 							>
 								<div className="group flex flex-col items-center gap-1.5 py-1">
-									{/* Category circle image */}
-									<div className="relative w-14 h-14 md:w-[84px] md:h-[84px] rounded-full overflow-hidden bg-[#EAF5EF] ring-2 ring-[#006C35]/15 transition duration-300 group-hover:ring-[#006C35] group-hover:scale-[1.05] shadow-xs">
+									{/* Category square image */}
+									<div className="relative w-14 h-14 md:w-[84px] md:h-[84px] rounded-lg md:rounded-xl overflow-hidden bg-[#EAF5EF] ring-2 ring-[#006C35]/15 transition duration-300 group-hover:ring-[#006C35] group-hover:scale-[1.05] shadow-xs">
 										<Image
 											src={cat.image || "/images/cat1.png"}
 											alt={cat.name}

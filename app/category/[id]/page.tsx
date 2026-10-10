@@ -65,7 +65,7 @@ interface CategoryData {
   is_parent: boolean;
   children: CategoryChild[];
   products: ProductI[];
-  category_banners: { image: string }[];
+  category_banners?: { id?: number; image?: string; mobile_image?: string; alt?: string }[];
 }
 
 interface Filters {
@@ -408,18 +408,32 @@ export default function CategoryPage() {
           </div>
         </motion.div>
 
-        {/* Banner with fallback */}
-        {category.category_banners?.[0]?.image && (
+        {/* Banner with fallback and responsive mobile/desktop support */}
+        {(category.category_banners?.[0]?.image || category.category_banners?.[0]?.mobile_image) && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
-            <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full aspect-[2000/460]">
-              <ImageWithFallback
-                src={category.category_banners[0].image}
-                alt={`${category.name} banner`}
-                fill
-                className="object-cover"
-                fallbackSrc="/images/hero-bg.jpg" // ضع صورة بنر افتراضية هنا
-                priority
-              />
+            <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full aspect-[200/63] md:aspect-[100/21] bg-[#F2F6F3]">
+              {/* Mobile Banner (2:1 aspect ratio) */}
+              <div className="block md:hidden relative w-full h-full">
+                <ImageWithFallback
+                  src={category.category_banners[0].mobile_image || category.category_banners[0].image || ""}
+                  alt={`${category.name} banner`}
+                  fill
+                  className="object-cover object-center"
+                  fallbackSrc="/images/category-default-banner.webp"
+                  priority
+                />
+              </div>
+              {/* Desktop Banner (3:1 aspect ratio) */}
+              <div className="hidden md:block relative w-full h-full">
+                <ImageWithFallback
+                  src={category.category_banners[0].image || category.category_banners[0].mobile_image || ""}
+                  alt={`${category.name} banner`}
+                  fill
+                  className="object-cover object-center"
+                  fallbackSrc="/images/category-default-banner.webp"
+                  priority
+                />
+              </div>
             </div>
           </motion.div>
         )}

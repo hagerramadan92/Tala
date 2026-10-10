@@ -72,7 +72,7 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
   if (!hasSlides) return null;
 
   return (
-    <div className="relative w-full h-[240px] sm:h-[340px] md:h-[500px] lg:h-[540px] group rounded-2xl overflow-hidden border border-[#006C35]/15 shadow-sm">
+    <div className="relative w-full h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] group rounded-2xl overflow-hidden border border-[#006C35]/15 shadow-sm">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         spaceBetween={18}
@@ -94,7 +94,7 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
 
           return (
             <SwiperSlide key={item.id ?? index}>
-              <div className="relative w-full h-[240px] sm:h-[340px] md:h-[500px] lg:h-[540px] overflow-hidden">
+              <div className="relative w-full h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] overflow-hidden">
                 <Link href={href} target={target} aria-label={`Go to slide ${index + 1}`}>
                   <img
                     src={imageSrc}

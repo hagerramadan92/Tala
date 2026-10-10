@@ -18,7 +18,7 @@ function Sk({ className = "" }: { className?: string }) {
 
 export function HeroSliderSkeleton() {
 	return (
-		<div className="relative  w-full h-[240px] sm:h-[340px] md:h-[500px] lg:h-[540px] overflow-hidden">
+		<div className="relative  w-full h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] overflow-hidden">
 			<Sk className="absolute w-full h-full inset-0 rounded-none" />
 
 			<div className="absolute top-1/2 -translate-y-1/2  right-[30px] items-center justify-between w-[calc(100%-60px)] flex gap-2">
