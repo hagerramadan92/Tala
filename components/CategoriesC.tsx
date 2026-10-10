@@ -49,8 +49,8 @@ export default function CategoriesSlider({
 			{/* Header */}
 			<div className="mb-2 md:mb-3 flex items-center justify-between gap-3">
 				<div className="flex items-center gap-2">
-					<span className="w-1.5 md:w-2 h-5 md:h-6 rounded-full bg-[#006C35]" />
-					<h2 className="text-base md:text-xl font-extrabold text-[#003B24]">
+					<span className="w-1.5 md:w-2 h-5 md:h-6 rounded-full bg-pro" />
+					<h2 className="text-base md:text-xl font-extrabold text-slate-900">
 						{title}
 					</h2>
 				</div>
@@ -130,7 +130,7 @@ export default function CategoriesSlider({
 							>
 								<div className="group flex flex-col items-center gap-1.5 py-1">
 									{/* Category square image */}
-									<div className="relative w-14 h-14 md:w-[84px] md:h-[84px] rounded-lg md:rounded-xl overflow-hidden bg-[#EAF5EF] ring-2 ring-[#006C35]/15 transition duration-300 group-hover:ring-[#006C35] group-hover:scale-[1.05] shadow-xs">
+									<div className="relative w-14 h-14 md:w-[84px] md:h-[84px] rounded-lg md:rounded-xl overflow-hidden bg-orange-50/60 ring-2 ring-slate-200 transition duration-300 group-hover:ring-pro group-hover:scale-[1.05] shadow-xs">
 										<Image
 											src={cat.image || "/images/cat1.png"}
 											alt={cat.name}
@@ -140,7 +140,7 @@ export default function CategoriesSlider({
 										/>
 									</div>
 
-									<p className="text-[10.5px] md:text-[13px] font-extrabold text-[#003B24] text-center leading-tight group-hover:text-[#006C35] transition truncate max-w-[75px] md:max-w-[105px]">
+									<p className="text-[10.5px] md:text-[13px] font-extrabold text-slate-800 text-center leading-tight group-hover:text-pro transition truncate max-w-[75px] md:max-w-[105px]">
 										{cat.name}
 									</p>
 								</div>

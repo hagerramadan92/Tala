@@ -20,7 +20,7 @@ export default function LayoutShell({
 	const isHome = pathname === "/";
 
 	return (
-		<div className={isHome ? "saudi-national-layout" : ""}>
+		<div>
 			{!hideLayout && <Navbar />}
 
 			<div className={`${!hideLayout ? "pt-[90px] lg:pt-[110px]" : ""}   min-h-[80vh]`}>

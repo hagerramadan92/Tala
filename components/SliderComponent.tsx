@@ -12,7 +12,7 @@ import "swiper/css/pagination";
 
 type SliderResponse = any;
 
-const DEFAULT_SLIDER_IMAGE = "/images/saudi_nd_banner_1.png";
+const DEFAULT_SLIDER_IMAGE = "/images/home-default-hero.webp";
 
 export default function SliderComponent({ src }: { src: SliderResponse | null }) {
   const prevRef = useRef<HTMLButtonElement | null>(null);
@@ -72,7 +72,7 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
   if (!hasSlides) return null;
 
   return (
-    <div className="relative w-full h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] group rounded-2xl overflow-hidden border border-[#006C35]/15 shadow-sm">
+    <div className="relative w-full h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] group rounded-2xl overflow-hidden border border-slate-200 shadow-xs">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         spaceBetween={18}
@@ -87,8 +87,8 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
         className="w-full h-full"
       >
         {items.map((item: any, index: number) => {
-          const href = item.url ? item.url : "#";
-          const target = item.url ? "_blank" : "_self";
+          const href = item.url || item.link_url || "#";
+          const target = item.link_target || (href.startsWith("http") ? "_blank" : "_self");
           const imageSrc = item.mobile_image || item.image || DEFAULT_SLIDER_IMAGE;
           const alt = item.alt || `Slide ${index + 1}`;
 
@@ -113,7 +113,7 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
         })}
       </Swiper>
 
-      {/* Navigation buttons with Saudi National Day Green styling */}
+      {/* Navigation buttons */}
       {showNav && (
         <>
           <button
@@ -121,12 +121,12 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
             className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 z-20 
                      w-9 h-9 md:w-11 md:h-11 rounded-full 
                      bg-white/90 backdrop-blur-sm
-                     border border-[#006C35]/20
-                     shadow-md
+                     border border-slate-200
+                     shadow-sm
                      flex items-center justify-center
                      transition-all duration-200 
-                     hover:bg-[#006C35] hover:text-white hover:border-[#006C35]
-                     active:scale-95 text-[#006C35]"
+                     hover:bg-pro hover:text-white hover:border-pro
+                     active:scale-95 text-slate-800"
             aria-label="Previous slide"
           >
             <svg 
@@ -144,12 +144,12 @@ export default function SliderComponent({ src }: { src: SliderResponse | null })
             className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 z-20
                      w-9 h-9 md:w-11 md:h-11 rounded-full
                      bg-white/90 backdrop-blur-sm
-                     border border-[#006C35]/20
-                     shadow-md
+                     border border-slate-200
+                     shadow-sm
                      flex items-center justify-center
                      transition-all duration-200
-                     hover:bg-[#006C35] hover:text-white hover:border-[#006C35]
-                     active:scale-95 text-[#006C35]"
+                     hover:bg-pro hover:text-white hover:border-pro
+                     active:scale-95 text-slate-800"
             aria-label="Next slide"
           >
             <svg 

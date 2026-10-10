@@ -19,7 +19,7 @@ import {
 } from "@/components/skeletons/HomeSkeletons";
 import WhyAndFaqs from "../components/WhyAndFaqs";
 
-const DEFAULT_HOME_BANNER = "/images/saudi_nd_banner_1.png";
+const DEFAULT_HOME_BANNER = "/images/home-default-hero.webp";
 const DEFAULT_CATEGORY_BANNER = "/images/category-default-banner.webp";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -276,7 +276,7 @@ export default function HomePageClient({
 
 	// ------------------ render ------------------
 	return (
-		<div className="saudi-national-home bg-[#FBFCFA] min-h-screen py-3 md:py-6">
+		<div className="bg-[#FBFCFA] min-h-screen py-3 md:py-6">
 			<div className="container flex flex-col gap-5 md:gap-8">
 				{/* Hero Slider */}
 				<div className="w-full">
@@ -285,10 +285,10 @@ export default function HomePageClient({
 					) : sliderSrc.length > 0 ? (
 						<SliderComponent src={mainSlider?.[0]} />
 					) : (
-						<div className="relative h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] rounded-2xl border border-[#006C35]/15 bg-white overflow-hidden shadow-sm">
+						<div className="relative h-[216px] sm:h-[306px] md:h-[450px] lg:h-[486px] rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
 							<Image
 								src={DEFAULT_HOME_BANNER}
-								alt="بنر اليوم الوطني السعودي"
+								alt="بنر تالا الجزيرة"
 								fill
 								sizes="100vw"
 								className="object-cover"
@@ -328,20 +328,20 @@ export default function HomePageClient({
 							return (
 								<section
 									key={category.id}
-									className="rounded-[10px] md:rounded-2xl border border-[#006C35]/15 bg-white p-3 md:p-5 shadow-xs overflow-hidden"
+									className="rounded-[10px] md:rounded-2xl border border-slate-200 bg-white p-3 md:p-5 shadow-xs overflow-hidden"
 								>
 									{/* Compact Category Header */}
 									<div className="flex items-center justify-between mb-2 md:mb-3 px-1">
 										<div className="flex items-center gap-2">
-											<span className="w-1.5 md:w-2 h-4 md:h-5 rounded-full bg-[#C9A54C]" />
-											<h2 className="text-base md:text-xl font-extrabold text-[#003B24]">
+											<span className="w-1.5 md:w-2 h-4 md:h-5 rounded-full bg-pro" />
+											<h2 className="text-base md:text-xl font-extrabold text-slate-900">
 												{category.name}
 											</h2>
 										</div>
 
 										<Link
 											href={`/category/${category.slug || category.id}`}
-											className="text-xs md:text-sm font-bold text-[#006C35] hover:text-[#C9A54C] transition flex items-center gap-1"
+											className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1"
 										>
 											الكل <span>←</span>
 										</Link>
@@ -350,7 +350,7 @@ export default function HomePageClient({
 									{/* Category Banner */}
 									<Link
 										href={`/category/${category.slug || category.id}`}
-										className="block relative w-full aspect-[200/63] md:aspect-[100/21] mb-3 rounded-lg md:rounded-xl overflow-hidden border border-[#006C35]/10 bg-[#F2F6F3] group cursor-pointer"
+										className="block relative w-full aspect-[200/63] md:aspect-[100/21] mb-3 rounded-lg md:rounded-xl overflow-hidden border border-slate-200 bg-slate-50 group cursor-pointer"
 									>
 										<CategoryBannerImage
 											desktopSrc={categoryBanner.desktop}
@@ -400,7 +400,7 @@ export default function HomePageClient({
 							type="button"
 							onClick={loadMore}
 							disabled={loadingMore}
-							className="rounded-xl px-6 py-2.5 text-sm md:text-base font-extrabold border border-[#006C35] bg-white text-[#006C35] hover:bg-[#006C35] hover:text-white disabled:opacity-60 disabled:cursor-not-allowed transition duration-200"
+							className="rounded-xl px-6 py-2.5 text-sm md:text-base font-extrabold border border-pro bg-white text-pro hover:bg-pro hover:text-white disabled:opacity-60 disabled:cursor-not-allowed transition duration-200"
 						>
 							{loadingMore ? "جاري تحميل المزيد..." : "تحميل المزيد"}
 						</button>

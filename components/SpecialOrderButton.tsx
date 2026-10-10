@@ -211,7 +211,7 @@ export default function SpecialOrderButton() {
 											className={`w-full px-3.5 py-2.5 text-sm rounded-xl border bg-slate-50/50 focus:bg-white focus:outline-hidden transition ${
 												errors.productName
 													? "border-red-400 ring-2 ring-red-100"
-													: "border-slate-200 focus:border-[#006C35] focus:ring-2 focus:ring-[#006C35]/10"
+													: "border-slate-200 focus:border-[#F39200] focus:ring-2 focus:ring-[#F39200]/10"
 											}`}
 										/>
 										{errors.productName && (
@@ -235,7 +235,7 @@ export default function SpecialOrderButton() {
 												className={`w-full px-3.5 py-2.5 text-sm rounded-xl border bg-slate-50/50 focus:bg-white focus:outline-hidden transition ${
 													errors.quantity
 														? "border-red-400 ring-2 ring-red-100"
-														: "border-slate-200 focus:border-[#006C35] focus:ring-2 focus:ring-[#006C35]/10"
+														: "border-slate-200 focus:border-[#F39200] focus:ring-2 focus:ring-[#F39200]/10"
 												}`}
 											/>
 											{errors.quantity && (
@@ -258,7 +258,7 @@ export default function SpecialOrderButton() {
 												className={`w-full px-3.5 py-2.5 text-sm rounded-xl border text-right bg-slate-50/50 focus:bg-white focus:outline-hidden transition ${
 													errors.phone
 														? "border-red-400 ring-2 ring-red-100"
-														: "border-slate-200 focus:border-[#006C35] focus:ring-2 focus:ring-[#006C35]/10"
+														: "border-slate-200 focus:border-[#F39200] focus:ring-2 focus:ring-[#F39200]/10"
 												}`}
 											/>
 											{errors.phone && (
@@ -278,7 +278,7 @@ export default function SpecialOrderButton() {
 											value={notes}
 											onChange={(e) => setNotes(e.target.value)}
 											placeholder="اكتب أي تفاصيل أخرى مثل: الألوان، نوع الخامة، خيارات الطباعة (لامع/مطفي)..."
-											className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:border-[#006C35] focus:ring-2 focus:ring-[#006C35]/10 transition resize-none"
+											className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:border-[#F39200] focus:ring-2 focus:ring-[#F39200]/10 transition resize-none"
 										/>
 									</div>
 

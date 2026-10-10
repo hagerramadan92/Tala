@@ -411,7 +411,7 @@ export default function CategoryPage() {
         {/* Banner with fallback and responsive mobile/desktop support */}
         {(category.category_banners?.[0]?.image || category.category_banners?.[0]?.mobile_image) && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
-            <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full aspect-[200/63] md:aspect-[100/21] bg-[#F2F6F3]">
+            <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full aspect-[200/63] md:aspect-[100/21] bg-slate-100">
               {/* Mobile Banner (2:1 aspect ratio) */}
               <div className="block md:hidden relative w-full h-full">
                 <ImageWithFallback
