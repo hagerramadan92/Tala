@@ -256,7 +256,7 @@ export default function HomePageClient({
 		<div className="bg-[#FBFCFA] min-h-screen py-3 md:py-6">
 			<div className="container flex flex-col gap-5 md:gap-8">
 				{/* Hero Slider */}
-				<div className="w-full">
+				<div className="mt-3 w-full sm:mt-0">
 					{isMainSliderLoading ? (
 						<HeroSliderSkeleton />
 					) : sliderSrc.length > 0 ? (
