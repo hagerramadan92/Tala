@@ -1,10 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
-
-import "swiper/css";
+import { useEffect, useState } from "react";
 
 type Ad = {
 	id: number;
@@ -51,9 +47,9 @@ function HeaderAdsSkeleton() {
 
 export default function HeaderAdsSlider() {
 	const [ads, setAds] = useState<Ad[]>([]);
-	const [loading, setLoading] = useState(true);
-
 	const apiBase = process.env.NEXT_PUBLIC_API_URL;
+	const [loading, setLoading] = useState(Boolean(apiBase));
+	const [activeIndex, setActiveIndex] = useState(0);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -75,24 +71,30 @@ export default function HeaderAdsSlider() {
 		}
 
 		if (apiBase) load();
-		else setLoading(false);
 
 		return () => {
 			cancelled = true;
 		};
 	}, [apiBase]);
 
-	const slides = useMemo(() => {
-		if (ads.length <= 1) return ads;
-		return [...ads, ...ads];
-	}, [ads]);
+	useEffect(() => {
+		if (ads.length <= 1) return;
+		const timer = window.setInterval(() => {
+			setActiveIndex((current) => (current + 1) % ads.length);
+		}, 3200);
+		return () => window.clearInterval(timer);
+	}, [ads.length]);
 
 	/* ---------- Skeleton ---------- */
 	if (loading) {
 		return <HeaderAdsSkeleton />;
 	}
 
-	if (!slides.length) return null;
+	if (!ads.length) {
+		return <div aria-hidden="true" className="h-10 w-full border-b border-gray-200 bg-gray-100" />;
+	}
+
+	const activeAd = ads[activeIndex % ads.length];
 
 	return (
 		<div
@@ -100,32 +102,12 @@ export default function HeaderAdsSlider() {
 			className="w-full border-b border-gray-200 bg-gray-100 text-gray-900 "
 		>
 			<div className="mx-auto max-w-7xl px-2 sm:px-4">
-				<Swiper
-					modules={[Autoplay]}
-					loop
-					slidesPerView={1}
-					speed={700}
-					autoplay={{
-						delay: 2500,
-						disableOnInteraction: false,
-						pauseOnMouseEnter: true,
-					}}
-					className="h-10"
-				>
-					{slides.map((ad, idx) => (
-						<SwiperSlide
-							key={`${ad.id}-${idx}`}
-							className="!flex items-center"
-						>
-							<div className="mx-auto flex w-full items-center justify-center gap-2 px-2 text-center text-sm sm:text-[15px]">
-								<span className="text-base">
-									{faToEmoji(ad.icon)}
-								</span>
-								<span className="truncate">{ad.description}</span>
-							</div>
-						</SwiperSlide>
-					))}
-				</Swiper>
+				<div className="flex h-10 items-center">
+					<div className="mx-auto flex w-full items-center justify-center gap-2 px-2 text-center text-sm sm:text-[15px]">
+						<span className="text-base">{faToEmoji(activeAd.icon)}</span>
+						<span className="truncate">{activeAd.description}</span>
+					</div>
+				</div>
 			</div>
 		</div>
 	);

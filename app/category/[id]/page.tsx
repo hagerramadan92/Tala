@@ -412,28 +412,25 @@ export default function CategoryPage() {
         {(category.category_banners?.[0]?.image || category.category_banners?.[0]?.mobile_image) && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
             <div className="md:rounded-2xl rounded-lg overflow-hidden shadow-sm border border-slate-200 relative w-full aspect-[200/63] md:aspect-[100/21] bg-slate-100">
-              {/* Mobile Banner (2:1 aspect ratio) */}
-              <div className="block md:hidden relative w-full h-full">
-                <ImageWithFallback
-                  src={category.category_banners[0].mobile_image || category.category_banners[0].image || ""}
+              <picture className="w-full h-full block">
+                {category.category_banners[0].mobile_image && (
+                  <source
+                    media="(max-width: 767px)"
+                    srcSet={category.category_banners[0].mobile_image}
+                  />
+                )}
+                <img
+                  src={category.category_banners[0].image || category.category_banners[0].mobile_image || "/images/category-default-banner.webp"}
                   alt={`${category.name} banner`}
-                  fill
-                  className="object-cover object-center"
-                  fallbackSrc="/images/category-default-banner.webp"
-                  priority
+                  className="w-full h-full object-cover object-center"
+                  loading="eager"
+                  // @ts-ignore
+                  fetchPriority="high"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/images/category-default-banner.webp";
+                  }}
                 />
-              </div>
-              {/* Desktop Banner (3:1 aspect ratio) */}
-              <div className="hidden md:block relative w-full h-full">
-                <ImageWithFallback
-                  src={category.category_banners[0].image || category.category_banners[0].mobile_image || ""}
-                  alt={`${category.name} banner`}
-                  fill
-                  className="object-cover object-center"
-                  fallbackSrc="/images/category-default-banner.webp"
-                  priority
-                />
-              </div>
+              </picture>
             </div>
           </motion.div>
         )}

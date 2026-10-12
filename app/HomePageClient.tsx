@@ -98,52 +98,29 @@ function CategoryBannerImage({
 	alt: string;
 	priority?: boolean;
 }) {
-	const [desktopImg, setDesktopImg] = useState(desktopSrc || DEFAULT_CATEGORY_BANNER);
-	const [mobileImg, setMobileImg] = useState(mobileSrc || desktopSrc || DEFAULT_CATEGORY_BANNER);
+	const desktop = desktopSrc || DEFAULT_CATEGORY_BANNER;
+	const mobile = mobileSrc || desktopSrc || DEFAULT_CATEGORY_BANNER;
+	const [imgSrc, setImgSrc] = useState(desktop);
 
 	useEffect(() => {
-		setDesktopImg(desktopSrc || DEFAULT_CATEGORY_BANNER);
-		setMobileImg(mobileSrc || desktopSrc || DEFAULT_CATEGORY_BANNER);
-	}, [desktopSrc, mobileSrc]);
+		setImgSrc(desktopSrc || DEFAULT_CATEGORY_BANNER);
+	}, [desktopSrc]);
 
 	return (
-		<>
-			{/* Mobile Banner (2:1 aspect ratio) */}
-			<div className="block md:hidden relative w-full h-full">
-				<Image
-					src={mobileImg}
-					alt={alt}
-					fill
-					sizes="100vw"
-					className="object-cover object-center"
-					priority={priority}
-					loading={priority ? "eager" : "lazy"}
-					onError={() => {
-						if (mobileImg !== DEFAULT_CATEGORY_BANNER) {
-							setMobileImg(DEFAULT_CATEGORY_BANNER);
-						}
-					}}
-				/>
-			</div>
-
-			{/* Desktop Banner (3:1 aspect ratio) */}
-			<div className="hidden md:block relative w-full h-full">
-				<Image
-					src={desktopImg}
-					alt={alt}
-					fill
-					sizes="(max-width: 1200px) 100vw, 1200px"
-					className="object-cover object-center"
-					priority={priority}
-					loading={priority ? "eager" : "lazy"}
-					onError={() => {
-						if (desktopImg !== DEFAULT_CATEGORY_BANNER) {
-							setDesktopImg(DEFAULT_CATEGORY_BANNER);
-						}
-					}}
-				/>
-			</div>
-		</>
+		<picture className="w-full h-full block">
+			{mobile && mobile !== desktop && (
+				<source media="(max-width: 767px)" srcSet={mobile} />
+			)}
+			<img
+				src={imgSrc}
+				alt={alt}
+				className="w-full h-full object-cover object-center"
+				loading={priority ? "eager" : "lazy"}
+				// @ts-ignore
+				fetchPriority={priority ? "high" : "auto"}
+				onError={() => setImgSrc(DEFAULT_CATEGORY_BANNER)}
+			/>
+		</picture>
 	);
 }
 
@@ -305,6 +282,36 @@ export default function HomePageClient({
 					) : (
 						<CategoriesSlider categories={parentCategories} />
 					)}
+				</div>
+
+				{/* Stationery & Quick Printing Feature Banner */}
+				<div className="w-full">
+					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#1e3a5f] p-6 md:p-8 text-white shadow-md">
+						<div className="absolute -left-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+						<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+							<div className="text-center md:text-right space-y-2">
+								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-bold">
+									<span>🖨️ خدمة جديدة وحصرية</span>
+								</div>
+								<h3 className="text-xl md:text-2xl font-black">
+									خدمات القرطاسية والطباعة الفورية
+								</h3>
+								<p className="text-slate-200 text-xs md:text-sm max-w-xl">
+									اطبع مستنداتك (PDF / Word) وصورك بأعلى جودة ليزر، مقاسات من A0 إلى A5، أبيض وأسود أو ملون، مع حذف تلقائي للملفات بعد الطباعة لضمان الخصوصية.
+								</p>
+							</div>
+
+							<div className="shrink-0 flex items-center gap-3">
+								<Link
+									href="/stationery"
+									className="px-6 py-3.5 rounded-xl bg-white text-black hover:bg-slate-100 active:scale-95 font-extrabold text-sm md:text-base flex items-center gap-2 shadow-lg transition"
+								>
+									<span>اطلب طباعة ملفاتك الآن</span>
+									<span>←</span>
+								</Link>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				{/* Category Sections */}

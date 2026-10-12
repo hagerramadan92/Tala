@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import "@/styles/screen.css";
 import { Toaster } from "react-hot-toast";
@@ -98,7 +99,9 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://dashboard.talaaljazeera.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://dashboard.talaaljazeera.com" />
-        <script
+        <Script
+          id="google-tag-manager"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

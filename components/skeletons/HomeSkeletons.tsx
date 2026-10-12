@@ -1,8 +1,5 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import { useRef } from "react";
 
 function Sk({ className = "" }: { className?: string }) {
 	return (
@@ -31,8 +28,6 @@ export function HeroSliderSkeleton() {
 
 
 export function CategoriesSliderSkeleton() {
-	const paginationRef = useRef<HTMLDivElement | null>(null);
-
 	return (
 		<div className="relative w-full !pb-6 py-4 md:py-6">
 			<div className="relative">
@@ -93,9 +88,9 @@ export function CategorySectionSkeleton() {
 
 				<div className=" grid grid-cols-4 max-lg:h-[340px] overflow-hidden max-lg:grid-cols-2  gap-6 overflow-hidden w-full">
 					{Array.from({ length: 4 }).map((_, i) => (
-						<SwiperSlide key={i}>
+						<div key={i}>
 							<ProductCardSkeleton />
-						</SwiperSlide>
+						</div>
 					))}
 				</div>
 			</div>

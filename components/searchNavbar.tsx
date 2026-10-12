@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaRegUser } from "react-icons/fa";
 import { LuPhone } from "react-icons/lu";
 import { AiOutlineClose } from "react-icons/ai";
@@ -14,6 +13,7 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useAppContext } from "@/src/context/AppContext";
 import Logo from "./Logo";
 import CategoriesSlider from "./CategoriesC";
+import { FiPrinter } from "react-icons/fi";
 
 function cn(...c: (string | false | null | undefined)[]) {
 	return c.filter(Boolean).join(" ");
@@ -31,7 +31,7 @@ export default function SearchNavbar() {
 		[socialMedia]
 	);
 
-	const phone = socials.find((s: any) => s.key === "phone")?.value || socials?.[0]?.value;
+	const phone = socials.find((social) => social.key === "phone")?.value || socials?.[0]?.value;
 
 	// دالة لإغلاق القائمة
 	const closeMenu = () => setMenuOpen(false);
@@ -57,18 +57,22 @@ export default function SearchNavbar() {
 							)}
 						>
 							<span className="absolute inset-0 md:rounded-2xl rounded-lg bg-gradient-to-tr from-slate-100 to-white opacity-0 hover:opacity-100 transition" />
-							<motion.span
-								whileHover={{ scale: 1.05 }}
-								whileTap={{ scale: 0.92 }}
-								className="relative z-10 flex items-center justify-center"
-							>
+							<span className="relative z-10 flex items-center justify-center">
 								<FaBars size={18} />
-							</motion.span>
+							</span>
 						</button>
 
 						<Logo className=" " />
 
 						<nav className="hidden md:flex items-center gap-2 ms-2">
+							<Link
+								href="/stationery"
+								className="px-3 py-2 rounded-xl text-sm font-extrabold text-[#1e3a5f] hover:bg-slate-100 flex items-center gap-1.5 transition"
+							>
+								<FiPrinter className="w-4 h-4 text-primary" />
+								<span>خدمات القرطاسية والطباعة</span>
+								<span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#1e3a5f] text-white font-bold">جديد</span>
+							</Link>
 							<Link
 								href="/blogs"
 								className="px-3 py-2 rounded-xl text-sm font-extrabold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
@@ -127,27 +131,18 @@ export default function SearchNavbar() {
 			</div>
 
 			{/* Mobile/Tablet Drawer */}
-			<AnimatePresence>
-				{menuOpen && (
+			{menuOpen && (
 					<>
 						{/* Overlay */}
-						<motion.div
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 0.55 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.2 }}
-							className="fixed inset-0 bg-black z-40"
+						<div
+							className="fixed inset-0 bg-black/55 z-40"
 							onClick={closeMenu}
 						/>
 
 						{/* Drawer: bottom sheet on mobile, right drawer on md+ */}
-						<motion.aside
+						<aside
 							role="dialog"
 							aria-modal="true"
-							initial={{ y: "100%", x: "0%" }}
-							animate={{ y: "0%", x: "0%" }}
-							exit={{ y: "100%", x: "0%" }}
-							transition={{ type: "spring", stiffness: 320, damping: 34 }}
 							className={cn(
 								"fixed z-50 bg-white shadow-2xl overflow-hidden",
 								"w-screen md:w-[420px]",
@@ -199,12 +194,33 @@ export default function SearchNavbar() {
 										<Link
 											href="/blogs"
 											onClick={closeMenu}
-											className="w-fit gap-4 inline-flex items-center justify-between rounded-xl bg-slate-900 text-white px-4 py-3 text-sm font-extrabold hover:bg-slate-800 transition"
+											className="w-fit gap-2 inline-flex items-center justify-between rounded-xl bg-slate-100 text-slate-800 px-3 py-3 text-xs font-extrabold hover:bg-slate-200 transition"
 										>
 											<span>المدونة</span>
 										</Link>
 									</div>
 								</div>
+
+								{/* Stationery Link Banner */}
+								<Link
+									href="/stationery"
+									onClick={closeMenu}
+									className="p-3.5 rounded-2xl bg-gradient-to-r from-[#0f172a] to-[#1e3a5f] text-white flex items-center justify-between shadow-md transition active:scale-98"
+								>
+									<div className="flex items-center gap-3">
+										<div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg">
+											🖨️
+										</div>
+										<div>
+											<div className="font-extrabold text-sm flex items-center gap-1.5">
+												<span>خدمات القرطاسية والطباعة</span>
+												<span className="bg-white text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+											</div>
+											<div className="text-xs text-white/80">طباعة مستندات وصور بجميع المقاسات</div>
+										</div>
+									</div>
+									<div className="text-white text-lg">←</div>
+								</Link>
 
 								{/* Support card */}
 								<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -290,10 +306,9 @@ export default function SearchNavbar() {
 									</button>
 								)}
 							</div>
-						</motion.aside>
+						</aside>
 					</>
 				)}
-			</AnimatePresence>
 		</div>
 	);
 }

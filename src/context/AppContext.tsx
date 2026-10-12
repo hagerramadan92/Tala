@@ -53,7 +53,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 	const [homeData, setHomeData] = useState<HomeData | null>(null);
 	const [loadingHome, setLoadingHome] = useState<any>(null);
 	const [parentCategories, setParentCategories] = useState<CategoryI[]>([]);
-	const [loadingCategories, setLoadingCategories] = useState<any>([]);
+	const [loadingCategories, setLoadingCategories] = useState(true);
 	const [socialMedia, setSocialMedia] = useState<SocialMediaI[]>([]);
 	const [paymentMethods, setPaymentMethods] = useState<any>([]);
 

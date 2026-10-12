@@ -27,16 +27,26 @@ export default async function Home() {
 	}
 
 	const firstSlide = initialMainSlider?.[0]?.items?.[0];
-	const firstSlideImage = firstSlide?.mobile_image || firstSlide?.image;
+	const firstSlideDesktop = firstSlide?.desktop_image || firstSlide?.image || firstSlide?.mobile_image;
+	const firstSlideMobile = firstSlide?.mobile_image || firstSlideDesktop;
 
 	return (
 		<>
-			{firstSlideImage && (
+			{firstSlideMobile && (
 				<link
 					rel="preload"
 					as="image"
-					href={firstSlideImage}
-					// @ts-ignore
+					href={firstSlideMobile}
+					media="(max-width: 767px)"
+					fetchPriority="high"
+				/>
+			)}
+			{firstSlideDesktop && (
+				<link
+					rel="preload"
+					as="image"
+					href={firstSlideDesktop}
+					media="(min-width: 768px)"
 					fetchPriority="high"
 				/>
 			)}

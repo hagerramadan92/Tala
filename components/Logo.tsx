@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 type Props = {
 	href?: string;
@@ -23,12 +22,7 @@ export default function Logo({
 			aria-label="Tala AlJazeera"
 		>
 			{/* Logo */}
-			<motion.div
-				initial={{ opacity: 0, y: 8, scale: 0.96 }}
-				animate={{ opacity: 1, y: 0, scale: 1 }}
-				transition={{ duration: 0.45, ease: "easeOut" }}
-				className="relative"
-			>
+			<div className="relative">
 				{/* soft glow */}
 				<div className="relative  ">
 					<Image
@@ -40,16 +34,11 @@ export default function Logo({
 						priority
 					/>
 				</div>
-			</motion.div>
+			</div>
 
 			{/* Names */}
 			<div className="flex flex-col leading-tight">
-				<motion.div
-					initial={{ opacity: 0, x: 10 }}
-					animate={{ opacity: 1, x: 0 }}
-					transition={{ duration: 0.45, ease: "easeOut", delay: 0.05 }}
-					className="flex flex-col items-baseline "
-				>
+				<div className="flex flex-col items-baseline">
 					<span className="font-ar  ml-auto font-extrabold text-slate-900 max-md:text-base text-lg">
 						تالا الجزيره
 					</span>
@@ -57,7 +46,7 @@ export default function Logo({
 					<span className=" mt-[-3px] font-en font-bold text-slate-500 text-sm max-md:text-xs tracking-wide">
 						Tala AlJazeera
 					</span>
-				</motion.div>
+				</div>
 			</div>
 		</Link>
 	);
