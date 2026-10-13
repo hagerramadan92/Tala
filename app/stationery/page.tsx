@@ -30,11 +30,14 @@ import { useCart } from "@/src/context/CartContext";
 interface PriceItem {
   id: number;
   service_type: "document" | "photo";
+  paper_type: string;
   paper_size: string;
   bw_price: string | number;
   color_price: string | number;
   file_bw_price?: string | number;
   file_color_price?: string | number;
+  side_type: "single" | "double";
+  orientation: "portrait" | "landscape";
   double_sided_price: string | number;
   is_active: boolean;
 }
@@ -49,6 +52,7 @@ interface UploadedFileItem {
   is_pdf: boolean;
   size_formatted?: string;
   service_type: "document" | "photo";
+  paper_type: string;
   paper_size: string;
   color_type: "bw" | "color";
   orientation: "portrait" | "landscape";
@@ -81,6 +85,10 @@ export default function StationeryPage() {
   // مصفوفات الأسعار والأحجام من الـ API
   const [pricesList, setPricesList] = useState<PriceItem[]>([]);
   const [availableSizes, setAvailableSizes] = useState<string[]>(["A4", "A3", "A5", "A2", "A1", "A0"]);
+  const [paperTypes, setPaperTypes] = useState<Record<"document" | "photo", Record<string, string>>>({
+    document: { plain: "ورق عادي", coated: "ورق كوشيه", cardstock: "ورق مقوّى" },
+    photo: { glossy: "ورق صور لامع", matte: "ورق صور مطفي" },
+  });
   const [sizeDimensions, setSizeDimensions] = useState<Record<string, string>>({
     A0: "84.1 × 118.9 cm",
     A1: "59.4 × 84.1 cm",
@@ -104,6 +112,7 @@ export default function StationeryPage() {
             if (json.data.prices) setPricesList(json.data.prices);
             if (json.data.sizes) setAvailableSizes(json.data.sizes);
             if (json.data.size_dimensions) setSizeDimensions(json.data.size_dimensions);
+            if (json.data.paper_types) setPaperTypes(json.data.paper_types);
           }
         }
       } catch (err) {
@@ -119,14 +128,19 @@ export default function StationeryPage() {
   const getPagePrice = (
     serviceType: "document" | "photo",
     paperSize: string,
+    paperType: string,
     colorType: "bw" | "color",
     sideType: "single" | "double" = "single",
+    orientation: "portrait" | "landscape" = "portrait",
     pagesCount: number = 1
   ): number => {
     const item = pricesList.find(
       (p) =>
         p.service_type === serviceType &&
-        p.paper_size.toUpperCase() === paperSize.toUpperCase()
+        p.paper_size.toUpperCase() === paperSize.toUpperCase() &&
+        p.paper_type === paperType &&
+        p.side_type === sideType &&
+        p.orientation === orientation
     );
     if (!item) {
       return colorType === "color" ? (serviceType === "photo" ? 3.0 : 1.5) : 0.5;
@@ -147,9 +161,6 @@ export default function StationeryPage() {
       base = colorType === "color" ? fileColor : fileBw;
     }
 
-    if (sideType === "double" && Number(item.double_sided_price) > 0) {
-      base += Number(item.double_sided_price);
-    }
     return Math.max(0.05, Number(base.toFixed(2)));
   };
 
@@ -170,8 +181,10 @@ export default function StationeryPage() {
     const pricePerPage = getPagePrice(
       file.service_type,
       file.paper_size,
+      file.paper_type,
       file.color_type,
       file.side_type,
+      file.orientation,
       file.pages_count
     );
     return Number((file.pages_count * pricePerPage * file.copies).toFixed(2));
@@ -312,6 +325,7 @@ export default function StationeryPage() {
             size_formatted: json.data.size_formatted,
             service_type: isDoc ? "document" : "photo",
             paper_size: "A4",
+            paper_type: Object.keys(paperTypes[isDoc ? "document" : "photo"] || {})[0] || (isDoc ? "plain" : "glossy"),
             color_type: isDoc ? "bw" : "color",
             orientation: "portrait",
             side_type: "single",
@@ -378,6 +392,7 @@ export default function StationeryPage() {
           file_name: f.file_name,
           service_type: f.service_type,
           paper_size: f.paper_size,
+          paper_type: f.paper_type,
           color_type: f.color_type,
           orientation: f.orientation,
           side_type: f.side_type,
@@ -611,8 +626,10 @@ export default function StationeryPage() {
                 const currentUnitPrice = getPagePrice(
                   file.service_type,
                   file.paper_size,
+                  file.paper_type,
                   file.color_type,
                   file.side_type,
+                  file.orientation,
                   file.pages_count
                 );
 
@@ -701,29 +718,19 @@ export default function StationeryPage() {
                         </span>
                       </div>
 
-                      {/* Control 2: Number of pages (editable) */}
+                      {/* Control 2: Number of pages (read-only) */}
                       <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
                         <label className="block text-xs font-bold text-slate-700 mb-2">
                           عدد صفحات الملف:
                         </label>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            min="1"
-                            value={file.pages_count}
-                            onChange={(e) =>
-                              updateFileOption(
-                                file.id,
-                                "pages_count",
-                                Math.max(1, parseInt(e.target.value) || 1)
-                              )
-                            }
-                            className="w-full bg-white px-3 py-2 rounded-lg border border-slate-300 text-sm font-bold text-slate-800 focus:outline-hidden focus:border-[#ff7300]"
-                          />
+                          <output className="w-full bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-800 cursor-default">
+                            {file.pages_count}
+                          </output>
                           <span className="text-xs text-slate-500 whitespace-nowrap">صفحة</span>
                         </div>
                         <span className="text-[11px] text-slate-400 mt-1 block">
-                          يمكنك تعديل عدد الصفحات يدوياً
+                          يتم تحديد عدد الصفحات تلقائياً من الملف
                         </span>
                       </div>
 
@@ -744,7 +751,7 @@ export default function StationeryPage() {
                           >
                             <span>⚪ أبيض وأسود</span>
                             <span className="text-[10px] text-slate-400">
-                              {getPagePrice(file.service_type, file.paper_size, "bw").toFixed(2)} ر.س/ص
+                              {getPagePrice(file.service_type, file.paper_size, file.paper_type, "bw", file.side_type, file.orientation, file.pages_count).toFixed(2)} ر.س/ص
                             </span>
                           </button>
 
@@ -759,13 +766,36 @@ export default function StationeryPage() {
                           >
                             <span>🎨 ألوان ملونة</span>
                             <span className="text-[10px] text-slate-400">
-                              {getPagePrice(file.service_type, file.paper_size, "color").toFixed(2)} ر.س/ص
+                              {getPagePrice(file.service_type, file.paper_size, file.paper_type, "color", file.side_type, file.orientation, file.pages_count).toFixed(2)} ر.س/ص
                             </span>
                           </button>
                         </div>
                       </div>
 
-                      {/* Control 4: Paper Size (A0 to A5) */}
+                      {/* Control 4: Paper Type */}
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 md:col-span-2 lg:col-span-3">
+                        <label className="block text-xs font-bold text-slate-700 mb-2">
+                          نوع الورق:
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(paperTypes[file.service_type] || {}).map(([type, label]) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => updateFileOption(file.id, "paper_type", type)}
+                              className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition ${
+                                file.paper_type === type
+                                  ? "border-[#ff7300] bg-white text-[#ff7300] shadow-xs ring-2 ring-[#ff7300]/10"
+                                  : "border-slate-200 bg-white/70 text-slate-700 hover:bg-white"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Control 5: Paper Size (A0 to A5) */}
                       <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 md:col-span-2 lg:col-span-3">
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-xs font-bold text-slate-700">
@@ -800,7 +830,7 @@ export default function StationeryPage() {
                         </div>
                       </div>
 
-                      {/* Control 5: Print Orientation */}
+                      {/* Control 6: Print Orientation */}
                       <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
                         <label className="block text-xs font-bold text-slate-700 mb-2">
                           اتجاه الطباعة (Print Orientation):
@@ -831,9 +861,8 @@ export default function StationeryPage() {
                         </div>
                       </div>
 
-                      {/* Control 6: Print Sides (Single vs Double) */}
-                      {file.service_type === "document" && (
-                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+                      {/* Control 7: Print Sides (Single vs Double) */}
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
                           <label className="block text-xs font-bold text-slate-700 mb-2">
                             طباعة الوجه (Sides):
                           </label>
@@ -861,8 +890,7 @@ export default function StationeryPage() {
                               <span>وجهين</span>
                             </button>
                           </div>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </motion.div>
                 );

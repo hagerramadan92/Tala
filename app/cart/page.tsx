@@ -692,6 +692,9 @@ export default function CartPage() {
 
   const backendSubtotal = n(subtotal);
   const backendTotal = n(total);
+  const hasStationery = cart.some((item: any) => item.product?.slug === "stationery-print-service");
+  const hasRegularProducts = cart.some((item: any) => item.product?.slug !== "stationery-print-service");
+  const isStationeryOnly = hasStationery && !hasRegularProducts;
 
   // ✅ حساب الإجمالي الحالي مع التعديلات المحلية
   const currentTotal = useMemo(() => {
@@ -756,6 +759,9 @@ export default function CartPage() {
       created_at: new Date().toISOString(),
       items_count: cartCount,
       items_length: Array.isArray(cart) ? cart.length : 0,
+      is_stationery_only: isStationeryOnly,
+      has_stationery: hasStationery,
+      has_regular_products: hasRegularProducts,
 
       // backend totals
       subtotal: backendSubtotal,
@@ -793,6 +799,9 @@ export default function CartPage() {
     cart,
     currentTotal,
     code,
+    isStationeryOnly,
+    hasStationery,
+    hasRegularProducts,
   ]);
 
   // ✅ استعادة معاينات التصميم من localStorage
@@ -840,6 +849,16 @@ export default function CartPage() {
   }, [persistCheckoutSummary]);
 
   const handleClick = () => {
+    if (hasStationery && hasRegularProducts) {
+      Swal.fire({
+        icon: "warning",
+        title: "يجب فصل طلب الطباعة",
+        text: "أكمل طلب الطباعة منفصلًا عن منتجات المتجر. احذف أحد النوعين من السلة ثم تابع الدفع.",
+        confirmButtonText: "حسنًا",
+      });
+      return;
+    }
+
     let hasMissing = false;
     const errors: string[] = [];
 

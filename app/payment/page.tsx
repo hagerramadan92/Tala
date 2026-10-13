@@ -71,7 +71,12 @@ type CheckoutSummaryV1 = {
 
 	// optional if you later add it
 	coupon_value?: number;
+	is_stationery_only?: boolean;
+	has_stationery?: boolean;
+	has_regular_products?: boolean;
 };
+
+type StationeryDeliveryArea = { id: number; name: string; price: string | number };
 
 function readSessionJSON<T>(key: string): T | null {
 	if (typeof window === "undefined") return null;
@@ -263,6 +268,9 @@ export default function PaymentPage() {
 	const [selectedShipping, setSelectedShipping] = useState<any>(null);
 	const [otoOrderId, setOtoOrderId] = useState<string | null>(null);
 	const [loadingShipping, setLoadingShipping] = useState(false);
+	const [stationeryDeliveryType, setStationeryDeliveryType] = useState<"pickup" | "home_delivery">("pickup");
+	const [stationeryDeliveryAreas, setStationeryDeliveryAreas] = useState<StationeryDeliveryArea[]>([]);
+	const [selectedStationeryArea, setSelectedStationeryArea] = useState<StationeryDeliveryArea | null>(null);
 
 	const router = useRouter();
 	const base_url = process.env.NEXT_PUBLIC_API_URL;
@@ -329,7 +337,7 @@ export default function PaymentPage() {
 
 	// 🚚 Fetch shipping options when address is available
 	useEffect(() => {
-		if (!token || !selectedAddress) return;
+		if (!token || !selectedAddress || checkoutSummary?.is_stationery_only) return;
 
 		const fetchShippingOptions = async () => {
 			setLoadingShipping(true);
@@ -362,7 +370,44 @@ export default function PaymentPage() {
 		};
 
 		fetchShippingOptions();
-	}, [token, selectedAddress, base_url]);
+	}, [token, selectedAddress, base_url, checkoutSummary?.is_stationery_only]);
+
+	useEffect(() => {
+		if (!checkoutSummary?.is_stationery_only) return;
+
+		const fetchStationeryDeliveryAreas = async () => {
+			setLoadingShipping(true);
+			try {
+				const res = await fetch(`${base_url}/stationery/delivery-options`, { cache: "no-store" });
+				const result = await res.json();
+				const areas = Array.isArray(result?.data?.areas) ? result.data.areas : [];
+				setStationeryDeliveryAreas(areas);
+				setSelectedShipping({ deliveryOptionName: "استلام من الفرع", price: 0 });
+			} catch (err) {
+				console.error("Error fetching stationery delivery areas:", err);
+			} finally {
+				setLoadingShipping(false);
+			}
+		};
+
+		fetchStationeryDeliveryAreas();
+	}, [checkoutSummary?.is_stationery_only, base_url]);
+
+	const selectStationeryDeliveryType = (type: "pickup" | "home_delivery") => {
+		setStationeryDeliveryType(type);
+		if (type === "pickup") {
+			setSelectedShipping({ deliveryOptionName: "استلام من الفرع", price: 0 });
+		} else {
+			const area = selectedStationeryArea || stationeryDeliveryAreas[0] || null;
+			setSelectedStationeryArea(area);
+			setSelectedShipping(area ? { deliveryOptionName: `توصيل للبيت - ${area.name}`, price: area.price } : null);
+		}
+	};
+
+	const selectStationeryArea = (area: StationeryDeliveryArea) => {
+		setSelectedStationeryArea(area);
+		setSelectedShipping({ deliveryOptionName: `توصيل للبيت - ${area.name}`, price: area.price });
+	};
 
 	const handleNewAddress = (newAddress: AddressI) => {
 		setAddresses((prev) => [newAddress, ...prev]);
@@ -409,6 +454,18 @@ export default function PaymentPage() {
 			Swal.fire("تنبيه", "لا توجد بيانات ملخص الطلب. يرجى الرجوع للسلة ثم المحاولة مرة أخرى.", "warning");
 			return;
 		}
+		if (checkoutSummary.has_stationery && checkoutSummary.has_regular_products) {
+			Swal.fire("تنبيه", "طلبات الطباعة يجب إتمامها منفصلة عن منتجات المتجر.", "warning");
+			return;
+		}
+		if (checkoutSummary.is_stationery_only && stationeryDeliveryType === "home_delivery" && !selectedStationeryArea) {
+			Swal.fire("تنبيه", "يرجى اختيار منطقة التوصيل.", "warning");
+			return;
+		}
+		if (checkoutSummary.is_stationery_only && stationeryDeliveryType === "home_delivery" && !selectedAddress) {
+			Swal.fire("تنبيه", "يرجى اختيار عنوان التوصيل.", "warning");
+			return;
+		}
 
 		setLoading(true);
 
@@ -425,7 +482,9 @@ export default function PaymentPage() {
 			
 			// ✅ create order payload with requested fields
 			const orderData: any = {
-				shipping_address: buildShippingAddressString(selectedAddress),
+				shipping_address: checkoutSummary.is_stationery_only && stationeryDeliveryType === "pickup"
+					? "استلام من الفرع"
+					: buildShippingAddressString(selectedAddress),
 				customer_name: (selectedAddress as any)?.full_name ? String((selectedAddress as any).full_name) : "",
 				customer_phone: (selectedAddress as any)?.phone ? String((selectedAddress as any).phone) : "",
 				customer_email: (selectedAddress as any)?.email ? String((selectedAddress as any).email) : "",
@@ -441,13 +500,17 @@ export default function PaymentPage() {
 				orderId: otoOrderId || "",
 				shippingPrice: n(selectedShipping?.price),
 				deliveryOptionName: selectedShipping?.deliveryOptionName || "",
+				...(checkoutSummary.is_stationery_only ? {
+					stationery_delivery_type: stationeryDeliveryType,
+					stationery_delivery_area_id: stationeryDeliveryType === "home_delivery" ? selectedStationeryArea?.id : null,
+				} : {}),
 
 				// ✅ include if backend expects a value (you said: "and also if there copupon_value")
 				// ...(couponValue > 0 ? { coupon_value: couponValue } : {}),
 			};
 
 			// keep compatibility with existing backend that uses address_id
-			if (selectedAddress?.id) {
+			if (selectedAddress?.id && !(checkoutSummary.is_stationery_only && stationeryDeliveryType === "pickup")) {
 				orderData.address_id = selectedAddress.id;
 			}
 
@@ -614,7 +677,31 @@ export default function PaymentPage() {
 									{/* Shipping Methods */}
 									<div className="mt-6 border-t border-slate-100 pt-5">
 										<h3 className="text-lg font-extrabold text-slate-900 mb-4">خيارات التوصيل</h3>
-										{loadingShipping ? (
+										{checkoutSummary?.is_stationery_only ? (
+											<div className="space-y-3">
+												<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+													<button type="button" onClick={() => selectStationeryDeliveryType("pickup")} className={`p-4 rounded-3xl border text-right ${stationeryDeliveryType === "pickup" ? "border-pro-max bg-blue-50" : "border-slate-200 bg-white"}`}>
+														<p className="font-extrabold text-slate-900">استلام من الفرع</p>
+														<p className="text-sm text-emerald-600 mt-1">مجانًا</p>
+													</button>
+													<button type="button" onClick={() => selectStationeryDeliveryType("home_delivery")} className={`p-4 rounded-3xl border text-right ${stationeryDeliveryType === "home_delivery" ? "border-pro-max bg-blue-50" : "border-slate-200 bg-white"}`}>
+														<p className="font-extrabold text-slate-900">توصيل للبيت</p>
+														<p className="text-sm text-slate-500 mt-1">اختر المنطقة لمعرفة السعر</p>
+													</button>
+												</div>
+												{stationeryDeliveryType === "home_delivery" && (
+													<div>
+														<label className="block text-sm font-extrabold text-slate-700 mb-2">منطقة التوصيل</label>
+														{loadingShipping ? <div className="h-12 bg-slate-50 rounded-2xl animate-pulse" /> : (
+															<select value={selectedStationeryArea?.id || ""} onChange={(e) => { const area = stationeryDeliveryAreas.find((item) => item.id === Number(e.target.value)); if (area) selectStationeryArea(area); }} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-bold outline-none focus:border-pro-max">
+																<option value="" disabled>اختر المنطقة</option>
+																{stationeryDeliveryAreas.map((area) => <option key={area.id} value={area.id}>{area.name} — {money(area.price)} ريال</option>)}
+															</select>
+														)}
+													</div>
+												)}
+											</div>
+										) : loadingShipping ? (
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 												<div className="h-20 bg-slate-50 rounded-3xl animate-pulse" />
 												<div className="h-20 bg-slate-50 rounded-3xl animate-pulse" />
