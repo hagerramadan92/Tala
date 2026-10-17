@@ -336,13 +336,27 @@ export default function PaymentPage() {
 	}, [token, base_url]);
 
 	// 🚚 Fetch shipping options when address is available
-	useEffect(() => {
-		if (!token || !selectedAddress || checkoutSummary?.is_stationery_only) return;
+	const fetchShippingOptions = useCallback(
+		async (targetAddress?: AddressI | null) => {
+			const addr = targetAddress || selectedAddress;
+			if (!token || !addr || checkoutSummary?.is_stationery_only) return;
 
-		const fetchShippingOptions = async () => {
 			setLoadingShipping(true);
+			setShippingOptions([]);
+			setSelectedShipping(null);
+
 			try {
-				const res = await fetch(`${base_url}/shippings-options`, {
+				const params = new URLSearchParams();
+				if (addr.id) {
+					params.append("address_id", String(addr.id));
+				}
+				const city = (addr as any)?.city;
+				if (city) {
+					params.append("city", String(city));
+				}
+
+				const queryStr = params.toString() ? `?${params.toString()}` : "";
+				const res = await fetch(`${base_url}/shippings-options${queryStr}`, {
 					headers: {
 						Accept: "application/json",
 						Authorization: `Bearer ${token}`,
@@ -361,16 +375,26 @@ export default function PaymentPage() {
 					if (fees.length > 0) {
 						setSelectedShipping(fees[0]);
 					}
+				} else {
+					setShippingOptions([]);
+					setSelectedShipping(null);
 				}
 			} catch (err) {
 				console.error("Error fetching shipping options:", err);
+				setShippingOptions([]);
+				setSelectedShipping(null);
 			} finally {
 				setLoadingShipping(false);
 			}
-		};
+		},
+		[token, selectedAddress, base_url, checkoutSummary?.is_stationery_only]
+	);
 
-		fetchShippingOptions();
-	}, [token, selectedAddress, base_url, checkoutSummary?.is_stationery_only]);
+	useEffect(() => {
+		if (selectedAddress?.id) {
+			fetchShippingOptions(selectedAddress);
+		}
+	}, [selectedAddress?.id, (selectedAddress as any)?.city, fetchShippingOptions]);
 
 	useEffect(() => {
 		if (!checkoutSummary?.is_stationery_only) return;
@@ -660,14 +684,10 @@ export default function PaymentPage() {
 														<p className="text-sm text-slate-600 mt-2">{(address as any).details}</p>
 														{/* 
 														 */}
-														 <div className="flex items-center justify-between">
-															{(address as any).phone && <p className="text-xs text-slate-500 mt-2">{(address as any).phone}</p>
-														}
-														<div className="flex ittems-center gap-1">
-															<p className="text-xs text-slate-500 mt-2">  رسوم الشحن</p>
-														<p className="text-xs text-slate-500 mt-2">10 ريال</p>
+														<div className="flex items-center justify-between">
+															{(address as any).phone && <p className="text-xs text-slate-500 mt-2">{(address as any).phone}</p>}
+															<p className="text-xs text-pro-max font-bold mt-2">حساب الشحن حسب المدينة</p>
 														</div>
-														 </div>
 													</button>
 												);
 											})}

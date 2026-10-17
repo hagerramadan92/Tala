@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { fetchApi } from "@/lib/api";
 import { IoIosArrowDown } from "react-icons/io";
 import { FiSearch } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
@@ -60,18 +61,14 @@ export default function FAQPage() {
 	const [openId, setOpenId] = useState<number | null>(null);
 	const [q, setQ] = useState("");
 
-	const base_url = process.env.NEXT_PUBLIC_API_URL;
-
 	useEffect(() => {
 		const fetchFAQs = async () => {
 			try {
-				const res = await fetch(`${base_url}/faqs`, { cache: "no-store" });
-				const data = await res.json();
-				if (data?.status) {
-					setFaqs(data.data || []);
-					// افتح أول سؤال بشكل لطيف (اختياري)
-					if (Array.isArray(data.data) && data.data.length) {
-						setOpenId(data.data[0].id);
+				const data = await fetchApi("faqs");
+				if (Array.isArray(data)) {
+					setFaqs(data);
+					if (data.length) {
+						setOpenId(data[0].id);
 					}
 				} else {
 					setFaqs([]);
@@ -85,7 +82,7 @@ export default function FAQPage() {
 		};
 
 		fetchFAQs();
-	}, [base_url]);
+	}, []);
 
 	const filteredFaqs = useMemo(() => {
 		const s = q.trim();

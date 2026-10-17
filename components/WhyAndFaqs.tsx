@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
+import { fetchApi } from "@/lib/api";
 // استيراد مكتبة Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -88,24 +89,8 @@ export default function WhyAndFaqs() {
 		setFaqsError(null);
 
 		try {
-			const base = process.env.NEXT_PUBLIC_API_URL;
-			if (!base) {
-				throw new Error("NEXT_PUBLIC_API_URL is not defined");
-			}
-
-			const res = await fetch(`${base}/faqs`, {
-				method: "GET",
-				headers: { Accept: "application/json" },
-				cache: "no-store",
-			});
-
-			if (!res.ok) {
-				throw new Error(`Failed to fetch faqs (${res.status})`);
-			}
-
-			const json = await res.json();
-
-			const list: FaqItem[] = Array.isArray(json?.data) ? json.data : [];
+			const data = await fetchApi("faqs");
+			const list: FaqItem[] = Array.isArray(data) ? data : [];
 			if (!mounted) return;
 
 			setFaqs(list);
@@ -127,26 +112,9 @@ export default function WhyAndFaqs() {
 		setTestimonialsError(null);
 
 		try {
-			// استخدام الرابط المباشر للـ API
-			const res = await fetch("https://dashboard.talaaljazeera.com/api/v1/testimonials", {
-				method: "GET",
-				headers: { Accept: "application/json" },
-				cache: "no-store",
-			});
-
-			if (!res.ok) {
-				throw new Error(`Failed to fetch testimonials (${res.status})`);
-			}
-
-			const json = await res.json();
-
-			// التحقق من بنية الاستجابة (status, data)
-			if (json.status === true && Array.isArray(json.data)) {
-				if (!mounted) return;
-				setTestimonials(json.data);
-			} else {
-				throw new Error("Invalid response format");
-			}
+			const data = await fetchApi("testimonials");
+			if (!mounted) return;
+			setTestimonials(Array.isArray(data) ? data : []);
 		} catch (e: any) {
 			if (!mounted) return;
 			setTestimonials([]);

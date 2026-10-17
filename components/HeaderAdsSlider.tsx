@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchApi } from "@/lib/api";
 
 type Ad = {
 	id: number;
@@ -47,8 +48,7 @@ function HeaderAdsSkeleton() {
 
 export default function HeaderAdsSlider() {
 	const [ads, setAds] = useState<Ad[]>([]);
-	const apiBase = process.env.NEXT_PUBLIC_API_URL;
-	const [loading, setLoading] = useState(Boolean(apiBase));
+	const [loading, setLoading] = useState(true);
 	const [activeIndex, setActiveIndex] = useState(0);
 
 	useEffect(() => {
@@ -57,11 +57,10 @@ export default function HeaderAdsSlider() {
 		async function load() {
 			try {
 				setLoading(true);
-				const res = await fetch(`${apiBase}/ads`, { cache: "no-store" });
-				const json = (await res.json()) as ApiResponse;
+				const data = await fetchApi("ads");
 
-				if (!cancelled && json?.status && Array.isArray(json.data)) {
-					setAds(json.data);
+				if (!cancelled && Array.isArray(data)) {
+					setAds(data);
 				}
 			} catch {
 				if (!cancelled) setAds([]);
@@ -70,12 +69,12 @@ export default function HeaderAdsSlider() {
 			}
 		}
 
-		if (apiBase) load();
+		load();
 
 		return () => {
 			cancelled = true;
 		};
-	}, [apiBase]);
+	}, []);
 
 	useEffect(() => {
 		if (ads.length <= 1) return;
