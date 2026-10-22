@@ -8,6 +8,7 @@ import {
 	Heart,
 	MapPin,
 	HelpCircle,
+	Gift,
 } from "lucide-react";
 
 interface SideBarProps {
@@ -29,6 +30,12 @@ export default function SideBar({ active }: SideBarProps) {
 			label: "طلباتي",
 			href: "/myAccount/orders",
 			icon: ShoppingBag,
+		},
+		{
+			key: "points",
+			label: "نقاطي",
+			href: "/myAccount/points",
+			icon: Gift,
 		},
 		{
 			key: "favorites",

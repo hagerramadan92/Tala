@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
 import { useAuth } from "@/src/context/AuthContext";
-import { useAppContext } from "@/src/context/AppContext";
 import { useCart } from "@/src/context/CartContext";
 
 import CustomSeparator from "@/components/Breadcrumbs";
@@ -48,7 +47,6 @@ export default function ProductPageClient() {
   const currentUserId: number | null = typeof userId === "number" ? userId : user?.id ?? null;
 
   const { addToCart } = useCart();
-  const { homeData } = useAppContext();
 
   const stickerFormRef = useRef<StickerFormHandle | null>(null);
 
@@ -80,6 +78,13 @@ export default function ProductPageClient() {
   });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // Related products (server-side pagination)
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [relatedPage, setRelatedPage] = useState(1);
+  const [relatedLastPage, setRelatedLastPage] = useState(1);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+  const relatedRequestRef = useRef(0);
 
   // Reviews state
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -200,6 +205,51 @@ export default function ProductPageClient() {
       fetchReviews();
     }
   }, [activeTab, fetchReviews]);
+
+  // جلب المنتجات المشابهة من السيرفر مع Pagination
+  const fetchRelatedProducts = useCallback(
+    async (nextPage: number) => {
+      if (!API_URL || !productId) return;
+
+      const requestId = ++relatedRequestRef.current;
+      setRelatedLoading(true);
+
+      try {
+        const res = await fetch(
+          `${API_URL}/products/${encodeURIComponent(productId)}/related?per_page=12&page=${nextPage}`,
+          { headers: { Accept: "application/json" }, cache: "no-store" }
+        );
+        const json = await res.json();
+
+        if (requestId !== relatedRequestRef.current) return;
+        if (!res.ok || !json.status) throw new Error(json.message || "فشل تحميل المنتجات المشابهة");
+
+        const items = json.data?.products || [];
+
+        setRelatedProducts((prev) => {
+          if (nextPage === 1) return items;
+          const merged = [...prev, ...items];
+          return Array.from(new Map(merged.map((p: any) => [p.id, p])).values());
+        });
+        setRelatedPage(json.data?.pagination?.current_page ?? nextPage);
+        setRelatedLastPage(json.data?.pagination?.last_page ?? 1);
+      } catch (err: any) {
+        if (requestId !== relatedRequestRef.current) return;
+        console.error("Error fetching related products:", err);
+        if (nextPage === 1) {
+          setRelatedProducts([]);
+          setRelatedLastPage(1);
+        }
+      } finally {
+        if (requestId === relatedRequestRef.current) setRelatedLoading(false);
+      }
+    },
+    [API_URL, productId]
+  );
+
+  useEffect(() => {
+    fetchRelatedProducts(1);
+  }, [fetchRelatedProducts]);
 
   const hasOptions = useMemo(() => {
     if (!apiData) return false;
@@ -469,8 +519,6 @@ export default function ProductPageClient() {
     }
   };
 
-  const categories2 = homeData?.sub_categories || [];
-
   if (loading) return <ProductPageSkeleton />;
 
   if (errorMsg || !product) {
@@ -607,33 +655,35 @@ export default function ProductPageClient() {
         </div>
 
         {/* Similar products */}
-        {product && categories2.length > 0 && (
+        {relatedProducts.length > 0 && (
           <div className="mt-10">
-            {(() => {
-              const currentCategory = categories2.find((cat: any) => 
-                cat.products?.some((p: any) => p.id === product.id)
-              );
-              const base = currentCategory?.products?.filter((p: any) => p.id !== product.id) || [];
-              const fallback = categories2
-                .flatMap((cat: any) => cat.products || [])
-                .filter((p: any) => p.id !== product.id)
-                .slice(0, 12);
-              const list = base.length ? base : fallback;
-              
-              if (!list.length) return null;
-
-              return (
-                <div className="mb-10">
-                  <InStockSlider
-                    title="منتجات قد تعجبك"
-                    inStock={list}
-                    CardComponent={(props: any) => (
-                      <ProductCard {...props} product={product} classNameHome="hidden" className2="hidden" />
-                    )}
+            <div className="mb-6">
+              <InStockSlider
+                title="منتجات قد تعجبك"
+                inStock={relatedProducts}
+                CardComponent={(props: any) => (
+                  <ProductCard
+                    {...props}
+                    product={props}
+                    classNameHome="hidden"
+                    className2="hidden"
                   />
-                </div>
-              );
-            })()}
+                )}
+              />
+            </div>
+
+            {relatedPage < relatedLastPage && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => fetchRelatedProducts(relatedPage + 1)}
+                  disabled={relatedLoading}
+                  className="rounded-xl px-6 py-2.5 text-sm md:text-base font-extrabold border border-pro bg-white text-pro hover:bg-pro hover:text-white disabled:opacity-60 disabled:cursor-not-allowed transition duration-200"
+                >
+                  {relatedLoading ? "جاري تحميل المزيد..." : "تحميل المزيد"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>

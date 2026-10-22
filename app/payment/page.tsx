@@ -115,9 +115,13 @@ function BlockSkeleton() {
 function TotalOrder({
     summary,
     selectedShipping,
+    pointsDiscount = 0,
+    pointsUsed = 0,
 }: {
     summary: CheckoutSummaryV1 | null;
     selectedShipping: any;
+    pointsDiscount?: number;
+    pointsUsed?: number;
 }) {
     // إذا لم يكن هناك ملخص، نعرض رسالة خطأ
     if (!summary) {
@@ -148,13 +152,15 @@ function TotalOrder({
         ? getNumeric(summary.total)
         : subtotal - couponDiscount;
 
+    const totalAfterPoints = Math.max(0, totalAfterCoupon - getNumeric(pointsDiscount));
+
     // --- قراءة رسوم الشحن من الـ selectedShipping (إذا كان متاحًا) ---
     const shippingFee = selectedShipping ? getNumeric(selectedShipping.price) : getNumeric(summary.shipping_fee);
     const isShippingFree = shippingFee <= 0;
 
     // --- حساب الضريبة والإجمالي النهائي ---
     const TAX_RATE = 0.15; // 15%
-    const totalWithShipping = totalAfterCoupon + shippingFee;
+    const totalWithShipping = totalAfterPoints + shippingFee;
     // حساب الضريبة بطريقة عكسية (لأن totalWithShipping شامل الضريبة)
     const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
     const totalWithoutTax = totalWithShipping - taxAmount;
@@ -175,6 +181,19 @@ function TotalOrder({
                     <p className="text-emerald-800 font-semibold">خصم الكوبون</p>
                     <p className="font-extrabold text-emerald-700">
                         - {money(couponDiscount)}
+                        <span className="text-sm ms-1">ريال</span>
+                    </p>
+                </div>
+            )}
+
+            {/* خصم النقاط */}
+            {pointsUsed > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                    <p className="text-emerald-800 font-semibold">
+                        خصم النقاط ({pointsUsed} نقطة)
+                    </p>
+                    <p className="font-extrabold text-emerald-700">
+                        - {money(pointsDiscount)}
                         <span className="text-sm ms-1">ريال</span>
                     </p>
                 </div>
@@ -272,6 +291,14 @@ export default function PaymentPage() {
 	const [stationeryDeliveryAreas, setStationeryDeliveryAreas] = useState<StationeryDeliveryArea[]>([]);
 	const [selectedStationeryArea, setSelectedStationeryArea] = useState<StationeryDeliveryArea | null>(null);
 
+	// 🎁 Loyalty points
+	const [loyalty, setLoyalty] = useState<{
+		balance: number;
+		value: number;
+		settings: { is_active: boolean; earn_rate: number; redeem_rate: number; min_redeem_points: number; max_redeem_percent: number; terms?: string | null };
+	} | null>(null);
+	const [pointsToUse, setPointsToUse] = useState<string>("");
+
 	const router = useRouter();
 	const base_url = process.env.NEXT_PUBLIC_API_URL;
 
@@ -304,6 +331,54 @@ export default function PaymentPage() {
 			router.push("/login");
 		}
 	}, [router]);
+
+	// جلب رصيد النقاط
+	useEffect(() => {
+		if (!token) return;
+
+		let cancelled = false;
+		const fetchLoyalty = async () => {
+			try {
+				const res = await fetch(`${base_url}/loyalty`, {
+					headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+					cache: "no-store",
+				});
+				const json = await res.json();
+				if (!cancelled && res.ok && json?.status !== false) {
+					setLoyalty(json.data);
+				}
+			} catch (err) {
+				console.error("Failed to load loyalty balance", err);
+			}
+		};
+
+		fetchLoyalty();
+		return () => {
+			cancelled = true;
+		};
+	}, [token, base_url]);
+
+	const pointsSettings = loyalty?.settings;
+	const pointsBalance = Number(loyalty?.balance || 0);
+	const pointsEligibleAmount = Number(checkoutSummary?.total || checkoutSummary?.subtotal || 0);
+	const pointsMaxByPercent =
+		pointsSettings && Number(pointsSettings.redeem_rate) > 0
+			? Math.floor(
+					pointsEligibleAmount *
+						(Number(pointsSettings.max_redeem_percent) / 100) *
+						Number(pointsSettings.redeem_rate)
+			  )
+			: 0;
+	const maxUsablePoints = Math.max(0, Math.min(pointsBalance, pointsMaxByPercent));
+	const requestedPoints = Math.max(0, Math.floor(Number(pointsToUse) || 0));
+	const usablePoints =
+		pointsSettings?.is_active && requestedPoints >= Number(pointsSettings?.min_redeem_points || 0)
+			? Math.min(requestedPoints, maxUsablePoints)
+			: 0;
+	const pointsDiscount =
+		pointsSettings && Number(pointsSettings.redeem_rate) > 0
+			? Number((usablePoints / Number(pointsSettings.redeem_rate)).toFixed(2))
+			: 0;
 
 	useEffect(() => {
 		if (!token) return;
@@ -515,6 +590,7 @@ export default function PaymentPage() {
 
 				payment_method: paymentMethod,
 				notes: notes?.trim() || `تم اختيار ${paymentLabel}`,
+				points_to_use: usablePoints,
 
 				// ✅ send coupon code for discount
 				// coupon_code: normalizedCoupon || "",
@@ -705,8 +781,8 @@ export default function PaymentPage() {
 														<p className="text-sm text-emerald-600 mt-1">مجانًا</p>
 													</button>
 													<button type="button" onClick={() => selectStationeryDeliveryType("home_delivery")} className={`p-4 rounded-3xl border text-right ${stationeryDeliveryType === "home_delivery" ? "border-pro-max bg-blue-50" : "border-slate-200 bg-white"}`}>
-														<p className="font-extrabold text-slate-900">توصيل للبيت</p>
-														<p className="text-sm text-slate-500 mt-1">اختر المنطقة لمعرفة السعر</p>
+														<p className="font-extrabold text-slate-900">توصيل داخل الرياض</p>
+														<p className="text-sm text-slate-500 mt-1">سعر ثابت 20 ريال لأي مكان بالرياض</p>
 													</button>
 												</div>
 												{stationeryDeliveryType === "home_delivery" && (
@@ -718,6 +794,9 @@ export default function PaymentPage() {
 																{stationeryDeliveryAreas.map((area) => <option key={area.id} value={area.id}>{area.name} — {money(area.price)} ريال</option>)}
 															</select>
 														)}
+														<p className="text-xs text-slate-500 mt-2 font-semibold">
+															التوصيل متاح داخل الرياض فقط، بسعر ثابت 20 ريال.
+														</p>
 													</div>
 												)}
 											</div>
@@ -816,9 +895,37 @@ export default function PaymentPage() {
        {/* ملخص الطلب */}
 							<div className="mt-4">
 								<h4 className="text-md font-extrabold text-pro mb-3">ملخص الطلب</h4>
+								{loyalty?.settings?.is_active && pointsBalance > 0 && (
+									<div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+										<div className="flex items-center justify-between gap-2 mb-2">
+											<p className="text-sm font-extrabold text-emerald-800">نقاطك</p>
+											<span className="text-xs font-extrabold text-emerald-700 bg-white border border-emerald-200 rounded-full px-2.5 py-1">
+												{pointsBalance} نقطة ≈ {Number(loyalty.value || 0).toFixed(2)} ر.س
+											</span>
+										</div>
+										<label className="block text-xs font-bold text-slate-700 mb-1.5">
+											استخدم نقاطك في هذا الطلب
+										</label>
+										<input
+											type="number"
+											min={0}
+											max={maxUsablePoints}
+											value={pointsToUse}
+											onChange={(e) => setPointsToUse(e.target.value)}
+											placeholder={`الحد الأقصى ${maxUsablePoints} نقطة`}
+											className="w-full rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-sm font-bold outline-none focus:border-emerald-500"
+										/>
+										<p className="text-[11px] text-emerald-800 font-semibold mt-1.5">
+											كل {loyalty.settings.redeem_rate} نقطة = 1 ر.س، والحد الأدنى {loyalty.settings.min_redeem_points} نقطة.
+											{usablePoints > 0 ? ` سيتم خصم ${pointsDiscount.toFixed(2)} ر.س.` : ""}
+										</p>
+									</div>
+								)}
 								<TotalOrder
 									summary={checkoutSummary}
 									selectedShipping={selectedShipping}
+									pointsDiscount={pointsDiscount}
+									pointsUsed={usablePoints}
 								/>
 							</div>
 

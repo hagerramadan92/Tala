@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import ChangePassword from "./ChangePassword";
+import PointsCard from "./PointsCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
@@ -138,6 +139,8 @@ export default function MangeAccount() {
 					</div>
 				</div>
 			</section>
+
+			<PointsCard />
 
 			{/* Security Card */}
 			<section className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">

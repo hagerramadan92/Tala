@@ -61,13 +61,39 @@ interface UploadedFileItem {
   copies: number;
 }
 
+interface StationeryService {
+  id: number;
+  key: string;
+  name: string;
+  price: string | number;
+}
+
+interface UploadedFileResponse {
+  status: boolean;
+  message?: string;
+  completed?: boolean;
+  data?: {
+    file_url: string;
+    file_path: string;
+    original_name?: string;
+    extension: string;
+    is_image: boolean;
+    is_pdf: boolean;
+    size_formatted?: string;
+    pages_count?: number;
+  };
+}
+
+const SUPPORTED_PAPER_SIZES = ["A4", "A3", "A5", "A2", "A1"];
+const LARGE_PAPER_SIZES = ["A1", "A2"];
+const MIN_LARGE_PAPER_SHEETS = 100;
+
 export default function StationeryPage() {
   const router = useRouter();
   const { refreshCart } = useCart();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // الحالة العامة
-  const [selectedService, setSelectedService] = useState<"document" | "photo">("document");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileItem[]>([]);
   const [loadingPrices, setLoadingPrices] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -79,12 +105,13 @@ export default function StationeryPage() {
   const [uploadBytesTotal, setUploadBytesTotal] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [uploadModalType, setUploadModalType] = useState<"document" | "photo">("document");
   const [generalNote, setGeneralNote] = useState("");
 
   // مصفوفات الأسعار والأحجام من الـ API
   const [pricesList, setPricesList] = useState<PriceItem[]>([]);
-  const [availableSizes, setAvailableSizes] = useState<string[]>(["A4", "A3", "A5", "A2", "A1", "A0"]);
+  const [services, setServices] = useState<StationeryService[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [availableSizes, setAvailableSizes] = useState<string[]>(SUPPORTED_PAPER_SIZES);
   const [paperTypes, setPaperTypes] = useState<Record<"document" | "photo", Record<string, string>>>({
     document: { plain: "ورق عادي", coated: "ورق كوشيه", cardstock: "ورق مقوّى" },
     photo: { glossy: "ورق صور لامع", matte: "ورق صور مطفي" },
@@ -110,7 +137,10 @@ export default function StationeryPage() {
           const json = await res.json();
           if (json.status && json.data) {
             if (json.data.prices) setPricesList(json.data.prices);
-            if (json.data.sizes) setAvailableSizes(json.data.sizes);
+            if (json.data.services) setServices(json.data.services);
+            if (json.data.sizes) {
+              setAvailableSizes(json.data.sizes.filter((size: string) => SUPPORTED_PAPER_SIZES.includes(size.toUpperCase())));
+            }
             if (json.data.size_dimensions) setSizeDimensions(json.data.size_dimensions);
             if (json.data.paper_types) setPaperTypes(json.data.paper_types);
           }
@@ -134,11 +164,14 @@ export default function StationeryPage() {
     orientation: "portrait" | "landscape" = "portrait",
     pagesCount: number = 1
   ): number => {
+    const basePaperType = paperType === "cardstock" ? "plain" : paperType;
+    const normalizedSize = paperSize.toUpperCase();
+    const baseSize = LARGE_PAPER_SIZES.includes(normalizedSize) ? normalizedSize : "A4";
     const item = pricesList.find(
       (p) =>
         p.service_type === serviceType &&
-        p.paper_size.toUpperCase() === paperSize.toUpperCase() &&
-        p.paper_type === paperType &&
+        p.paper_size.toUpperCase() === baseSize &&
+        p.paper_type === basePaperType &&
         p.side_type === sideType &&
         p.orientation === orientation
     );
@@ -161,7 +194,12 @@ export default function StationeryPage() {
       base = colorType === "color" ? fileColor : fileBw;
     }
 
-    return Math.max(0.05, Number(base.toFixed(2)));
+    const sizeMultiplier = normalizedSize === "A3" ? 1.75
+      : normalizedSize === "A5" ? 0.75
+      : 1;
+    const cardstockMultiplier = paperType === "cardstock" ? 1.20 : 1;
+
+    return Math.max(0.05, Number((base * sizeMultiplier * cardstockMultiplier).toFixed(2)));
   };
 
   // أقل سعر يبدأ به كل قسم لعرضه في البطاقات الرئيسية
@@ -187,25 +225,41 @@ export default function StationeryPage() {
       file.orientation,
       file.pages_count
     );
-    return Number((file.pages_count * pricePerPage * file.copies).toFixed(2));
+    const sheets = file.pages_count * file.copies;
+    const normalizedSize = file.paper_size.toUpperCase();
+    if (LARGE_PAPER_SIZES.includes(normalizedSize)) {
+      const minimumTotal = normalizedSize === "A1" ? 500 : 400;
+      return Number((minimumTotal + Math.max(0, sheets - 100) * pricePerPage).toFixed(2));
+    }
+    return Number((sheets * pricePerPage).toFixed(2));
   };
 
   // إجمالي السعر لجميع الملفات
-  const grandTotal = uploadedFiles.reduce(
+  const filesTotal = uploadedFiles.reduce(
     (sum, file) => sum + calculateFileTotal(file),
     0
   );
+
+  const servicesTotal = services
+    .filter((service) => selectedServices.includes(service.key))
+    .reduce((sum, service) => sum + Number(service.price), 0);
+
+  const grandTotal = filesTotal + servicesTotal;
 
   const totalPagesAll = uploadedFiles.reduce(
     (sum, f) => sum + f.pages_count * f.copies,
     0
   );
 
-  // فتح نافذة اختيار الملفات
-  const openUploadModal = (type: "document" | "photo") => {
-    setUploadModalType(type);
-    setSelectedService(type);
-    setIsUploadModalOpen(true);
+  const fileSheets = (file: UploadedFileItem) => file.pages_count * file.copies;
+  const filesBelowMinimum = uploadedFiles.filter(
+    (file) => LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && fileSheets(file) < MIN_LARGE_PAPER_SHEETS
+  );
+
+  const toggleService = (key: string) => {
+    setSelectedServices((prev) =>
+      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
+    );
   };
 
   // دالة مساعدة لتنسيق حجم الملفات (Bytes to KB/MB)
@@ -217,45 +271,104 @@ export default function StationeryPage() {
     return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
   };
 
-  // دالة رفع ملف واحد مع تتبع نسبة التقدم
+  // حجم كل جزء في الرفع المتقطع (أقل من حد السيرفر 1MB)
+  const UPLOAD_CHUNK_SIZE = 512 * 1024;
+
+  const createUploadId = () => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  };
+
+  // دالة رفع ملف واحد على أجزاء مع تتبع نسبة التقدم
   const uploadSingleFileWithProgress = (
     file: File,
-    onProgress: (loaded: number, total: number) => void
-  ): Promise<any> => {
+    offsetLoaded: number,
+    onProgress: (loaded: number) => void
+  ): Promise<UploadedFileResponse> => {
     return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${API_URL}/stationery/upload`);
-      xhr.setRequestHeader("Accept", "application/json");
+      const uploadId = createUploadId();
+      const totalChunks = Math.max(1, Math.ceil(file.size / UPLOAD_CHUNK_SIZE));
+      let chunkIndex = 0;
+      let loadedBeforeChunk = offsetLoaded;
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          onProgress(event.loaded, event.total);
-        }
-      };
+      const sendChunk = () => {
+        const start = chunkIndex * UPLOAD_CHUNK_SIZE;
+        const blob = file.slice(start, Math.min(file.size, start + UPLOAD_CHUNK_SIZE));
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const json = JSON.parse(xhr.responseText);
-            resolve(json);
-          } catch (e) {
-            reject(new Error("استجابة غير صحيحة من الخادم"));
+        const formData = new FormData();
+        formData.append("upload_id", uploadId);
+        formData.append("chunk_index", String(chunkIndex));
+        formData.append("total_chunks", String(totalChunks));
+        formData.append("original_name", file.name);
+        formData.append("chunk", blob, file.name);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${API_URL}/stationery/upload-chunk`);
+        xhr.setRequestHeader("Accept", "application/json");
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            onProgress(
+              Math.min(loadedBeforeChunk + event.loaded, offsetLoaded + file.size)
+            );
           }
-        } else {
+        };
+
+        xhr.onload = () => {
+          loadedBeforeChunk += blob.size;
+
+          if (xhr.status < 200 || xhr.status >= 300) {
+            let message = `فشل رفع الملف (${xhr.status})`;
+            if (xhr.status === 413) {
+              message = "حجم الملف أكبر من الحد المسموح على السيرفر، يرجى المحاولة ثانية.";
+            } else if (xhr.status === 429) {
+              message = "تم إرسال عدد كبير من الأجزاء، انتظر دقيقة ثم حاول مرة أخرى.";
+            } else {
+              try {
+                const json = JSON.parse(xhr.responseText) as { message?: string };
+                message = json.message || message;
+              } catch {
+                // ignore
+              }
+            }
+            reject(new Error(message));
+            return;
+          }
+
+          let json: UploadedFileResponse;
           try {
-            const json = JSON.parse(xhr.responseText);
-            reject(new Error(json.message || `فشل رفع الملف (${xhr.status})`));
+            json = JSON.parse(xhr.responseText) as UploadedFileResponse;
           } catch {
-            reject(new Error(`فشل رفع الملف (${xhr.status})`));
+            reject(new Error("استجابة غير صحيحة من الخادم"));
+            return;
           }
-        }
+
+          onProgress(loadedBeforeChunk);
+
+          if (chunkIndex === totalChunks - 1) {
+            if (!json.status) {
+              reject(new Error(json.message || "فشل رفع الملف"));
+              return;
+            }
+            resolve(json);
+          } else {
+            chunkIndex += 1;
+            sendChunk();
+          }
+        };
+
+        xhr.onerror = () =>
+          reject(
+            new Error(
+              "انقطع الاتصال أثناء رفع الملف. تأكد من الإنترنت ثم حاول مرة أخرى"
+            )
+          );
+        xhr.send(formData);
       };
 
-      xhr.onerror = () => reject(new Error("حدث خطأ في الاتصال بالشبكة"));
-
-      const formData = new FormData();
-      formData.append("file", file);
-      xhr.send(formData);
+      sendChunk();
     });
   };
 
@@ -293,14 +406,13 @@ export default function StationeryPage() {
           continue;
         }
 
-        const json = await uploadSingleFileWithProgress(file, (loaded) => {
-          const currentTotalLoaded = cumulativeLoaded + loaded;
+        const json = await uploadSingleFileWithProgress(file, cumulativeLoaded, (loaded) => {
           const pct = Math.min(
             99,
-            Math.round((currentTotalLoaded / (totalBytesAll || 1)) * 100)
+            Math.round((loaded / (totalBytesAll || 1)) * 100)
           );
           setUploadProgress(pct);
-          setUploadBytesLoaded(currentTotalLoaded);
+          setUploadBytesLoaded(loaded);
         });
 
         cumulativeLoaded += file.size;
@@ -313,7 +425,6 @@ export default function StationeryPage() {
         setUploadBytesLoaded(currentTotalLoaded);
 
         if (json.status && json.data) {
-          const isDoc = uploadModalType === "document";
           newItems.push({
             id: Math.random().toString(36).substring(2, 9),
             file_url: json.data.file_url,
@@ -323,10 +434,10 @@ export default function StationeryPage() {
             is_image: json.data.is_image,
             is_pdf: json.data.is_pdf,
             size_formatted: json.data.size_formatted,
-            service_type: isDoc ? "document" : "photo",
+            service_type: "document",
             paper_size: "A4",
-            paper_type: Object.keys(paperTypes[isDoc ? "document" : "photo"] || {})[0] || (isDoc ? "plain" : "glossy"),
-            color_type: isDoc ? "bw" : "color",
+            paper_type: Object.keys(paperTypes.document || {})[0] || "plain",
+            color_type: "bw",
             orientation: "portrait",
             side_type: "single",
             pages_count: Math.max(1, json.data.pages_count || 1),
@@ -381,6 +492,12 @@ export default function StationeryPage() {
       return;
     }
 
+    if (filesBelowMinimum.length > 0) {
+      const first = filesBelowMinimum[0];
+      toast.error(`المقاس ${first.paper_size} يتطلب حدًا أدنى 100 ورقة.`);
+      return;
+    }
+
     setIsAddingToCart(true);
     const toastId = toast.loading("جاري إضافة طلب الطباعة إلى السلة...");
 
@@ -399,6 +516,7 @@ export default function StationeryPage() {
           pages_count: f.pages_count,
           copies: f.copies,
         })),
+        services: selectedServices,
         note: generalNote,
       };
 
@@ -449,7 +567,7 @@ export default function StationeryPage() {
           </div>
 
           <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-2">
-            اطبع مستنداتك وصورك بدقة عالية
+            اطبع مستنداتك وملفاتك بدقة عالية
           </h1>
           <p className="text-slate-300 text-xs md:text-sm max-w-xl mx-auto">
             طباعة رقمية فورية بمقاسات A0 إلى A5 مع استلام من الفرع أو شحن لباب بيتك.
@@ -475,11 +593,11 @@ export default function StationeryPage() {
                   </div>
 
                   <h2 className="text-xl md:text-2xl font-black text-slate-900">
-                    طباعة المستندات والصور
+                    طباعة المستندات والملفات
                   </h2>
 
                   <p className="text-slate-500 text-xs md:text-sm">
-                    ملفات PDF، وورد، وصور فوتوغرافية بأعلى دقة ليزر.
+                    ملفات PDF وورد بأعلى دقة ليزر.
                   </p>
 
                   <ul className="space-y-1.5 text-xs md:text-sm text-slate-700 font-semibold pt-1">
@@ -610,7 +728,7 @@ export default function StationeryPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => openUploadModal(selectedService)}
+                  onClick={() => setIsUploadModalOpen(true)}
                   className="px-4 py-2.5 rounded-xl bg-pro hover:bg-pro-max text-white font-bold text-xs md:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                 >
                   <FiPlus className="w-4 h-4" />
@@ -714,8 +832,14 @@ export default function StationeryPage() {
                           </button>
                         </div>
                         <span className="text-[11px] text-slate-400 mt-1 block">
-                          إجمالي الصفحات المطبوعة: {file.pages_count * file.copies} صفحة
+                          عدد الورق: {file.pages_count} صفحة × {file.copies} نسخة ={" "}
+                          {file.pages_count * file.copies} ورقة
                         </span>
+                        {LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && fileSheets(file) < MIN_LARGE_PAPER_SHEETS && (
+                          <div className="mt-2 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
+                            المقاس {file.paper_size} يتطلب حدًا أدنى 100 ورقة.
+                          </div>
+                        )}
                       </div>
 
                       {/* Control 2: Number of pages (read-only) */}
@@ -911,6 +1035,59 @@ export default function StationeryPage() {
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:border-[#ff7300] transition resize-none"
               />
             </div>
+
+            {/* Paid extra services */}
+            {services.length > 0 && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="text-sm md:text-base font-extrabold text-slate-900">
+                      خدمات إضافية (اختياري)
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      خدمات مدفوعة تُضاف لكل الطلب — 10 ر.س لكل خدمة.
+                    </p>
+                  </div>
+                  {servicesTotal > 0 && (
+                    <span className="text-xs font-extrabold text-[#ff7300] bg-amber-50 border border-amber-200 rounded-full px-3 py-1 whitespace-nowrap">
+                      +{servicesTotal.toFixed(2)} ر.س
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {services.map((service) => {
+                    const active = selectedServices.includes(service.key);
+                    return (
+                      <button
+                        key={service.key}
+                        type="button"
+                        onClick={() => toggleService(service.key)}
+                        className={`p-3 rounded-xl border text-right transition ${
+                          active
+                            ? "border-[#ff7300] bg-amber-50 text-[#ff7300] ring-2 ring-[#ff7300]/10"
+                            : "border-slate-200 bg-white/70 text-slate-700 hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-extrabold">{service.name}</span>
+                          <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${active ? "bg-[#ff7300] border-[#ff7300] text-white" : "border-slate-300"}`}>
+                            {active && <FiCheck className="w-3 h-3" />}
+                          </span>
+                        </div>
+                        <div className="text-[11px] mt-1 font-bold text-slate-500">
+                          {Number(service.price).toFixed(2)} ر.س
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 text-[11px] md:text-xs text-slate-500 bg-slate-100/70 border border-slate-200 rounded-xl px-3 py-2">
+              <FiShield className="w-4 h-4 text-emerald-600" />
+              <span>التوصيل داخل الرياض فقط — 20 ر.س لأي مكان. الاستلام من الفرع مجاني.</span>
+            </div>
           </div>
         )}
       </div>
@@ -1004,60 +1181,17 @@ export default function StationeryPage() {
                     ref={fileInputRef}
                     type="file"
                     multiple
-                    accept={
-                      uploadModalType === "photo"
-                        ? "image/jpeg,image/png,image/heic,image/webp"
-                        : ".pdf,.doc,.docx,application/pdf,application/msword"
-                    }
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
 
                   <div className="space-y-3 mb-6">
-                    {/* Upload Photo Button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUploadModalType("photo");
-                        if (fileInputRef.current) {
-                          fileInputRef.current.accept = "image/jpeg,image/png,image/heic,image/webp";
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      className={`w-full p-4 rounded-2xl border-2 text-right flex items-center gap-4 transition group ${
-                        uploadModalType === "photo"
-                          ? "border-pro bg-slate-50"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 text-pro flex items-center justify-center shrink-0 text-xl group-hover:scale-105 transition">
-                        🖼️
-                      </div>
-                      <div>
-                        <h4 className="font-extrabold text-sm text-slate-900 mb-0.5">
-                          رفع صور (Upload photo)
-                        </h4>
-                        <p className="text-xs text-slate-500">
-                          الصيغ المعتمدة: JPG, JPEG, PNG, HEIC, WEBP
-                        </p>
-                      </div>
-                    </button>
-
                     {/* Upload Document Button */}
                     <button
                       type="button"
-                      onClick={() => {
-                        setUploadModalType("document");
-                        if (fileInputRef.current) {
-                          fileInputRef.current.accept = ".pdf,.doc,.docx,application/pdf";
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      className={`w-full p-4 rounded-2xl border-2 text-right flex items-center gap-4 transition group ${
-                        uploadModalType === "document"
-                          ? "border-pro bg-slate-50"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full p-4 rounded-2xl border-2 text-right flex items-center gap-4 transition group border-pro bg-slate-50 hover:border-pro"
                     >
                       <div className="w-12 h-12 rounded-xl bg-slate-100 text-pro flex items-center justify-center shrink-0 text-xl group-hover:scale-105 transition">
                         📄
@@ -1096,11 +1230,19 @@ export default function StationeryPage() {
                 </span>
                 <span className="text-xs text-slate-400">شامل الضريبة</span>
               </div>
-              <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+              <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
                 <span>{uploadedFiles.length} مستندات</span>
                 <span>•</span>
-                <span>{totalPagesAll} صفحات إجمالية</span>
-                <span className="hidden md:inline">• استلام من الفرع أو شحن</span>
+                <span>{totalPagesAll} صفحة / ورقة</span>
+                {servicesTotal > 0 && (
+                  <>
+                    <span>•</span>
+                    <span className="text-[#ff7300] font-bold">
+                      خدمات إضافية: {servicesTotal.toFixed(2)} ر.س
+                    </span>
+                  </>
+                )}
+                <span className="hidden md:inline">• التوصيل داخل الرياض 20 ر.س أو استلام مجاني</span>
               </div>
             </div>
 
@@ -1108,7 +1250,7 @@ export default function StationeryPage() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                disabled={isAddingToCart}
+                disabled={isAddingToCart || filesBelowMinimum.length > 0}
                 onClick={handleAddToCart}
                 className="px-6 md:px-10 py-3.5 rounded-xl bg-pro hover:bg-pro-max active:scale-95 text-white font-extrabold text-sm md:text-base flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 transition cursor-pointer disabled:opacity-50"
               >

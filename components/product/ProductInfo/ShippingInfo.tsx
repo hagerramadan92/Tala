@@ -8,6 +8,9 @@ import { Truck, ShieldCheck, Tags } from "lucide-react";
 interface ShippingInfoProps {
   deliveryTime?: {
     estimated?: string;
+    note?: string;
+    starts_from?: string;
+    production_type?: string;
   };
   warrantyText?: string | null;
   offers?: any[];
@@ -18,9 +21,16 @@ export function ShippingInfo({ deliveryTime, warrantyText, offers }: ShippingInf
     <SectionCard title="معلومات الشحن والضمان والعروض" icon={<Truck className="w-5 h-5 text-slate-700" />}>
       <div className="space-y-3">
         {deliveryTime?.estimated && (
-          <InfoRow 
-            label="التوصيل المتوقع" 
-            value={<Pill tone="emerald">{deliveryTime.estimated}</Pill>} 
+          <InfoRow
+            label="مدة التنفيذ"
+            value={
+              <div className="flex flex-col items-end gap-1">
+                <Pill tone="emerald">{deliveryTime.estimated}</Pill>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  {deliveryTime.note || "المدة من تاريخ تعميد التصميم"}
+                </span>
+              </div>
+            }
           />
         )}
 

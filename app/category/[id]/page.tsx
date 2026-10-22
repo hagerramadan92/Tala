@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Discount from "@/components/Discount";
 import ProductCard from "@/components/ProductCard";
 import ProductFilter from "@/components/ProductFilter";
@@ -10,7 +10,7 @@ import { FiFilter, FiGrid, FiList } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ProductI } from "@/Types/ProductsI";
-import CategoryPageSkeleton from "@/components/skeletons/HomeSkeletons";
+import CategoryPageSkeleton, { ProductCardSkeleton } from "@/components/skeletons/HomeSkeletons";
 import { ChevronDown } from "lucide-react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { LayoutGrid, Grid2X2, Columns3, Columns4 } from "lucide-react";
@@ -82,15 +82,27 @@ const fadeUp = {
 };
 
 export default function CategoryPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const { id } = useParams();
-  const categoryId = id as string;
+  const categoryId = Array.isArray(id) ? id[0] : (id as string);
+
+  // إعادة تركيب المحتوى عند تغيير القسم لضبط الفلاتر والصفحة من جديد
+  return <CategoryPageContent key={categoryId} categoryId={categoryId} />;
+}
+
+function CategoryPageContent({ categoryId }: { categoryId: string }) {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<CategoryData | null>(null);
 
-  const [allProducts, setAllProducts] = useState<ProductI[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<ProductI[]>([]);
+  const [products, setProducts] = useState<ProductI[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [pagination, setPagination] = useState<{
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  } | null>(null);
 
   const [showFilter, setShowFilter] = useState(false);
 
@@ -101,128 +113,133 @@ export default function CategoryPage() {
   const rowsPerPage = 12;
 
   const [priceOrder, setPriceOrder] = useState<"" | "asc" | "desc" | "rating">("");
+  const [filters, setFilters] = useState<Filters>({
+    available: false,
+    brands: [],
+    materials: [],
+    colors: [],
+    categories: [],
+  });
   const [filterMaterials, setFilterMaterials] = useState<string[]>([]);
   const [filterColors, setFilterColors] = useState<string[]>([]);
   const [subCategories, setSubCategories] = useState<CategoryChild[]>([]);
+  const filtersLoadedRef = useRef(false);
+  const productsTopRef = useRef<HTMLDivElement>(null);
 
-  const extractFilters = (products: ProductI[]) => {
-    const materials = [
-      ...new Set(
-        products.flatMap((p) => p.materials?.map((m) => m.name) || []).filter(Boolean)
-      ),
-    ];
-    const colors = [
-      ...new Set(products.flatMap((p) => p.colors?.map((c) => c.name) || []).filter(Boolean)),
-    ];
-
-    setFilterMaterials(materials as string[]);
-    setFilterColors(colors as string[]);
-  };
-
+  // جلب بيانات القسم (بدون المنتجات، المنتجات لها Endpoint منفصل مع Pagination)
   useEffect(() => {
-    if (!categoryId) return;
+    if (!categoryId || !API_URL) return;
 
-    async function fetchCategoryAndProducts() {
+    let mounted = true;
+
+    async function fetchCategory() {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/categories/${categoryId}`);
+        const res = await fetch(
+          `${API_URL}/categories/${encodeURIComponent(categoryId)}?include_products=0`
+        );
         const result = await res.json();
 
+        if (!mounted) return;
+
         if (result.status && result.data) {
-          const cat: CategoryData = result.data;
-          setCategory(cat);
-          setSubCategories(cat.children || []);
-
-          // parent category => fetch children products too
-          if (cat.is_parent && cat.children.length > 0) {
-            const allProds: ProductI[] = [...(cat.products || [])];
-
-            for (const child of cat.children) {
-              try {
-                const childRes = await fetch(`${API_URL}/categories/${child.id}`);
-                const childData = await childRes.json();
-                if (childData.status && childData.data?.products) {
-                  allProds.push(...childData.data.products);
-                }
-              } catch (err) {
-                console.error(`Error fetching child ${child.id}:`, err);
-              }
-            }
-
-            const uniqueProducts = Array.from(new Map(allProds.map((p) => [p.id, p])).values());
-
-            setAllProducts(uniqueProducts);
-            setFilteredProducts(uniqueProducts);
-            extractFilters(uniqueProducts);
-          } else {
-            const prods = cat.products || [];
-            setAllProducts(prods);
-            setFilteredProducts(prods);
-            extractFilters(prods);
-          }
+          setCategory(result.data);
+          setSubCategories(result.data.children || []);
         } else {
           setCategory(null);
         }
       } catch (err) {
         console.error("Error fetching category:", err);
-        setCategory(null);
+        if (mounted) setCategory(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
-    fetchCategoryAndProducts();
+    fetchCategory();
+
+    return () => {
+      mounted = false;
+    };
   }, [categoryId, API_URL]);
 
-  const handleFilterChange = (filters: Filters) => {
-    let result = [...allProducts];
+  // جلب منتجات القسم مع Pagination وفلترة وترتيب من السيرفر
+  useEffect(() => {
+    if (!categoryId || !API_URL) return;
 
-    if (filters.available) result = result.filter((p) => (p.stock ?? 0) > 0);
+    const controller = new AbortController();
 
-    if (filters.categories.length > 0) {
-      result = result.filter((p) => filters.categories.includes(p.category?.id || 0));
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("per_page", String(rowsPerPage));
+
+    if (priceOrder === "rating") params.set("sort", "rating");
+    else if (priceOrder === "asc") params.set("sort", "price_asc");
+    else if (priceOrder === "desc") params.set("sort", "price_desc");
+
+    if (filters.available) params.set("available", "1");
+    filters.categories.forEach((cid) => params.append("categories[]", String(cid)));
+    filters.materials.forEach((m) => params.append("materials[]", m));
+    filters.colors.forEach((c) => params.append("colors[]", c));
+
+    // خيارات الفلاتر تُجلب مرة واحدة فقط
+    if (!filtersLoadedRef.current) params.set("include_filters", "1");
+
+    async function fetchProducts() {
+      setLoadingProducts(true);
+      try {
+        const res = await fetch(
+          `${API_URL}/categories/${encodeURIComponent(categoryId)}/products?${params.toString()}`,
+          { signal: controller.signal }
+        );
+        const result = await res.json();
+
+        if (!result.status) {
+          throw new Error(result.message || "فشل تحميل المنتجات");
+        }
+
+        setProducts(result.data?.products || []);
+        setPagination(result.data?.pagination || null);
+
+        if (result.data?.filters) {
+          setFilterMaterials(result.data.filters.materials || []);
+          setFilterColors(result.data.filters.colors || []);
+          filtersLoadedRef.current = true;
+        }
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+        console.error("Error fetching category products:", err);
+        setProducts([]);
+        setPagination(null);
+      } finally {
+        if (!controller.signal.aborted) setLoadingProducts(false);
+      }
     }
 
-    if (filters.materials.length > 0) {
-      result = result.filter((p) => p.materials?.some((m) => filters.materials.includes(m.name)));
-    }
+    fetchProducts();
 
-    if (filters.colors.length > 0) {
-      result = result.filter((p) => p.colors?.some((c) => filters.colors.includes(c.name)));
-    }
+    return () => controller.abort();
+  }, [categoryId, API_URL, page, priceOrder, filters]);
 
-    setFilteredProducts(result);
+  const handleFilterChange = (nextFilters: Filters) => {
+    setFilters(nextFilters);
     setPage(1);
   };
 
-  const sortedProducts = useMemo(() => {
-    if (!priceOrder) return filteredProducts;
-    const sorted = [...filteredProducts];
+  const handleSortChange = (value: "" | "asc" | "desc" | "rating") => {
+    setPriceOrder(value);
+    setPage(1);
+  };
 
-    if (priceOrder === "asc" || priceOrder === "desc") {
-      sorted.sort((a, b) => {
-        const pa = Number(a.final_price ?? a.price ?? 0);
-        const pb = Number(b.final_price ?? b.price ?? 0);
-        return priceOrder === "asc" ? pa - pb : pb - pa;
-      });
-    } else if (priceOrder === "rating") {
-      sorted.sort((a, b) => (b.average_rating ?? 0) - (a.average_rating ?? 0));
-    }
-
-    return sorted;
-  }, [filteredProducts, priceOrder]);
-
-  const paginatedProducts = useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    return sortedProducts.slice(start, start + rowsPerPage);
-  }, [sortedProducts, page]);
+  const goToPage = (nextPage: number) => {
+    setPage(nextPage);
+    productsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const handleFavoriteChange = (productId: number, newValue: boolean) => {
-    const update = (arr: ProductI[]) =>
-      arr.map((p) => (p.id === productId ? { ...p, is_favorite: newValue } : p));
-
-    setAllProducts(update);
-    setFilteredProducts(update);
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, is_favorite: newValue } : p))
+    );
   };
 
   if (loading) return <CategoryPageSkeleton />;
@@ -281,7 +298,7 @@ export default function CategoryPage() {
     return pages;
   }
 
-  const totalPages = Math.ceil(sortedProducts.length / rowsPerPage);
+  const totalPages = pagination?.last_page ?? 1;
 
   return (
     <section className="">
@@ -292,7 +309,10 @@ export default function CategoryPage() {
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-slate-900">{category.name}</h1>
               <p className="max-md:hidden text-sm text-slate-500 mt-1">
-                عرض <span className="font-extrabold text-slate-900">{filteredProducts.length}</span>{" "}
+                عرض{" "}
+                <span className="font-extrabold text-slate-900">
+                  {pagination?.total ?? products.length}
+                </span>{" "}
                 منتج
               </p>
             </div>
@@ -340,7 +360,7 @@ export default function CategoryPage() {
               <FormControl size="small" sx={{ minWidth: 180 }}>
                 <Select
                   value={priceOrder}
-                  onChange={(e) => setPriceOrder(e.target.value as any)}
+                  onChange={(e) => handleSortChange(e.target.value as "" | "asc" | "desc" | "rating")}
                   displayEmpty
                   IconComponent={KeyboardArrowDownRoundedIcon}
                   renderValue={(selected) =>
@@ -447,7 +467,7 @@ export default function CategoryPage() {
           </div>
 
           {/* Content */}
-          <div className="lg:col-span-9">
+          <div ref={productsTopRef} className="lg:col-span-9 scroll-mt-28">
             {/* Sub categories row with fallback images */}
             {subCategories.length > 0 && (
               <motion.div
@@ -483,7 +503,13 @@ export default function CategoryPage() {
             )}
 
             {/* Products */}
-            {paginatedProducts.length === 0 ? (
+            {loadingProducts && products.length === 0 ? (
+              <div className={gridClass}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <ProductCardSkeleton key={`product-skeleton-${i}`} />
+                ))}
+              </div>
+            ) : products.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -495,9 +521,16 @@ export default function CategoryPage() {
                 </p>
               </motion.div>
             ) : (
-              <motion.div layout className={gridClass + " gap-2 md:gap-3"}>
+              <motion.div
+                layout
+                className={
+                  gridClass +
+                  " transition-opacity" +
+                  (loadingProducts ? " opacity-60 pointer-events-none" : "")
+                }
+              >
                 <AnimatePresence mode="popLayout">
-                  {paginatedProducts.map((product, idx) => (
+                  {products.map((product, idx) => (
                     <motion.div
                       key={product.id}
                       layout
@@ -513,14 +546,6 @@ export default function CategoryPage() {
                         name={product.name}
                         product={product}
                         image={product.image || "/images/not.jpg"}
-                        images={
-                          product.images?.length
-                            ? product.images.map(img => ({
-                                ...img,
-                                url: img.url || "/images/not.jpg"
-                              }))
-                            : [{ url: "/images/not.jpg", alt: "default" }]
-                        }
                         price={(product.price ?? 1).toString()}
                         final_price={product.final_price}
                         discount={
@@ -543,7 +568,7 @@ export default function CategoryPage() {
             )}
 
             {/* Pagination */}
-            {sortedProducts.length > rowsPerPage && (
+            {totalPages > 1 && (
               <div className="mt-10 flex items-center justify-center">
                 <div
                   className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white 
@@ -552,7 +577,7 @@ export default function CategoryPage() {
                 >
                   {/* Prev */}
                   <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    onClick={() => goToPage(Math.max(1, page - 1))}
                     disabled={page === 1}
                     className="inline-flex items-center gap-1 rounded-lg 
                    px-2 py-1.5 text-xs font-extrabold text-slate-700
@@ -580,7 +605,7 @@ export default function CategoryPage() {
                           key={p}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => setPage(p)}
+                          onClick={() => goToPage(p)}
                           className={[
                             "min-w-[30px] h-[30px] rounded-lg px-1 text-xs font-black transition",
                             "sm:min-w-[38px] sm:h-[38px] sm:rounded-xl sm:px-2 sm:text-sm",
@@ -601,7 +626,7 @@ export default function CategoryPage() {
 
                   {/* Next */}
                   <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() => goToPage(Math.min(totalPages, page + 1))}
                     disabled={page >= totalPages}
                     className="inline-flex items-center gap-1 rounded-lg 
                    px-2 py-1.5 text-xs font-extrabold text-slate-700
