@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { signOut as nextAuthSignOut, useSession } from "next-auth/react";
 import {
@@ -21,6 +22,7 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function DropdownUser() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { fullName, userImage, logout } = useAuth();
   const { data: session } = useSession();
@@ -68,8 +70,9 @@ export default function DropdownUser() {
       });
 
       setTimeout(() => {
-        window.location.href = "/login";
-      }, 1500);
+        router.replace("/login");
+        router.refresh();
+      }, 1200);
     } catch (err) {
       console.error("Logout error:", err);
       Swal.fire({

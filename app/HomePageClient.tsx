@@ -153,7 +153,7 @@ export default function HomePageClient({
 		const getHomeData = async () => {
 			setLoadingHome(true);
 			try {
-				const res = await fetchApi("home?categories_limit=4&products_limit=6");
+				const res = await fetchApi("home?categories_limit=4&products_limit=4");
 				const sub_categories =
 					res?.data?.sub_categories ?? res?.sub_categories ?? [];
 				const pagination =
@@ -297,7 +297,7 @@ export default function HomePageClient({
 									خدمات القرطاسية والطباعة الفورية
 								</h3>
 								<p className="text-slate-200 text-xs md:text-sm max-w-xl">
-									اطبع مستنداتك (PDF / Word) وصورك بأعلى جودة ليزر، مقاسات من A0 إلى A5، أبيض وأسود أو ملون، مع حذف تلقائي للملفات بعد الطباعة لضمان الخصوصية.
+									اطبع مستنداتك (PDF / Word) وصورك بأعلى جودة ليزر، مقاسات من A1 إلى A5، أبيض وأسود أو ملون، مع حذف تلقائي للملفات بعد الطباعة لضمان الخصوصية.
 								</p>
 							</div>
 
@@ -329,8 +329,8 @@ export default function HomePageClient({
 							if (!hasProducts) return null;
 
 							const categoryBanner = getCategoryBanner(category);
-							// Limit products in home slider to 16 for DOM performance
-							const displayProducts = category.products.slice(0, 16);
+							// نعرض أول 4 منتجات مختارة من الداشبورد لكل قسم رئيسي
+							const displayProducts = category.products.slice(0, 4);
 
 							return (
 								<section

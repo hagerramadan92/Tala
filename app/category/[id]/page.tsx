@@ -54,6 +54,7 @@ interface CategoryChild {
   name: string;
   slug: string;
   image?: string | null;
+  sub_image?: string | null;
 }
 
 interface CategoryData {
@@ -475,24 +476,25 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-6"
               >
-                <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2">
+                <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3">
                   {subCategories.map((sub) => (
                     <Link
                       href={`/category/${sub.slug || sub.id}`}
                       key={sub.id}
                       className="min-w-fit group"
                     >
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="relative w-[70px] h-[70px] rounded-full overflow-hidden bg-white border border-slate-200 shadow-sm group-hover:shadow transition">
+                      <div className="flex flex-col items-center gap-2.5">
+                        <div className="relative w-[104px] h-[104px] md:w-[136px] md:h-[136px] rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm group-hover:shadow-md group-hover:border-pro/40 transition">
                           <ImageWithFallback
-                            src={sub.image}
+                            src={sub.image || sub.sub_image}
                             alt={sub.name}
                             fill
+                            sizes="(max-width: 768px) 104px, 136px"
                             className="object-cover group-hover:scale-[1.06] transition duration-300"
                             fallbackSrc="/images/not.jpg"
                           />
                         </div>
-                        <p className="text-xs font-extrabold text-slate-700 group-hover:text-pro transition line-clamp-1 w-[90px] text-center">
+                        <p className="text-sm md:text-base font-extrabold text-slate-700 group-hover:text-pro transition line-clamp-1 w-[104px] md:w-[136px] text-center">
                           {sub.name}
                         </p>
                       </div>

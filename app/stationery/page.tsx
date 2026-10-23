@@ -14,7 +14,6 @@ import {
   FiTrash2,
   FiCheck,
   FiChevronRight,
-  FiInfo,
   FiShield,
   FiLock,
   FiRefreshCw,
@@ -59,6 +58,7 @@ interface UploadedFileItem {
   side_type: "single" | "double";
   pages_count: number;
   copies: number;
+  services: string[];
 }
 
 interface StationeryService {
@@ -88,6 +88,18 @@ const SUPPORTED_PAPER_SIZES = ["A4", "A3", "A5", "A2", "A1"];
 const LARGE_PAPER_SIZES = ["A1", "A2"];
 const MIN_LARGE_PAPER_SHEETS = 100;
 
+// السعر الأدنى لأول 100 ورقة للمقاسات الكبيرة (A1 / A2) حسب الوجه واللون.
+const LARGE_FORMAT_MINIMUMS: Record<string, Record<string, Record<string, number>>> = {
+  A2: {
+    single: { bw: 400, color: 500 },
+    double: { bw: 750, color: 850 },
+  },
+  A1: {
+    single: { bw: 500, color: 600 },
+    double: { bw: 900, color: 1000 },
+  },
+};
+
 export default function StationeryPage() {
   const router = useRouter();
   const { refreshCart } = useCart();
@@ -105,19 +117,16 @@ export default function StationeryPage() {
   const [uploadBytesTotal, setUploadBytesTotal] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [generalNote, setGeneralNote] = useState("");
 
   // مصفوفات الأسعار والأحجام من الـ API
   const [pricesList, setPricesList] = useState<PriceItem[]>([]);
   const [services, setServices] = useState<StationeryService[]>([]);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [availableSizes, setAvailableSizes] = useState<string[]>(SUPPORTED_PAPER_SIZES);
   const [paperTypes, setPaperTypes] = useState<Record<"document" | "photo", Record<string, string>>>({
     document: { plain: "ورق عادي", coated: "ورق كوشيه", cardstock: "ورق مقوّى" },
     photo: { glossy: "ورق صور لامع", matte: "ورق صور مطفي" },
   });
   const [sizeDimensions, setSizeDimensions] = useState<Record<string, string>>({
-    A0: "84.1 × 118.9 cm",
     A1: "59.4 × 84.1 cm",
     A2: "42.0 × 59.4 cm",
     A3: "29.7 × 42.0 cm",
@@ -154,7 +163,18 @@ export default function StationeryPage() {
     fetchStationeryPrices();
   }, [API_URL]);
 
+  // السعر الأدنى لأول 100 ورقة للمقاسات الكبيرة حسب المقاس والوجه واللون
+  const getMinimumLargeFormatTotal = (
+    paperSize: string,
+    colorType: "bw" | "color",
+    sideType: "single" | "double"
+  ): number => {
+    const size = paperSize.toUpperCase();
+    return LARGE_FORMAT_MINIMUMS[size]?.[sideType]?.[colorType] ?? 0;
+  };
+
   // دالة جلب سعر الصفحة بناء على المقاس واللون ونوع الخدمة (ورقة منفردة أو ورقة في ملف)
+  // كل الأسعار تُدخل يدوياً من الداشبورد لكل مقاس ونوع ورق، بدون معادلات أو مضاعفات.
   const getPagePrice = (
     serviceType: "document" | "photo",
     paperSize: string,
@@ -164,16 +184,15 @@ export default function StationeryPage() {
     orientation: "portrait" | "landscape" = "portrait",
     pagesCount: number = 1
   ): number => {
-    const basePaperType = paperType === "cardstock" ? "plain" : paperType;
     const normalizedSize = paperSize.toUpperCase();
-    const baseSize = LARGE_PAPER_SIZES.includes(normalizedSize) ? normalizedSize : "A4";
     const item = pricesList.find(
       (p) =>
         p.service_type === serviceType &&
-        p.paper_size.toUpperCase() === baseSize &&
-        p.paper_type === basePaperType &&
+        p.paper_size.toUpperCase() === normalizedSize &&
+        p.paper_type === paperType &&
         p.side_type === sideType &&
-        p.orientation === orientation
+        p.orientation === orientation &&
+        p.is_active
     );
     if (!item) {
       return colorType === "color" ? (serviceType === "photo" ? 3.0 : 1.5) : 0.5;
@@ -185,37 +204,29 @@ export default function StationeryPage() {
     if (isSingleSheet) {
       base = colorType === "color" ? Number(item.color_price) : Number(item.bw_price);
     } else {
-      const fileBw = item.file_bw_price !== undefined && item.file_bw_price !== null 
-        ? Number(item.file_bw_price) 
+      const fileBw = item.file_bw_price !== undefined && item.file_bw_price !== null
+        ? Number(item.file_bw_price)
         : Number(item.bw_price);
-      const fileColor = item.file_color_price !== undefined && item.file_color_price !== null 
-        ? Number(item.file_color_price) 
+      const fileColor = item.file_color_price !== undefined && item.file_color_price !== null
+        ? Number(item.file_color_price)
         : Number(item.color_price);
       base = colorType === "color" ? fileColor : fileBw;
     }
 
-    const sizeMultiplier = normalizedSize === "A3" ? 1.75
-      : normalizedSize === "A5" ? 0.75
-      : 1;
-    const cardstockMultiplier = paperType === "cardstock" ? 1.20 : 1;
-
-    return Math.max(0.05, Number((base * sizeMultiplier * cardstockMultiplier).toFixed(2)));
+    return Math.max(0.05, Number(base.toFixed(2)));
   };
 
-  // أقل سعر يبدأ به كل قسم لعرضه في البطاقات الرئيسية
-  const startingDocPrice = pricesList
+  // أقل سعر للورقة المفردة يبدأ به قسم المستندات (من أول ريال)
+  const documentSinglePrices = pricesList
     .filter((p) => p.service_type === "document" && p.is_active)
-    .reduce((min, p) => {
-      const bestPrice = p.file_bw_price ? Math.min(Number(p.bw_price), Number(p.file_bw_price)) : Number(p.bw_price);
-      return Math.min(min, bestPrice);
-    }, 0.25);
+    .map((p) => Number(p.bw_price))
+    .filter((price) => Number.isFinite(price) && price > 0);
+  const startingDocPrice = documentSinglePrices.length
+    ? Math.max(1, Math.min(...documentSinglePrices))
+    : 1;
 
-  const startingPhotoPrice = pricesList
-    .filter((p) => p.service_type === "photo" && p.is_active)
-    .reduce((min, p) => Math.min(min, Number(p.color_price)), 2.0);
-
-  // حساب تكلفة ملف واحد
-  const calculateFileTotal = (file: UploadedFileItem): number => {
+  // حساب تكلفة الطباعة فقط لملف واحد (بدون الخدمات الإضافية)
+  const calculatePrintTotal = (file: UploadedFileItem): number => {
     const pricePerPage = getPagePrice(
       file.service_type,
       file.paper_size,
@@ -228,23 +239,42 @@ export default function StationeryPage() {
     const sheets = file.pages_count * file.copies;
     const normalizedSize = file.paper_size.toUpperCase();
     if (LARGE_PAPER_SIZES.includes(normalizedSize)) {
-      const minimumTotal = normalizedSize === "A1" ? 500 : 400;
-      return Number((minimumTotal + Math.max(0, sheets - 100) * pricePerPage).toFixed(2));
+      const minimumTotal = getMinimumLargeFormatTotal(
+        normalizedSize,
+        file.color_type,
+        file.side_type
+      );
+      return Number(
+        (minimumTotal + Math.max(0, sheets - MIN_LARGE_PAPER_SHEETS) * pricePerPage).toFixed(2)
+      );
     }
     return Number((sheets * pricePerPage).toFixed(2));
   };
 
-  // إجمالي السعر لجميع الملفات
+  // سعر الخدمات الإضافية للملف الواحد — تُحتسب لكل نسخة
+  const calculateFileServicesTotal = (file: UploadedFileItem): number => {
+    const perCopy = services
+      .filter((service) => file.services.includes(service.key))
+      .reduce((sum, service) => sum + Number(service.price), 0);
+    return Number((perCopy * file.copies).toFixed(2));
+  };
+
+  // حساب تكلفة ملف واحد = طباعة + خدمات إضافية
+  const calculateFileTotal = (file: UploadedFileItem): number =>
+    Number((calculatePrintTotal(file) + calculateFileServicesTotal(file)).toFixed(2));
+
+  // إجمالي السعر لجميع الملفات (الخدمات محسوبة داخل كل ملف)
   const filesTotal = uploadedFiles.reduce(
     (sum, file) => sum + calculateFileTotal(file),
     0
   );
 
-  const servicesTotal = services
-    .filter((service) => selectedServices.includes(service.key))
-    .reduce((sum, service) => sum + Number(service.price), 0);
+  const servicesTotal = uploadedFiles.reduce(
+    (sum, file) => sum + calculateFileServicesTotal(file),
+    0
+  );
 
-  const grandTotal = filesTotal + servicesTotal;
+  const grandTotal = filesTotal;
 
   const totalPagesAll = uploadedFiles.reduce(
     (sum, f) => sum + f.pages_count * f.copies,
@@ -256,9 +286,37 @@ export default function StationeryPage() {
     (file) => LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && fileSheets(file) < MIN_LARGE_PAPER_SHEETS
   );
 
-  const toggleService = (key: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
+  // اختيار / إلغاء خدمة إضافية لملف معين
+  const toggleService = (fileId: string, key: string) => {
+    setUploadedFiles((prev) =>
+      prev.map((item) =>
+        item.id === fileId
+          ? {
+              ...item,
+              services: item.services.includes(key)
+                ? item.services.filter((serviceKey) => serviceKey !== key)
+                : [...item.services, key],
+            }
+          : item
+      )
+    );
+  };
+
+  // تغيير مقاس الملف: الورق العادي غير متاح للمقاسات الكبيرة A1/A2
+  const changeFileSize = (fileId: string, size: string) => {
+    const isLarge = LARGE_PAPER_SIZES.includes(size.toUpperCase());
+    setUploadedFiles((prev) =>
+      prev.map((item) => {
+        if (item.id !== fileId) return item;
+        let paperType = item.paper_type;
+        if (isLarge && paperType === "plain") {
+          paperType =
+            Object.keys(paperTypes[item.service_type] || {}).find(
+              (type) => type !== "plain"
+            ) || paperType;
+        }
+        return { ...item, paper_size: size, paper_type: paperType };
+      })
     );
   };
 
@@ -442,6 +500,7 @@ export default function StationeryPage() {
             side_type: "single",
             pages_count: Math.max(1, json.data.pages_count || 1),
             copies: 1,
+            services: [],
           });
         }
       }
@@ -515,9 +574,8 @@ export default function StationeryPage() {
           side_type: f.side_type,
           pages_count: f.pages_count,
           copies: f.copies,
+          services: f.services,
         })),
-        services: selectedServices,
-        note: generalNote,
       };
 
       const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
@@ -570,7 +628,7 @@ export default function StationeryPage() {
             اطبع مستنداتك وملفاتك بدقة عالية
           </h1>
           <p className="text-slate-300 text-xs md:text-sm max-w-xl mx-auto">
-            طباعة رقمية فورية بمقاسات A0 إلى A5 مع استلام من الفرع أو شحن لباب بيتك.
+            طباعة رقمية فورية بمقاسات A1 إلى A5 مع استلام من الفرع أو شحن لباب بيتك.
           </p>
         </div>
       </div>
@@ -603,7 +661,7 @@ export default function StationeryPage() {
                   <ul className="space-y-1.5 text-xs md:text-sm text-slate-700 font-semibold pt-1">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-pro" />
-                      <span>المقاسات: A0 إلى A5 (الافتراضي A4)</span>
+                      <span>المقاسات: A1 إلى A5 (الافتراضي A4)</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-pro" />
@@ -616,7 +674,7 @@ export default function StationeryPage() {
                         <strong className="text-pro font-black">
                           {startingDocPrice.toFixed(2)} ر.س
                         </strong>{" "}
-                        / صفحة
+                        / ورقة
                       </span>
                     </li>
                   </ul>
@@ -740,6 +798,8 @@ export default function StationeryPage() {
             {/* Uploaded Files Cards List */}
             <div className="space-y-5">
               {uploadedFiles.map((file, idx) => {
+                const printCost = calculatePrintTotal(file);
+                const servicesCost = calculateFileServicesTotal(file);
                 const fileCost = calculateFileTotal(file);
                 const currentUnitPrice = getPagePrice(
                   file.service_type,
@@ -787,9 +847,16 @@ export default function StationeryPage() {
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-base font-extrabold text-[#ff7300]">
-                          {fileCost.toFixed(2)} ر.س
-                        </span>
+                        <div className="text-left">
+                          <span className="text-base font-extrabold text-[#ff7300]">
+                            {fileCost.toFixed(2)} ر.س
+                          </span>
+                          {servicesCost > 0 && (
+                            <div className="text-[10px] text-slate-500 font-bold mt-0.5">
+                              طباعة {printCost.toFixed(2)} + خدمات {servicesCost.toFixed(2)}
+                            </div>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeFile(file.id)}
@@ -835,6 +902,17 @@ export default function StationeryPage() {
                           عدد الورق: {file.pages_count} صفحة × {file.copies} نسخة ={" "}
                           {file.pages_count * file.copies} ورقة
                         </span>
+                        {LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && (
+                          <div className="mt-2 text-[11px] font-bold text-slate-600 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                            أول 100 ورقة ={" "}
+                            {getMinimumLargeFormatTotal(
+                              file.paper_size,
+                              file.color_type,
+                              file.side_type
+                            ).toFixed(2)}{" "}
+                            ر.س، وكل ورقة زيادة تُحسب بسعرها من الداشبورد.
+                          </div>
+                        )}
                         {LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && fileSheets(file) < MIN_LARGE_PAPER_SHEETS && (
                           <div className="mt-2 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
                             المقاس {file.paper_size} يتطلب حدًا أدنى 100 ورقة.
@@ -902,7 +980,16 @@ export default function StationeryPage() {
                           نوع الورق:
                         </label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {Object.entries(paperTypes[file.service_type] || {}).map(([type, label]) => (
+                          {Object.entries(paperTypes[file.service_type] || {})
+                            .filter(
+                              ([type]) =>
+                                !(
+                                  LARGE_PAPER_SIZES.includes(
+                                    file.paper_size.toUpperCase()
+                                  ) && type === "plain"
+                                )
+                            )
+                            .map(([type, label]) => (
                             <button
                               key={type}
                               type="button"
@@ -917,13 +1004,18 @@ export default function StationeryPage() {
                             </button>
                           ))}
                         </div>
+                        {LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && (
+                          <p className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+                            الورق العادي غير متاح لمقاسي A1 وA2 — يرجى اختيار الكوشيه أو المقوّى.
+                          </p>
+                        )}
                       </div>
 
-                      {/* Control 5: Paper Size (A0 to A5) */}
+                      {/* Control 5: Paper Size (A1 to A5) */}
                       <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 md:col-span-2 lg:col-span-3">
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-xs font-bold text-slate-700">
-                            حجم الورقة (Paper Size A0 - A5):
+                            حجم الورقة (Paper Size A1 - A5):
                           </label>
                           <span className="text-[11px] text-slate-500 font-medium">
                             المقاس المختار: {file.paper_size} ({sizeDimensions[file.paper_size] || ""})
@@ -937,7 +1029,7 @@ export default function StationeryPage() {
                               <button
                                 key={size}
                                 type="button"
-                                onClick={() => updateFileOption(file.id, "paper_size", size)}
+                                onClick={() => changeFileSize(file.id, size)}
                                 className={`py-2 px-2.5 rounded-xl border text-center transition ${
                                   isSelected
                                     ? "border-[#ff7300] bg-white text-[#ff7300] shadow-xs ring-2 ring-[#ff7300]/10"
@@ -1016,73 +1108,58 @@ export default function StationeryPage() {
                           </div>
                       </div>
                     </div>
+
+                    {/* خدمات إضافية خاصة بهذا الملف — تُحتسب لكل نسخة */}
+                    {services.length > 0 && (
+                      <div className="border-t border-slate-100 pt-4">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div>
+                            <h4 className="text-xs md:text-sm font-extrabold text-slate-900">
+                              خدمات إضافية لهذا الملف (اختياري)
+                            </h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              يتم احتساب سعر الخدمة لكل نسخة من هذا الملف.
+                            </p>
+                          </div>
+                          {servicesCost > 0 && (
+                            <span className="text-[11px] font-extrabold text-[#ff7300] bg-amber-50 border border-amber-200 rounded-full px-3 py-1 whitespace-nowrap">
+                              +{servicesCost.toFixed(2)} ر.س
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {services.map((service) => {
+                            const active = file.services.includes(service.key);
+                            return (
+                              <button
+                                key={service.key}
+                                type="button"
+                                onClick={() => toggleService(file.id, service.key)}
+                                className={`p-3 rounded-xl border text-right transition ${
+                                  active
+                                    ? "border-[#ff7300] bg-amber-50 text-[#ff7300] ring-2 ring-[#ff7300]/10"
+                                    : "border-slate-200 bg-white/70 text-slate-700 hover:bg-white"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-xs font-extrabold">{service.name}</span>
+                                  <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${active ? "bg-[#ff7300] border-[#ff7300] text-white" : "border-slate-300"}`}>
+                                    {active && <FiCheck className="w-3 h-3" />}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] mt-1 font-bold text-slate-500">
+                                  {Number(service.price).toFixed(2)} ر.س × {file.copies} نسخة
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
             </div>
-
-            {/* General Order Notes */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-              <label className="block text-xs md:text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
-                <FiInfo className="text-[#ff7300]" />
-                <span>ملاحظات إضافية على أمر الطباعة (اختياري):</span>
-              </label>
-              <textarea
-                rows={2}
-                value={generalNote}
-                onChange={(e) => setGeneralNote(e.target.value)}
-                placeholder="مثال: يرجى التدبيس في الزاوية العلوية، أو وضع غلاف شفاف، أو أي متطلبات خاصة..."
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:border-[#ff7300] transition resize-none"
-              />
-            </div>
-
-            {/* Paid extra services */}
-            {services.length > 0 && (
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="text-sm md:text-base font-extrabold text-slate-900">
-                      خدمات إضافية (اختياري)
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      خدمات مدفوعة تُضاف لكل الطلب — 10 ر.س لكل خدمة.
-                    </p>
-                  </div>
-                  {servicesTotal > 0 && (
-                    <span className="text-xs font-extrabold text-[#ff7300] bg-amber-50 border border-amber-200 rounded-full px-3 py-1 whitespace-nowrap">
-                      +{servicesTotal.toFixed(2)} ر.س
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {services.map((service) => {
-                    const active = selectedServices.includes(service.key);
-                    return (
-                      <button
-                        key={service.key}
-                        type="button"
-                        onClick={() => toggleService(service.key)}
-                        className={`p-3 rounded-xl border text-right transition ${
-                          active
-                            ? "border-[#ff7300] bg-amber-50 text-[#ff7300] ring-2 ring-[#ff7300]/10"
-                            : "border-slate-200 bg-white/70 text-slate-700 hover:bg-white"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-extrabold">{service.name}</span>
-                          <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${active ? "bg-[#ff7300] border-[#ff7300] text-white" : "border-slate-300"}`}>
-                            {active && <FiCheck className="w-3 h-3" />}
-                          </span>
-                        </div>
-                        <div className="text-[11px] mt-1 font-bold text-slate-500">
-                          {Number(service.price).toFixed(2)} ر.س
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             <div className="flex items-center gap-2 text-[11px] md:text-xs text-slate-500 bg-slate-100/70 border border-slate-200 rounded-xl px-3 py-2">
               <FiShield className="w-4 h-4 text-emerald-600" />

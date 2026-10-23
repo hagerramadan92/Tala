@@ -156,8 +156,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setFullName(null);
     setFavoriteProducts([]); // ✅ إفراغ المفضلة عند تسجيل الخروج
 
-    localStorage.clear();
-    nextAuthSignOut({ callbackUrl: "/login" });
+    // إزالة بيانات الجلسة فقط دون مسح بقية بيانات الموقع
+    [
+      "auth_token",
+      "userName",
+      "userEmail",
+      "userImage",
+      "fullName",
+      "favorites",
+    ].forEach((key) => localStorage.removeItem(key));
   };
 
   const favoriteIdsSet = useMemo(() => {
