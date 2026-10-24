@@ -486,7 +486,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
                       <div className="flex flex-col items-center gap-2.5">
                         <div className="relative w-[104px] h-[104px] md:w-[136px] md:h-[136px] rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm group-hover:shadow-md group-hover:border-pro/40 transition">
                           <ImageWithFallback
-                            src={sub.image || sub.sub_image}
+                            src={sub.sub_image || sub.image}
                             alt={sub.name}
                             fill
                             sizes="(max-width: 768px) 104px, 136px"
