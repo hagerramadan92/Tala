@@ -163,7 +163,6 @@ function TotalOrder({
     const totalWithShipping = totalAfterPoints + shippingFee;
     // حساب الضريبة بطريقة عكسية (لأن totalWithShipping شامل الضريبة)
     const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
-    const totalWithoutTax = totalWithShipping - taxAmount;
 
     return (
         <div className="my-4 gap-2 flex flex-col">
@@ -225,15 +224,6 @@ function TotalOrder({
                 <p>ضريبة القيمة المضافة (15%)</p>
                 <p className="font-semibold">
                     {money(taxAmount)}
-                    <span className="text-sm ms-1">ريال</span>
-                </p>
-            </div>
-
-            {/* الإجمالي بدون الضريبة */}
-            <div className="flex items-center justify-between text-sm">
-                <p>الإجمالي بدون الضريبة</p>
-                <p className="font-semibold">
-                    {money(totalWithoutTax)}
                     <span className="text-sm ms-1">ريال</span>
                 </p>
             </div>
