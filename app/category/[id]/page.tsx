@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { usePageParam } from "@/lib/usePageParam";
 import { useEffect, useRef, useState } from "react";
 import Discount from "@/components/Discount";
 import ProductCard from "@/components/ProductCard";
@@ -110,7 +111,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
   // UI state
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [columns, setColumns] = useState<number>(4);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const rowsPerPage = 12;
 
   const [priceOrder, setPriceOrder] = useState<"" | "asc" | "desc" | "rating">("");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePageParam } from "@/lib/usePageParam";
 import ProductCard from "@/components/ProductCard";
 import { ProductI } from "@/Types/ProductsI";
 
@@ -131,7 +132,7 @@ export default function AllProductsPage() {
 	const [showFilter, setShowFilter] = useState(false);
 
 	// ✅ endpoint params
-	const [page, setPage] = useState(1);
+	const [page, setPage] = usePageParam();
 	const [perPage, setPerPage] = useState(15);
 
 	const [filters, setFilters] = useState<ProductsApiFilters>({
@@ -152,15 +153,36 @@ export default function AllProductsPage() {
 		prevProductsRef.current = products;
 	}, [products]);
 
-	// ✅ Options (IDs) extracted from results
+	// ✅ Category filter options: the full main/sub category tree, not only
+	// categories present in the current page of products.
+	type CategoryTreeNode = { id: number; name: string; children?: { id: number; name: string }[] };
+	const [categoryTree, setCategoryTree] = useState<CategoryTreeNode[]>([]);
+
+	useEffect(() => {
+		if (!API_URL) return;
+		let alive = true;
+		fetch(`${API_URL}/categories?type=parent`)
+			.then((r) => r.json())
+			.then((res) => {
+				if (!alive) return;
+				setCategoryTree(Array.isArray(res?.data) ? res.data : []);
+			})
+			.catch(() => {});
+		return () => {
+			alive = false;
+		};
+	}, [API_URL]);
+
 	const categoriesOptions = useMemo<Option[]>(() => {
-		return uniqOptions(
-			products
-				.map((p) => (p as any).category)
-				.filter(Boolean)
-				.map((c: any) => ({ id: c.id, name: c.name }))
-		);
-	}, [products]);
+		const out: Option[] = [];
+		for (const parent of categoryTree) {
+			out.push({ id: parent.id, name: parent.name });
+			for (const child of parent.children ?? []) {
+				out.push({ id: child.id, name: `— ${child.name}` });
+			}
+		}
+		return out;
+	}, [categoryTree]);
 
 	const materialsOptions = useMemo<Option[]>(() => {
 		return uniqOptions(

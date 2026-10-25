@@ -18,7 +18,9 @@ type LoyaltySummary = {
   value: number;
   settings: {
     is_active: boolean;
+    earn_mode?: "amount" | "per_order" | "both";
     earn_rate: number;
+    points_per_order?: number;
     redeem_rate: number;
     min_redeem_points: number;
     max_redeem_percent: number;
@@ -97,6 +99,13 @@ export default function PointsPage() {
               تعادل {Number(summary.value || 0).toFixed(2)} ر.س
             </p>
             <p className="text-xs text-slate-500 font-semibold mt-3 leading-relaxed">
+              {summary.settings.earn_mode === "per_order"
+                ? `تحصل على ${summary.settings.points_per_order ?? 0} نقطة لكل طلب مكتمل.`
+                : summary.settings.earn_mode === "both"
+                  ? `تحصل على ${summary.settings.earn_rate} نقطة لكل 1 ر.س + ${summary.settings.points_per_order ?? 0} نقطة لكل طلب مكتمل.`
+                  : `تحصل على ${summary.settings.earn_rate} نقطة لكل 1 ر.س.`}
+            </p>
+            <p className="text-xs text-slate-500 font-semibold mt-2 leading-relaxed">
               كل {summary.settings.redeem_rate} نقطة = 1 ر.س. الحد الأدنى للاستخدام {summary.settings.min_redeem_points} نقطة،
               وبحد أقصى {summary.settings.max_redeem_percent}% من قيمة الطلب.
             </p>

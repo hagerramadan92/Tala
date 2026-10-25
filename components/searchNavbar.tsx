@@ -8,6 +8,7 @@ import { LuPhone } from "react-icons/lu";
 import { AiOutlineClose } from "react-icons/ai";
 import SearchComponent from "./SearchComponent";
 import CartSidebar from "./CartSideBar";
+import HeaderPoints from "./HeaderPoints";
 import DropdownUser from "./DropdownUser";
 import { useAuth } from "@/src/context/AuthContext";
 import { useAppContext } from "@/src/context/AppContext";
@@ -108,6 +109,9 @@ export default function SearchNavbar() {
 								</a>
 							</div>
 						)}
+
+						{/* Loyalty points */}
+						{fullName && <HeaderPoints />}
 
 						{/* Cart */}
 						<div className={`cursor-pointer ${!fullName && "hidden"}`}>
