@@ -163,7 +163,8 @@ export default function StationeryPage() {
     async function fetchStationeryPrices() {
       try {
         setLoadingPrices(true);
-        const res = await fetch(`${API_URL}/stationery/prices`);
+        // no-store عشان أي تعديل من الداشبورد يظهر فورًا بدون كاش من المتصفح.
+        const res = await fetch(`${API_URL}/stationery/prices`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
           if (json.status && json.data) {
@@ -955,21 +956,6 @@ export default function StationeryPage() {
                           عدد الورق: {file.pages_count} صفحة × {file.copies} نسخة ={" "}
                           {file.pages_count * file.copies} ورقة
                         </span>
-                        {(() => {
-                          const rule = getLargeFormatRule(file.paper_size);
-                          if (!rule?.minimum_enabled) return null;
-                          return (
-                            <div className="mt-2 text-[11px] font-bold text-slate-600 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                              سعر البداية لأول {rule.included_sheets} ورقة ={" "}
-                              {getMinimumLargeFormatTotal(
-                                file.paper_size,
-                                file.color_type,
-                                file.side_type
-                              ).toFixed(2)}{" "}
-                              ر.س، وكل ورقة زيادة تُحسب بسعرها من الداشبورد.
-                            </div>
-                          );
-                        })()}
                       </div>
 
                       {/* Control 2: Number of pages (read-only) */}
