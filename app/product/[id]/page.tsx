@@ -341,6 +341,22 @@ export default function ProductPageClient() {
   const currentValidation = validateOptions(selectedOptions, apiData);
   const showMissingBadge = showValidation && hasOptions && !currentValidation.isValid;
 
+  // الكمية المختارة من العميل: أي كمية أكبر من 300 تتحول لمدة الأوفست (10 - 15 يوم).
+  const selectedQuantity = Number(selectedOptions.size_quantity || 0);
+  const largeQuantityThreshold = Number(apiData?.large_quantity_threshold ?? 300);
+
+  const effectiveDeliveryTime = useMemo(() => {
+    if (selectedQuantity > largeQuantityThreshold && apiData?.offset_delivery_time) {
+      return apiData.offset_delivery_time;
+    }
+    return apiData?.delivery_time;
+  }, [
+    selectedQuantity,
+    largeQuantityThreshold,
+    apiData?.offset_delivery_time,
+    apiData?.delivery_time,
+  ]);
+
   const handleAddToCart = async () => {
     setShowValidation(true);
 
@@ -557,9 +573,9 @@ export default function ProductPageClient() {
 
             <ProductDescription description={product.description} />
 
-            {apiData?.delivery_time && (
+            {effectiveDeliveryTime && (
               <ShippingInfo
-                deliveryTime={apiData.delivery_time}
+                deliveryTime={effectiveDeliveryTime}
                 warrantyText={warrantyText}
                 offers={apiData.offers}
               />
@@ -690,7 +706,7 @@ export default function ProductPageClient() {
 
       <BottomBar
         key={forceUpdate}
-        product={product}
+        product={{ ...product, delivery_time: effectiveDeliveryTime }}
         displayTotal={displayTotal}
         showMissingBadge={showMissingBadge}
         uploadingDesign={uploadingDesign}
