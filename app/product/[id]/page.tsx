@@ -342,7 +342,38 @@ export default function ProductPageClient() {
   const showMissingBadge = showValidation && hasOptions && !currentValidation.isValid;
 
   // الكمية المختارة من العميل: أي كمية أكبر من 300 تتحول لمدة الأوفست (10 - 15 يوم).
-  const selectedQuantity = Number(selectedOptions.size_quantity || 0);
+  // الكمية ممكن تكون من شرائح المقاس (size_quantity) أو من خيار منتج اسمه "الكمية"
+  // وقيمته زي "10000 حبة (0.73 ريال / للحبة)".
+  const parseSelectedQuantity = (opts: SelectedOptions): number => {
+    const direct = Number(opts?.size_quantity || 0);
+    if (direct > 0) return direct;
+
+    const candidates: Array<{ name: string; value: string }> = [];
+    (opts?.flatOptions || []).forEach((option) => {
+      candidates.push({
+        name: String(option?.name || ""),
+        value: String(option?.value || ""),
+      });
+    });
+    Object.entries(opts?.optionGroups || {}).forEach(([name, value]) => {
+      candidates.push({ name: String(name), value: String(value || "") });
+    });
+
+    const extract = (regex: RegExp): number => {
+      for (const candidate of candidates) {
+        if (!regex.test(candidate.name)) continue;
+        const match = candidate.value.match(/(\d[\d,]*)/);
+        if (!match) continue;
+        const quantity = parseInt(match[1].replace(/,/g, ""), 10);
+        if (quantity > 0) return quantity;
+      }
+      return 0;
+    };
+
+    return extract(/(كمي|حبات|حبة|qty|quantity)/i) || extract(/(عدد|قطع|sheet)/i);
+  };
+
+  const selectedQuantity = parseSelectedQuantity(selectedOptions);
   const largeQuantityThreshold = Number(apiData?.large_quantity_threshold ?? 300);
 
   const effectiveDeliveryTime = useMemo(() => {
