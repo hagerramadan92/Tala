@@ -66,6 +66,18 @@ interface StationeryService {
   key: string;
   name: string;
   price: string | number;
+  // null / undefined = متاحة لكل المقاسات، [] = مش متاحة لأي مقاس
+  available_sizes?: string[] | null;
+}
+
+// إعدادات سعر البداية للمقاسات الكبيرة — قادمة من الداشبورد
+interface LargeFormatRule {
+  minimum_enabled: boolean;
+  included_sheets: number;
+  prices: {
+    single: { bw: number; color: number };
+    double: { bw: number; color: number };
+  };
 }
 
 interface UploadedFileResponse {
@@ -86,17 +98,24 @@ interface UploadedFileResponse {
 
 const SUPPORTED_PAPER_SIZES = ["A4", "A3", "A5", "A2", "A1"];
 const LARGE_PAPER_SIZES = ["A1", "A2"];
-const MIN_LARGE_PAPER_SHEETS = 100;
 
-// السعر الأدنى لأول 100 ورقة للمقاسات الكبيرة (A1 / A2) حسب الوجه واللون.
-const LARGE_FORMAT_MINIMUMS: Record<string, Record<string, Record<string, number>>> = {
+// احتياطي فقط لو الـ API رجع بدون إعدادات (المصدر الأساسي هو الداشبورد).
+const FALLBACK_LARGE_FORMAT_RULES: Record<string, LargeFormatRule> = {
   A2: {
-    single: { bw: 400, color: 500 },
-    double: { bw: 750, color: 850 },
+    minimum_enabled: true,
+    included_sheets: 100,
+    prices: {
+      single: { bw: 400, color: 500 },
+      double: { bw: 750, color: 850 },
+    },
   },
   A1: {
-    single: { bw: 500, color: 600 },
-    double: { bw: 900, color: 1000 },
+    minimum_enabled: true,
+    included_sheets: 100,
+    prices: {
+      single: { bw: 500, color: 600 },
+      double: { bw: 900, color: 1000 },
+    },
   },
 };
 
@@ -121,6 +140,9 @@ export default function StationeryPage() {
   // مصفوفات الأسعار والأحجام من الـ API
   const [pricesList, setPricesList] = useState<PriceItem[]>([]);
   const [services, setServices] = useState<StationeryService[]>([]);
+  const [largeFormatRules, setLargeFormatRules] = useState<Record<string, LargeFormatRule>>(
+    FALLBACK_LARGE_FORMAT_RULES
+  );
   const [availableSizes, setAvailableSizes] = useState<string[]>(SUPPORTED_PAPER_SIZES);
   const [paperTypes, setPaperTypes] = useState<Record<"document" | "photo", Record<string, string>>>({
     document: { plain: "ورق عادي", coated: "ورق كوشيه", cardstock: "ورق مقوّى" },
@@ -147,6 +169,15 @@ export default function StationeryPage() {
           if (json.status && json.data) {
             if (json.data.prices) setPricesList(json.data.prices);
             if (json.data.services) setServices(json.data.services);
+            if (json.data.pricing_rules) {
+              setLargeFormatRules((prev) => {
+                const next = { ...prev };
+                Object.entries(json.data.pricing_rules).forEach(([size, rule]) => {
+                  if (rule) next[size.toUpperCase()] = rule as LargeFormatRule;
+                });
+                return next;
+              });
+            }
             if (json.data.sizes) {
               setAvailableSizes(json.data.sizes.filter((size: string) => SUPPORTED_PAPER_SIZES.includes(size.toUpperCase())));
             }
@@ -163,14 +194,20 @@ export default function StationeryPage() {
     fetchStationeryPrices();
   }, [API_URL]);
 
-  // السعر الأدنى لأول 100 ورقة للمقاسات الكبيرة حسب المقاس والوجه واللون
+  // إعدادات سعر البداية للمقاس الكبير (من الداشبورد)
+  const getLargeFormatRule = (paperSize: string): LargeFormatRule | undefined =>
+    largeFormatRules[paperSize.toUpperCase()];
+
+  // سعر البداية حسب المقاس والوجه واللون
   const getMinimumLargeFormatTotal = (
     paperSize: string,
     colorType: "bw" | "color",
     sideType: "single" | "double"
   ): number => {
-    const size = paperSize.toUpperCase();
-    return LARGE_FORMAT_MINIMUMS[size]?.[sideType]?.[colorType] ?? 0;
+    const rule = getLargeFormatRule(paperSize);
+    if (!rule) return 0;
+    const sidePrices = rule.prices?.[sideType] || rule.prices?.single;
+    return Number(sidePrices?.[colorType] ?? 0);
   };
 
   // دالة جلب سعر الصفحة بناء على المقاس واللون ونوع الخدمة (ورقة منفردة أو ورقة في ملف)
@@ -238,16 +275,22 @@ export default function StationeryPage() {
     );
     const sheets = file.pages_count * file.copies;
     const normalizedSize = file.paper_size.toUpperCase();
-    if (LARGE_PAPER_SIZES.includes(normalizedSize)) {
+    const rule = getLargeFormatRule(normalizedSize);
+
+    // المقاسات الكبيرة: لو الحد الأدنى مفعّل من الداشبورد نضيف سعر البداية،
+    // وإلا السعر = عدد الورق × سعر الورقة.
+    if (rule?.minimum_enabled) {
+      const includedSheets = Math.max(0, Number(rule.included_sheets) || 0);
       const minimumTotal = getMinimumLargeFormatTotal(
         normalizedSize,
         file.color_type,
         file.side_type
       );
       return Number(
-        (minimumTotal + Math.max(0, sheets - MIN_LARGE_PAPER_SHEETS) * pricePerPage).toFixed(2)
+        (minimumTotal + Math.max(0, sheets - includedSheets) * pricePerPage).toFixed(2)
       );
     }
+
     return Number((sheets * pricePerPage).toFixed(2));
   };
 
@@ -281,10 +324,16 @@ export default function StationeryPage() {
     0
   );
 
-  const fileSheets = (file: UploadedFileItem) => file.pages_count * file.copies;
-  const filesBelowMinimum = uploadedFiles.filter(
-    (file) => LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && fileSheets(file) < MIN_LARGE_PAPER_SHEETS
-  );
+  // الخدمات المتاحة لمقاس ورقة معين (null = متاحة للكل)
+  const servicesForSize = (paperSize: string): StationeryService[] => {
+    const size = paperSize.toUpperCase();
+    return services.filter((service) => {
+      const sizes = service.available_sizes;
+      if (sizes === undefined || sizes === null) return true;
+      if (sizes.length === 0) return false;
+      return sizes.map((s) => s.toUpperCase()).includes(size);
+    });
+  };
 
   // اختيار / إلغاء خدمة إضافية لملف معين
   const toggleService = (fileId: string, key: string) => {
@@ -315,7 +364,17 @@ export default function StationeryPage() {
               (type) => type !== "plain"
             ) || paperType;
         }
-        return { ...item, paper_size: size, paper_type: paperType };
+
+        // نشيل أي خدمة مش متاحة للمقاس الجديد.
+        const allowedKeys = new Set(servicesForSize(size).map((service) => service.key));
+        const keptServices = item.services.filter((key) => allowedKeys.has(key));
+
+        return {
+          ...item,
+          paper_size: size,
+          paper_type: paperType,
+          services: keptServices,
+        };
       })
     );
   };
@@ -548,12 +607,6 @@ export default function StationeryPage() {
   const handleAddToCart = async () => {
     if (uploadedFiles.length === 0) {
       toast.error("يرجى رفع ملف واحد على الأقل للمتابعة");
-      return;
-    }
-
-    if (filesBelowMinimum.length > 0) {
-      const first = filesBelowMinimum[0];
-      toast.error(`المقاس ${first.paper_size} يتطلب حدًا أدنى 100 ورقة.`);
       return;
     }
 
@@ -902,22 +955,21 @@ export default function StationeryPage() {
                           عدد الورق: {file.pages_count} صفحة × {file.copies} نسخة ={" "}
                           {file.pages_count * file.copies} ورقة
                         </span>
-                        {LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && (
-                          <div className="mt-2 text-[11px] font-bold text-slate-600 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                            أول 100 ورقة ={" "}
-                            {getMinimumLargeFormatTotal(
-                              file.paper_size,
-                              file.color_type,
-                              file.side_type
-                            ).toFixed(2)}{" "}
-                            ر.س، وكل ورقة زيادة تُحسب بسعرها من الداشبورد.
-                          </div>
-                        )}
-                        {LARGE_PAPER_SIZES.includes(file.paper_size.toUpperCase()) && fileSheets(file) < MIN_LARGE_PAPER_SHEETS && (
-                          <div className="mt-2 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
-                            المقاس {file.paper_size} يتطلب حدًا أدنى 100 ورقة.
-                          </div>
-                        )}
+                        {(() => {
+                          const rule = getLargeFormatRule(file.paper_size);
+                          if (!rule?.minimum_enabled) return null;
+                          return (
+                            <div className="mt-2 text-[11px] font-bold text-slate-600 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                              سعر البداية لأول {rule.included_sheets} ورقة ={" "}
+                              {getMinimumLargeFormatTotal(
+                                file.paper_size,
+                                file.color_type,
+                                file.side_type
+                              ).toFixed(2)}{" "}
+                              ر.س، وكل ورقة زيادة تُحسب بسعرها من الداشبورد.
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Control 2: Number of pages (read-only) */}
@@ -1110,7 +1162,7 @@ export default function StationeryPage() {
                     </div>
 
                     {/* خدمات إضافية خاصة بهذا الملف — تُحتسب لكل نسخة */}
-                    {services.length > 0 && (
+                    {servicesForSize(file.paper_size).length > 0 && (
                       <div className="border-t border-slate-100 pt-4">
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div>
@@ -1128,7 +1180,7 @@ export default function StationeryPage() {
                           )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                          {services.map((service) => {
+                          {servicesForSize(file.paper_size).map((service) => {
                             const active = file.services.includes(service.key);
                             return (
                               <button
@@ -1327,7 +1379,7 @@ export default function StationeryPage() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                disabled={isAddingToCart || filesBelowMinimum.length > 0}
+                disabled={isAddingToCart}
                 onClick={handleAddToCart}
                 className="px-6 md:px-10 py-3.5 rounded-xl bg-pro hover:bg-pro-max active:scale-95 text-white font-extrabold text-sm md:text-base flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 transition cursor-pointer disabled:opacity-50"
               >
