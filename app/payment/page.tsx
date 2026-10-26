@@ -285,8 +285,10 @@ export default function PaymentPage() {
 	const [loyalty, setLoyalty] = useState<{
 		balance: number;
 		value: number;
-		settings: { is_active: boolean; earn_rate: number; redeem_rate: number; min_redeem_points: number; max_redeem_percent: number; terms?: string | null };
+		settings: { is_active: boolean; earn_mode?: string; earn_rate: number; points_per_order?: number; redeem_rate: number; min_redeem_points: number; max_redeem_percent: number; terms?: string | null };
 	} | null>(null);
+	// النقاط مش بتتخصم غير لما العميل يفعّل المفتاح بنفسه — غير كده بتتجمع.
+	const [usePoints, setUsePoints] = useState(false);
 	const [pointsToUse, setPointsToUse] = useState<string>("");
 
 	const router = useRouter();
@@ -362,13 +364,37 @@ export default function PaymentPage() {
 	const maxUsablePoints = Math.max(0, Math.min(pointsBalance, pointsMaxByPercent));
 	const requestedPoints = Math.max(0, Math.floor(Number(pointsToUse) || 0));
 	const usablePoints =
-		pointsSettings?.is_active && requestedPoints >= Number(pointsSettings?.min_redeem_points || 0)
+		usePoints &&
+		pointsSettings?.is_active &&
+		requestedPoints >= Number(pointsSettings?.min_redeem_points || 0)
 			? Math.min(requestedPoints, maxUsablePoints)
 			: 0;
 	const pointsDiscount =
 		pointsSettings && Number(pointsSettings.redeem_rate) > 0
 			? Number((usablePoints / Number(pointsSettings.redeem_rate)).toFixed(2))
 			: 0;
+
+	// تفعيل/إلغاء استخدام النقاط — إلغاء التفعيل معناها النقاط هتتجمع.
+	const toggleUsePoints = () => {
+		const next = !usePoints;
+		setUsePoints(next);
+		setPointsToUse(next ? String(maxUsablePoints) : "");
+	};
+
+	// تقدير النقاط اللي هتتجمع من الطلب الحالي.
+	const estimatedEarnedPoints = useMemo(() => {
+		if (!loyalty?.settings?.is_active) return 0;
+		const mode = loyalty.settings.earn_mode || "amount";
+		const earnedAmount = Number(checkoutSummary?.total || 0);
+		let points = 0;
+		if (mode === "amount" || mode === "both") {
+			points += Math.floor(earnedAmount * Number(loyalty.settings.earn_rate || 0));
+		}
+		if (mode === "per_order" || mode === "both") {
+			points += Number(loyalty.settings.points_per_order || 0);
+		}
+		return Math.max(0, points);
+	}, [loyalty, checkoutSummary]);
 
 	useEffect(() => {
 		if (!token) return;
@@ -887,28 +913,71 @@ export default function PaymentPage() {
 								<h4 className="text-md font-extrabold text-pro mb-3">ملخص الطلب</h4>
 								{loyalty?.settings?.is_active && pointsBalance > 0 && (
 									<div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
-										<div className="flex items-center justify-between gap-2 mb-2">
-											<p className="text-sm font-extrabold text-emerald-800">نقاطك</p>
-											<span className="text-xs font-extrabold text-emerald-700 bg-white border border-emerald-200 rounded-full px-2.5 py-1">
-												{pointsBalance} نقطة ≈ {Number(loyalty.value || 0).toFixed(2)} ر.س
-											</span>
+										<div className="flex items-center justify-between gap-3">
+											<div>
+												<p className="text-sm font-extrabold text-emerald-800">استخدام نقاطي للخصم</p>
+												<p className="text-[11px] text-emerald-700 font-bold mt-0.5">
+													رصيدك {pointsBalance} نقطة ≈ {Number(loyalty.value || 0).toFixed(2)} ر.س
+												</p>
+											</div>
+											<button
+												type="button"
+												role="switch"
+												aria-checked={usePoints}
+												onClick={toggleUsePoints}
+												className={`inline-flex h-7 w-12 shrink-0 items-center rounded-full border px-0.5 transition ${
+													usePoints
+														? "bg-emerald-600 border-emerald-600 justify-end"
+														: "bg-white border-emerald-300 justify-start"
+												}`}
+											>
+												<span className="inline-block h-5 w-5 rounded-full bg-white shadow transition" />
+											</button>
 										</div>
-										<label className="block text-xs font-bold text-slate-700 mb-1.5">
-											استخدم نقاطك في هذا الطلب
-										</label>
-										<input
-											type="number"
-											min={0}
-											max={maxUsablePoints}
-											value={pointsToUse}
-											onChange={(e) => setPointsToUse(e.target.value)}
-											placeholder={`الحد الأقصى ${maxUsablePoints} نقطة`}
-											className="w-full rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-sm font-bold outline-none focus:border-emerald-500"
-										/>
-										<p className="text-[11px] text-emerald-800 font-semibold mt-1.5">
-											كل {loyalty.settings.redeem_rate} نقطة = 1 ر.س، والحد الأدنى {loyalty.settings.min_redeem_points} نقطة.
-											{usablePoints > 0 ? ` سيتم خصم ${pointsDiscount.toFixed(2)} ر.س.` : ""}
-										</p>
+
+										{usePoints ? (
+											<div className="mt-3">
+												<div className="flex items-center gap-2 mb-1.5">
+													<label className="text-xs font-bold text-slate-700">
+														عدد النقاط المستخدمة
+													</label>
+													<button
+														type="button"
+														onClick={() => setPointsToUse(String(maxUsablePoints))}
+														className="text-[11px] font-extrabold text-emerald-700 underline decoration-dotted"
+													>
+														استخدام الحد الأقصى ({maxUsablePoints})
+													</button>
+												</div>
+												<input
+													type="number"
+													min={0}
+													max={maxUsablePoints}
+													value={pointsToUse}
+													onChange={(e) => setPointsToUse(e.target.value)}
+													placeholder={`الحد الأقصى ${maxUsablePoints} نقطة`}
+													className="w-full rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-sm font-bold outline-none focus:border-emerald-500"
+												/>
+												<p className="text-[11px] text-emerald-800 font-semibold mt-1.5">
+													كل {loyalty.settings.redeem_rate} نقطة = 1 ر.س، والحد الأدنى {loyalty.settings.min_redeem_points} نقطة.
+													{usablePoints > 0
+														? ` سيتم خصم ${pointsDiscount.toFixed(2)} ر.س.`
+														: requestedPoints > 0
+															? ` أقل من الحد الأدنى — لن يتم خصم أي نقاط.`
+															: ""}
+												</p>
+											</div>
+										) : (
+											<p className="text-[11px] text-emerald-800 font-semibold mt-2">
+												النقاط هتتجمع في حسابك، وتقدر تستخدمها في أي طلب لاحق.
+											</p>
+										)}
+
+										{estimatedEarnedPoints > 0 && (
+											<p className="text-[11px] font-extrabold text-emerald-900 bg-white/70 border border-emerald-200 rounded-lg px-2.5 py-1.5 mt-2">
+												هتتجمع لك ≈ {estimatedEarnedPoints} نقطة من الطلب ده بعد إتمامه.
+											</p>
+										)}
 									</div>
 								)}
 								<TotalOrder
