@@ -6,6 +6,7 @@ import Image from "next/image";
 
 type PaymentMethod = {
   id: number;
+  key?: string;
   name: string;
   icon?: string;
   image?: string;      // This contains the actual image URL
@@ -21,14 +22,28 @@ export default function BankPayment({
 }) {
   const [open] = useState(true);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [applePaySupported, setApplePaySupported] = useState(false);
+
+  // Apple Pay بيشتغل بس على Safari في أجهزة Apple اللي فيها كارت بالمحفظة.
+  useEffect(() => {
+    const ApplePaySession = (window as any).ApplePaySession;
+    const supported =
+      typeof ApplePaySession !== "undefined" &&
+      (typeof ApplePaySession.canMakePayments !== "function" ||
+        ApplePaySession.canMakePayments());
+    setApplePaySupported(Boolean(supported));
+  }, []);
 
   const methods = useMemo(() => {
     return (paymentMethods || [])
       .filter((m: PaymentMethod) => m?.is_active !== false)
+      .filter((m: PaymentMethod) =>
+        m?.key === "applepay" ? applePaySupported : true
+      )
       .map((m: PaymentMethod) => ({
         ...m,
       }));
-  }, [paymentMethods]);
+  }, [paymentMethods, applePaySupported]);
 
   const selected = methods.find((m: PaymentMethod) => m.id === selectedId) || null;
 
@@ -85,7 +100,9 @@ export default function BankPayment({
                     <div className="flex flex-col gap-1">
                       <p className="font-extrabold text-slate-900">{m.name}</p>
                       <p className="text-sm text-slate-600 font-semibold">
-                        اختر طريقة الدفع المناسبة
+                        {m.key === "applepay"
+                          ? "ادفع بلمسة واحدة من محفظة Apple"
+                          : "اختر طريقة الدفع المناسبة"}
                       </p>
                     </div>
                   </label>
