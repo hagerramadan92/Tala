@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import Swal from "sweetalert2";
 
 type PaymentMethod = {
   id: number;
@@ -34,16 +35,17 @@ export default function BankPayment({
     setApplePaySupported(Boolean(supported));
   }, []);
 
+  // بنعرض Apple Pay دايمًا، لكن بنعطّله لو الجهاز/المتصفح مش بيدعمه.
   const methods = useMemo(() => {
     return (paymentMethods || [])
       .filter((m: PaymentMethod) => m?.is_active !== false)
-      .filter((m: PaymentMethod) =>
-        m?.key === "applepay" ? applePaySupported : true
-      )
       .map((m: PaymentMethod) => ({
         ...m,
       }));
-  }, [paymentMethods, applePaySupported]);
+  }, [paymentMethods]);
+
+  const isApplePayBlocked = (key?: string) =>
+    key === "applepay" && !applePaySupported;
 
   const selected = methods.find((m: PaymentMethod) => m.id === selectedId) || null;
 
@@ -65,22 +67,35 @@ export default function BankPayment({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {methods.map((m: PaymentMethod) => {
                 const active = selectedId === m.id;
+                const blocked = isApplePayBlocked(m.key);
 
                 return (
                   <label
                     key={m.id}
-                    className={`flex items-center gap-3 p-4 rounded-3xl border cursor-pointer transition ${
+                    className={`flex items-center gap-3 p-4 rounded-3xl border transition ${
                       active
                         ? "border-pro-max bg-blue-50"
                         : "border-slate-200 hover:bg-slate-50"
-                    }`}
+                    } ${blocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <input
                       type="radio"
                       name="payment"
                       checked={active}
-                      onChange={() => setSelectedId(m.id)}
-                      className="w-5 h-5 accent-[#14213d] cursor-pointer"
+                      onChange={() => {
+                        if (blocked) {
+                          Swal.fire({
+                            icon: "info",
+                            title: "Apple Pay",
+                            text: "Apple Pay متاح على أجهزة Apple فقط (iPhone / iPad / Mac) من متصفح Safari مع وجود كارت في المحفظة.",
+                            confirmButtonText: "تمام",
+                            confirmButtonColor: "#14213d",
+                          });
+                          return;
+                        }
+                        setSelectedId(m.id);
+                      }}
+                      className={`w-5 h-5 accent-[#14213d] ${blocked ? "cursor-not-allowed" : "cursor-pointer"}`}
                     />
 
                     {/* Image container - using img tag for simplicity */}
@@ -101,7 +116,9 @@ export default function BankPayment({
                       <p className="font-extrabold text-slate-900">{m.name}</p>
                       <p className="text-sm text-slate-600 font-semibold">
                         {m.key === "applepay"
-                          ? "ادفع بلمسة واحدة من محفظة Apple"
+                          ? blocked
+                            ? "متاح على iPhone / iPad (Safari)"
+                            : "ادفع بلمسة واحدة من محفظة Apple"
                           : "اختر طريقة الدفع المناسبة"}
                       </p>
                     </div>
