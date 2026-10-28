@@ -27,7 +27,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url, 301);
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // صفحات HTML متتخزنش: بعد أي تحديث للموقع أسماء ملفات JS بتتغير،
+  // ولو المتصفح عرض نسخة HTML قديمة الصفحة بتكسر (زرار مبيشتغلش).
+  response.headers.set(
+    'Cache-Control',
+    'private, no-cache, no-store, max-age=0, must-revalidate'
+  );
+
+  return response;
 }
 
 export const config = {
