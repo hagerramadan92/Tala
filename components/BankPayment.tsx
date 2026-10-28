@@ -27,11 +27,10 @@ export default function BankPayment({
 
   // Apple Pay بيشتغل بس على Safari في أجهزة Apple اللي فيها كارت بالمحفظة.
   useEffect(() => {
-    const ApplePaySession = (window as any).ApplePaySession;
-    const supported =
-      typeof ApplePaySession !== "undefined" &&
-      (typeof ApplePaySession.canMakePayments !== "function" ||
-        ApplePaySession.canMakePayments());
+    // وجود ApplePaySession معناه إن المتصفح Safari على جهاز Apple.
+    // مش بنشترط canMakePayments() لأنها بترجع false لو مفيش كارت
+    // متسجّل في المحفظة، مع إن العميل ممكن يضيف كارت وقت الدفع.
+    const supported = typeof (window as any).ApplePaySession !== "undefined";
     setApplePaySupported(Boolean(supported));
   }, []);
 
@@ -117,7 +116,7 @@ export default function BankPayment({
                       <p className="text-sm text-slate-600 font-semibold">
                         {m.key === "applepay"
                           ? blocked
-                            ? "متاح على iPhone / iPad (Safari)"
+                            ? "متاح على Safari في أجهزة Apple"
                             : "ادفع بلمسة واحدة من محفظة Apple"
                           : "اختر طريقة الدفع المناسبة"}
                       </p>
