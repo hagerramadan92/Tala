@@ -263,7 +263,10 @@ export default function PhoneOtpAuthForm({
       <div className="pt-2">
         <div className={`${otpPending ? "opacity-80 pointer-events-none" : ""}`}>
           <ButtonComponent
-            type="submit"
+            // بننادي الدالة مباشرة: motion.button مش بينفّذ submit الفورم
+            // مع الكليك الحقيقي بالماوس (بينفّذ بس مع الكليك البرمجي).
+            type="button"
+            onClick={otpStep === "phone" ? sendOtp : verifyOtp}
             title={
               otpPending
                 ? "جارٍ المعالجة..."
