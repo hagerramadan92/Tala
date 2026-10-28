@@ -62,14 +62,22 @@ export default function PhoneOtpAuthForm({
 
     loginContext(token, user.name, user.email, user.image, user.name);
 
+    const isNewUser = Boolean(data?.data?.is_new_user);
+
+    // رسالة نجاح واضحة تفضل لحد ما العميل يقول "تمام" أو 5 ثواني.
     Swal.fire({
       icon: "success",
-      title: data?.data?.is_new_user ? "تم إنشاء حسابك بنجاح" : "تم تسجيل الدخول بنجاح",
-      timer: 1400,
-      showConfirmButton: false,
+      title: isNewUser ? "تم إنشاء حسابك بنجاح 🎉" : "تم تسجيل الدخول بنجاح",
+      text: isNewUser ? "أهلاً بيك في تالا الجزيرة" : "نوّرت تاني 👋",
+      confirmButtonText: "تمام",
+      confirmButtonColor: "#14213d",
+      timer: 5000,
+      timerProgressBar: true,
+      allowOutsideClick: false,
+    }).then(() => {
+      router.replace("/");
+      router.refresh();
     });
-
-    router.replace("/");
   };
 
   const sendOtp = async (e?: React.SyntheticEvent) => {
