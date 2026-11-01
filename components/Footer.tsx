@@ -34,7 +34,7 @@ import {
 import Image from "next/image";
 
 type SocialItem = { key: string; value: any; icon?: string };
-type PaymentMethod = { id: number; name: string; icon?: string; is_active: boolean };
+type PaymentMethod = { id: number; name: string; icon?: string; image?: string; is_active: boolean };
 
 function isEmptyValue(v: any) {
   if (v === null || v === undefined) return true;
@@ -83,6 +83,10 @@ const paymentImagesMap: Record<string, string> = {
   "الدفع عند الاستلام": "/images/payments/cod.png",
   "بطاقات بنكيه": "/images/payments/card.jpg",
   "بطاقات بنكية": "/images/payments/card.jpg",
+  "بطاقات بنكية و Apple Pay": "/images/payments/card.jpg",
+  "بطاقات بنكية و apple pay": "/images/payments/card.jpg",
+  "paymob": "/images/payments/paymob.png",
+  "Paymob": "/images/payments/paymob.png",
   "tabby": "/images/payments/tabby.jpeg",
   "Tabby": "/images/payments/tabby.jpeg",
   "tamara": "/images/payments/tamara.png",
@@ -96,10 +100,11 @@ const paymentImagesMap: Record<string, string> = {
   "mada": "/images/mada_mini.png",
   "Mada": "/images/mada_mini.png",
   "مدى": "/images/mada_mini.png",
-  "apple pay": "/images/applepay.png",
-  "Apple Pay": "/images/applepay.png",
-  "applePay": "/images/applepay.png",
-  "ابل باي": "/images/applepay.png",
+  "apple pay": "/images/payments/applepay.svg",
+  "Apple Pay": "/images/payments/applepay.svg",
+  "applePay": "/images/payments/applepay.svg",
+  "applepay": "/images/payments/applepay.svg",
+  "ابل باي": "/images/payments/applepay.svg",
 };
 
 // خريطة لربط طرق الدفع برابط خارجي إذا لزم الأمر
@@ -174,8 +179,17 @@ function getPaymentIcon(iconName: string | undefined, paymentName: string) {
     }
   }
 
-  // إذا كان iconName يبدأ بـ http أو / (رابط صورة مباشر)
+  // إذا كان iconName رابط صورة مباشر
   if (iconName && (iconName.startsWith('http') || iconName.startsWith('/'))) {
+    // رابط خارجي (دومين الداشبورد) → img عادي عشان Next/Image بيمنع الدومينات غير المسجلة
+    if (iconName.startsWith('http')) {
+      return () => (
+        <div className="relative h-5 w-8">
+          <img src={iconName} alt={paymentName} className="h-full w-full object-contain" loading="lazy" />
+        </div>
+      );
+    }
+
     return () => (
       <div className="relative h-5 w-8">
         <Image
@@ -425,7 +439,7 @@ export default function Footer() {
             ) : (
               <div className="flex flex-wrap gap-2">
                 {activePayments.map((p) => {
-                  const PaymentIcon = getPaymentIcon(p.icon, p.name);
+                  const PaymentIcon = getPaymentIcon(p.image || p.icon, p.name);
                   const isImageComponent = typeof PaymentIcon === 'function' && 
                     (PaymentIcon.toString().includes('Image') || 
                      PaymentIcon.toString().includes('img') ||
