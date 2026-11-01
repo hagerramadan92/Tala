@@ -117,13 +117,13 @@ function TotalOrder({
     selectedShipping,
     pointsDiscount = 0,
     pointsUsed = 0,
-    gatewayDiscountPercent = 0,
+    gatewayFeePercent = 0,
 }: {
     summary: CheckoutSummaryV1 | null;
     selectedShipping: any;
     pointsDiscount?: number;
     pointsUsed?: number;
-    gatewayDiscountPercent?: number;
+    gatewayFeePercent?: number;
 }) {
     // إذا لم يكن هناك ملخص، نعرض رسالة خطأ
     if (!summary) {
@@ -160,13 +160,13 @@ function TotalOrder({
     const shippingFee = selectedShipping ? getNumeric(selectedShipping.price) : getNumeric(summary.shipping_fee);
     const isShippingFree = shippingFee <= 0;
 
-    // --- خصم بوابة الدفع (تابي / تمارا) ---
-    const gatewayDiscount = Math.round(totalAfterPoints * (gatewayDiscountPercent / 100) * 100) / 100;
-    const totalAfterGatewayDiscount = Math.max(0, totalAfterPoints - gatewayDiscount);
+    // --- زيادة بوابة الدفع (تابي / تمارا) ---
+    const gatewayFee = Math.round(totalAfterPoints * (gatewayFeePercent / 100) * 100) / 100;
+    const totalAfterGatewayFee = totalAfterPoints + gatewayFee;
 
     // --- حساب الضريبة والإجمالي النهائي ---
     const TAX_RATE = 0.15; // 15%
-    const totalWithShipping = totalAfterGatewayDiscount + shippingFee;
+    const totalWithShipping = totalAfterGatewayFee + shippingFee;
     // حساب الضريبة بطريقة عكسية (لأن totalWithShipping شامل الضريبة)
     const taxAmount = totalWithShipping * (TAX_RATE / (1 + TAX_RATE));
 
@@ -213,14 +213,14 @@ function TotalOrder({
                 </p>
             </div>
 
-            {/* خصم بوابة الدفع (تابي / تمارا) */}
-            {gatewayDiscount > 0 && (
+            {/* رسوم بوابة الدفع (تابي / تمارا) */}
+            {gatewayFee > 0 && (
                 <div className="flex items-center justify-between text-sm">
-                    <p className="text-emerald-800 font-semibold">
-                        خصم بوابة الدفع ({gatewayDiscountPercent}%)
+                    <p className="text-slate-800 font-semibold">
+                        رسوم بوابة الدفع ({gatewayFeePercent}%)
                     </p>
-                    <p className="font-extrabold text-emerald-700">
-                        - {money(gatewayDiscount)}
+                    <p className="font-extrabold text-slate-900">
+                        + {money(gatewayFee)}
                         <span className="text-sm ms-1">ريال</span>
                     </p>
                 </div>
@@ -284,7 +284,7 @@ export default function PaymentPage() {
 	const selectedGateway = (paymentMethods || []).find(
 		(m: any) => String(m?.id) === String(paymentMethod)
 	);
-	const gatewayDiscountPercent = Number(selectedGateway?.discount_percent || 0);
+	const gatewayFeePercent = Number(selectedGateway?.fee_percent || 0);
 	const [notes, setNotes] = useState<string>("");
 
 	const [loading, setLoading] = useState(false);
@@ -1011,7 +1011,7 @@ export default function PaymentPage() {
 									selectedShipping={selectedShipping}
 									pointsDiscount={pointsDiscount}
 									pointsUsed={usablePoints}
-									gatewayDiscountPercent={gatewayDiscountPercent}
+									gatewayFeePercent={gatewayFeePercent}
 								/>
 							</div>
 
