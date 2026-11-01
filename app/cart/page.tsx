@@ -988,26 +988,43 @@ export default function CartPage() {
 											? "معاينة"
 											: "التصميم"}
                             </div>
-                            <Image
-                                width={220}
-                                height={160}
-                              src={
-                                item.image_design
-                                  ? item.image_design
-                                  : draftById[item.cart_item_id]?.existing_design_url ||
-                                    "/images/not.jpg"
-                              }
-                              alt="تصميم المرفوع"
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                console.error(
-                                  "Failed to load design image:",
-                                  e,
+                            {(() => {
+                              const designUrl =
+                                item.image_design ||
+                                draftById[item.cart_item_id]?.existing_design_url ||
+                                "/images/not.jpg";
+                              const isImageDesign =
+                                designUrl.startsWith("data:image") ||
+                                designUrl.startsWith("blob:") ||
+                                /\.(png|jpe?g|webp|gif|bmp|svg|avif|heic|heif|tiff?)(\?|$)/i.test(designUrl);
+
+                              if (!isImageDesign) {
+                                return (
+                                  <a
+                                    href={designUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full h-full flex flex-col items-center justify-center gap-1 bg-white text-slate-700"
+                                  >
+                                    <span className="text-xl">📄</span>
+                                    <span className="text-[10px] font-bold">ملف التصميم</span>
+                                  </a>
                                 );
-                                (e.target as HTMLImageElement).style.display =
-                                  "none";
-                              }}
-                            />
+                              }
+
+                              return (
+                                <Image
+                                  width={220}
+                                  height={160}
+                                  src={designUrl}
+                                  alt="تصميم المرفوع"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              );
+                            })()}
 
                             {/* ✅ إضافة زر لتغيير التصميم */}
                             {/* <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -1424,7 +1441,7 @@ const StickerForm = forwardRef(function StickerForm(
   const [designFile, setDesignFile] = useState<File | null>(null);
   const [designPreview, setDesignPreview] = useState<string | null>(null);
 
-  const [designSendMethod, setDesignSendMethod] = useState<"whatsapp" | "email" | "upload" | null>(null);
+  const [designSendMethod, setDesignSendMethod] = useState<"whatsapp" | "email" | "upload" | null>("upload");
 
   const whatsappFromSocial = getSocialValue(socialMedia, "whatsapp");
   const emailFromSocial = getSocialValue(socialMedia, "email");
@@ -2222,14 +2239,15 @@ useEffect(() => {
     setDesignFile(file);
 
     if (file) {
-      const previewUrl = URL.createObjectURL(file);
+      const isImage = file.type.startsWith("image/");
+      const previewUrl = isImage ? URL.createObjectURL(file) : null;
       setDesignPreview(previewUrl);
 
-      if (cartItemId) {
+      if (cartItemId && previewUrl) {
         localStorage.setItem(`design_temp_${cartItemId}`, previewUrl);
       }
 
-      if (cartItemId && onOptionsChange) {
+      if (cartItemId && onOptionsChange && previewUrl) {
         onOptionsChange(cartItemId, {
           existing_design_url: previewUrl,
           has_new_design_file: true,
@@ -3044,118 +3062,9 @@ useEffect(() => {
               {(groupName === "خدمة تصميم" || groupName === "خدمة التصميم") &&
                 showDesignSection && (
                   <div className="mt-3 md:rounded-2xl rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-extrabold text-slate-800">أرسل ملف التصميم عبر:</p>
+                    <p className="text-sm font-extrabold text-slate-800">ارفع ملف التصميم:</p>
+                    <p className="text-[11px] text-slate-500 font-bold mt-1">صور بأي صيغة أو PDF — بحد أقصى 5 ميجا</p>
 
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {whatsappHref && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDesignSendMethod("whatsapp");
-                            markDirty();
-                          }}
-                          className={[
-                            "md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
-                            designSendMethod === "whatsapp" ? "ring-2 ring-green-500" : "",
-                          ].join(" ")}
-                        >
-                          <p className="font-black text-slate-900">WhatsApp</p>
-                          <p className="text-xs text-slate-500 font-bold mt-1">إرسال عبر واتساب</p>
-                        </button>
-                      )}
-
-                      {emailHref && emailFromSocial && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDesignSendMethod("email");
-                            markDirty();
-                          }}
-                          className={[
-                            "md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
-                            designSendMethod === "email" ? "ring-2 ring-blue-500" : "",
-                          ].join(" ")}
-                        >
-                          <p className="font-black text-slate-900">📧 البريد الإلكتروني</p>
-                          <p className="text-xs text-blue-600 font-bold mt-1 font-mono">{emailFromSocial}</p>
-                          <p className="text-[10px] text-slate-400 mt-1">انقر للاختيار</p>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDesignSendMethod("upload");
-                          markDirty();
-                        }}
-                        className={[
-                          "md:rounded-2xl rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition text-right",
-                          designSendMethod === "upload" ? "ring-2 ring-amber-300" : "",
-                        ].join(" ")}
-                      >
-                        <p className="font-black text-slate-900">رفع الملف</p>
-                        <p className="text-xs text-slate-500 font-bold mt-1">رفع مباشر عبر الموقع</p>
-                      </button>
-                    </div>
-
-                    {/* عرض محتوى واتساب فقط عند اختياره */}
-                    {designSendMethod === "whatsapp" && (
-                      <div className="mt-4">
-                        <Divider className="!my-3" />
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-xl">
-                              📱
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-green-800">تم اختيار الإرسال عبر واتساب</p>
-                              <p className="text-xs text-green-600">انقر على الزر أدناه لفتح المحادثة</p>
-                            </div>
-                          </div>
-                          <Link
-                            href={whatsappHref || "#"}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center justify-center gap-2 w-full bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-green-700 transition"
-                          >
-                            <span>فتح واتساب</span>
-                            <span>📤</span>
-                          </Link>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* عرض محتوى البريد الإلكتروني فقط عند اختياره */}
-                    {designSendMethod === "email" && emailFromSocial && (
-                      <div className="mt-4">
-                        <Divider className="!my-3" />
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xl">
-                              📧
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-blue-800">تم اختيار الإرسال عبر البريد الإلكتروني</p>
-                              <p className="text-xs text-blue-600 font-mono">{emailFromSocial}</p>
-                            </div>
-                          </div>
-                          <Link
-                            href={`mailto:${emailFromSocial}?subject=${encodeURIComponent("طلب تصميم")}&body=${encodeURIComponent(
-                              `السلام عليكم،\n\nلدي طلب تصميم للمنتج`
-                            )}`}
-                            className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
-                          >
-                            <span>إرسال بريد إلكتروني</span>
-                            <span>📤</span>
-                          </Link>
-                          <p className="text-xs text-center text-blue-500 mt-3">
-                            أو أرسل مباشرة على: {emailFromSocial}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* عرض محتوى الرفع المباشر فقط عند اختياره */}
                     {designSendMethod === "upload" && (
                       <div className="mt-4">
                         <Divider className="!my-3" />
@@ -3165,8 +3074,8 @@ useEffect(() => {
                               📎
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-amber-800">تم اختيار الرفع المباشر</p>
-                              <p className="text-xs text-amber-600">قم برفع ملف التصميم مباشرة</p>
+                              <p className="text-sm font-bold text-amber-800">رفع مباشر عبر الموقع</p>
+                              <p className="text-xs text-amber-600">صور بأي صيغة أو PDF — بحد أقصى 5 ميجا</p>
                             </div>
                           </div>
                           
@@ -3184,25 +3093,38 @@ useEffect(() => {
                             >
                               <input
                                 type="file"
-                                accept="image/*,.pdf,.ai,.psd,.eps,.svg"
+                                accept="image/*,.pdf,.ai,.psd,.eps,.svg,.heic,.heif,.avif,.tiff,.tif,.bmp"
                                 className="hidden"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0] ?? null;
-                                  if (file) {
-                                    handleDesignFileChange(file);
-                                    
-                                    const reader = new FileReader();
-                                    reader.onload = (e) => {
-                                      setDesignPreview(e.target?.result as string);
-                                      if (cartItemId) {
-                                        localStorage.setItem(
-                                          `design_temp_${cartItemId}`,
-                                          e.target?.result as string
-                                        );
-                                      }
-                                    };
-                                    reader.readAsDataURL(file);
+                                  e.currentTarget.value = "";
+
+                                  if (!file) return;
+
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast.error("حجم الملف أكبر من 5 ميجا. اختار ملف أصغر.", { icon: "⚠️" });
+                                    return;
                                   }
+
+                                  handleDesignFileChange(file);
+
+                                  // الصور بس اللي ليها معاينة؛ PDF وباقي الملفات بتظهر بالاسم.
+                                  if (!file.type.startsWith("image/")) {
+                                    setDesignPreview(null);
+                                    return;
+                                  }
+
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    setDesignPreview(ev.target?.result as string);
+                                    if (cartItemId) {
+                                      localStorage.setItem(
+                                        `design_temp_${cartItemId}`,
+                                        ev.target?.result as string
+                                      );
+                                    }
+                                  };
+                                  reader.readAsDataURL(file);
                                 }}
                               />
 
@@ -3212,7 +3134,7 @@ useEffect(() => {
                                     ⬆️
                                   </div>
                                   <p className="text-xs font-bold text-slate-700">اختر ملف التصميم</p>
-                                  <p className="text-[10px] text-slate-500">PNG, JPG, PDF, AI, PSD, SVG</p>
+                                  <p className="text-[10px] text-slate-500">PNG, JPG, PDF, AI, PSD, SVG — حتى 5 ميجا</p>
                                 </>
                               ) : (
                                 <>
