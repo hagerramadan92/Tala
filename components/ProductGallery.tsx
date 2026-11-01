@@ -16,10 +16,18 @@ import type { ImagesI } from "@/Types/ProductsI";
 export default function ProductGallery({ mainImage, images }: any) {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
 
-  const allImages = useMemo(
-    () => [{ path: mainImage, alt: "Main Product" }, ...(images || [])].filter(Boolean),
-    [mainImage, images]
-  );
+  // الصورة الأساسية بتيجي كمان جوه images من الـ API، فبنشيل التكرار.
+  const allImages = useMemo(() => {
+    const list = [{ path: mainImage, alt: "Main Product" }, ...(images || [])].filter(Boolean);
+
+    const seen = new Set<string>();
+    return list.filter((img: any) => {
+      const key = String(img?.path || "").trim();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [mainImage, images]);
  
   const hasNav = allImages.length > 1;
 
