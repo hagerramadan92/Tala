@@ -19,6 +19,8 @@ export default function MangeAccount() {
 	const [firstName, setFirstName] = useState("");
 	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
+	const [username, setUsername] = useState("");
+	const [saving, setSaving] = useState(false);
 
 	const router = useRouter();
 
@@ -46,12 +48,65 @@ export default function MangeAccount() {
 			setFirstName(nameParts[0] || "");
 			setLastName(nameParts.slice(1).join(" ") || "");
 			setEmail(data?.data?.email || "");
+			setUsername(data?.data?.username || "");
 		} catch {
 			Swal.fire({
 				icon: "error",
 				title: "خطأ في الاتصال",
 				text: "تعذر الاتصال بالسيرفر",
 			});
+		}
+	};
+
+
+	const saveProfile = async () => {
+		const token = localStorage.getItem("auth_token");
+		if (!token) {
+			Swal.fire({ icon: "warning", title: "يجب تسجيل الدخول", text: "فضلاً قم بتسجيل الدخول أولاً" });
+			router.push("/login");
+			return;
+		}
+
+		if (!firstName.trim()) {
+			Swal.fire({ icon: "warning", title: "بيانات ناقصة", text: "من فضلك أدخل الاسم الأول" });
+			return;
+		}
+
+		try {
+			setSaving(true);
+			const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+			const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ name: fullName, email: email.trim() || null }),
+			});
+			const data = await res.json();
+
+			if (!res.ok || data?.status === false) {
+				throw new Error(data?.message || "تعذر تحديث البيانات");
+			}
+
+			const savedName = data?.data?.name || fullName;
+			localStorage.setItem("userName", savedName);
+			localStorage.setItem("fullName", savedName);
+			if (data?.data?.email) localStorage.setItem("userEmail", data.data.email);
+			if (data?.data?.username) setUsername(data.data.username);
+
+			Swal.fire({
+				icon: "success",
+				title: "تم الحفظ",
+				text: "تم تحديث بياناتك بنجاح",
+				confirmButtonText: "تمام",
+				confirmButtonColor: "#14213d",
+			});
+		} catch (error: any) {
+			Swal.fire({ icon: "error", title: "خطأ", text: error?.message || "تعذر تحديث البيانات" });
+		} finally {
+			setSaving(false);
 		}
 	};
 
@@ -93,16 +148,11 @@ export default function MangeAccount() {
 					{/* Optional save (placeholder) */}
 					<button
 						type="button"
-						className="hidden md:inline-flex items-center justify-center rounded-xl bg-pro px-4 py-2 text-sm font-bold text-white shadow-sm hover:opacity-95 active:opacity-90 transition"
-						onClick={() => {
-							Swal.fire({
-								icon: "info",
-								title: "قريبًا",
-								text: "زر الحفظ جاهز—اربطه بـ API تحديث البيانات عندك.",
-							});
-						}}
+						className="hidden md:inline-flex items-center justify-center rounded-xl bg-pro px-4 py-2 text-sm font-bold text-white shadow-sm hover:opacity-95 active:opacity-90 transition disabled:opacity-60"
+						disabled={saving}
+						onClick={saveProfile}
 					>
-						حفظ التغييرات
+						{saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}
 					</button>
 				</div>
 
@@ -122,19 +172,28 @@ export default function MangeAccount() {
 						/>
 					</form>
 
+					{username && (
+						<div className="mt-4">
+							<label className="block text-sm font-extrabold text-slate-800 mb-2">
+								اسم المستخدم
+							</label>
+							<div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+								<span className="font-bold text-slate-900" dir="ltr">
+									{username}
+								</span>
+								<span className="text-[11px] font-bold text-slate-500">ثابت</span>
+							</div>
+						</div>
+					)}
+
 					<div className="mt-4 md:hidden">
 						<button
 							type="button"
-							className="w-full rounded-xl bg-pro px-4 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 active:opacity-90 transition"
-							onClick={() => {
-								Swal.fire({
-									icon: "info",
-									title: "قريبًا",
-									text: "زر الحفظ جاهز—اربطه بـ API تحديث البيانات عندك.",
-								});
-							}}
+							className="w-full rounded-xl bg-pro px-4 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 active:opacity-90 transition disabled:opacity-60"
+							disabled={saving}
+							onClick={saveProfile}
 						>
-							حفظ التغييرات
+							{saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}
 						</button>
 					</div>
 				</div>
