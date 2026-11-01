@@ -47,13 +47,14 @@ export default function ProductGallery({ mainImage, images }: any) {
                 initial={{ opacity: 0.7, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.25 }}
-                className="relative w-full h-[320px] sm:h-[420px] lg:h-[560px] bg-slate-50"
+                className="relative w-full h-[320px] sm:h-[480px] lg:h-[620px] bg-white"
               >
                 <Image
                   src={img.path || "/images/not.jpg"}
                   alt={img.alt || `Product ${i}`}
                   fill
-                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 640px"
+                  className="object-contain p-1 sm:p-2"
                   priority={i === 0}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
@@ -84,7 +85,8 @@ export default function ProductGallery({ mainImage, images }: any) {
                     src={img.path || "/images/not.jpg"}
                     alt={img.alt || `Thumb ${i}`}
                     fill
-                    className="object-cover hover:scale-[1.03] transition duration-300"
+                    sizes="90px"
+                    className="object-contain p-1 bg-white hover:scale-[1.03] transition duration-300"
                   />
                 </div>
               </SwiperSlide>
