@@ -292,8 +292,11 @@ export default function Footer() {
   }, [socials]);
 
   // ✅ active payments only
+  const isSbcMethod = (p: any) => /sbc/i.test(String(p?.key || "")) || /sbc/i.test(String(p?.name || ""));
+
   const activePayments = useMemo(() => {
-    return payments.filter((p) => p?.is_active);
+    // SBC بتتعرض جنب السجل التجاري تحت، مش في صف طرق الدفع.
+    return payments.filter((p) => p?.is_active && !isSbcMethod(p));
   }, [payments]);
 
   const year = new Date().getFullYear();
@@ -503,6 +506,18 @@ export default function Footer() {
                     نسخ
                   </button>
                 </div>
+
+                {/* SBC جنب السجل التجاري */}
+                <a
+                  href={paymentLinksMap["SBC"] || "https://qr.saudibusiness.gov.sa/viewcr?nCrNumber=khRFqz0XWeB9RSyhLP7KdQ=="}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="تحقق من السجل التجاري عبر SBC"
+                  className="mt-2 ms-2 inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-3 text-sm ring-1 ring-white/10 hover:bg-white/15 transition align-middle"
+                >
+                  <img src="/images/sbc.png" alt="SBC" className="h-5 w-8 object-contain" />
+                  <span className="font-extrabold text-xs">SBC</span>
+                </a>
               </div>
             )}
           </div>
