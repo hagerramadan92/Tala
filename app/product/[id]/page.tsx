@@ -602,6 +602,11 @@ export default function ProductPageClient() {
               reviews={product.reviews || []}
             />
 
+            {/* الموبايل: الصورة بعد الاسم مباشرة */}
+            <div className="lg:hidden">
+              <ProductGallery mainImage={product.image} images={product.images} />
+            </div>
+
             <ProductDescription description={product.description} />
 
             {effectiveDeliveryTime && (
@@ -694,7 +699,7 @@ export default function ProductPageClient() {
           </motion.div>
 
           {/* Right: Gallery */}
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-7">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="hidden lg:block lg:col-span-7">
             <div className="lg:sticky lg:top-[150px]">
               <ProductGallery mainImage={product.image} images={product.images} />
             </div>
