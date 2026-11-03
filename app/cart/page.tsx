@@ -2619,13 +2619,9 @@ useEffect(() => {
 
   const designServiceValue =
     optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
+  // أي اختيار في مجموعة خدمة التصميم معناه إن العميل محتاج يرفع ملف.
   const showDesignSection =
-    !!designServiceValue &&
-    (String(designServiceValue).includes("لدى تصميم") ||
-      String(designServiceValue).includes("تصميم خاص") ||
-      String(designServiceValue).includes("رفع") ||
-      String(designServiceValue).includes("لدي") ||
-      String(designServiceValue).includes("رفع تصميم خاص"));
+    !!designServiceValue && String(designServiceValue).trim() !== "اختر";
 
   return (
     <motion.div

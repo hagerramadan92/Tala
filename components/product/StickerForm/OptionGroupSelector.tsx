@@ -240,8 +240,8 @@ export function OptionGroupSelector({
             )}
 
             {/* خدمة التصميم */}
-            {(String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") && 
-             ["رفع تصميم خاص", "رفع تصميمي الخاص", "لدي تصميم يحتاج تعديل"].includes(currentValue) && (
+            {(String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") &&
+             !!currentValue && currentValue !== "اختر" && (
               <DesignServiceBox
                 productId={productId}
                 cartItemId={cartItemId}
