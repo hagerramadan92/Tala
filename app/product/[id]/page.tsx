@@ -299,48 +299,6 @@ export default function ProductPageClient() {
     return total > 0 ? total : 0;
   }, [selectedOptions]);
 
-  // ✅ حساب سعر الإضافات (الخيارات)
-  const extrasTotal = useMemo(() => {
-    if (!apiData) return 0;
-    
-    // ✅ إذا كان في flatOptions، استخدم flatOptionsTotal مباشرة
-    if (selectedOptions.flatOptionsTotal !== undefined && selectedOptions.flatOptionsTotal > 0) {
-      console.log("💰 Using flatOptionsTotal:", selectedOptions.flatOptionsTotal);
-      return selectedOptions.flatOptionsTotal;
-    }
-    
-    // ✅ إذا كان في flatOptions، احسب المجموع منها
-    if (selectedOptions.flatOptions && selectedOptions.flatOptions.length > 0) {
-      const total = selectedOptions.flatOptions.reduce((sum, opt) => sum + (opt.price || 0), 0);
-      console.log("💰 Extras total from flatOptions array:", total, selectedOptions.flatOptions);
-      return total;
-    }
-    
-    // ✅ غير ذلك استخدم الدالة القديمة
-    console.log("⚠️ Using old method for extras total");
-    const selected = buildSelectedOptionsWithPrice(apiData, selectedOptions);
-    const total = selected.reduce((sum, o) => sum + num(o.additional_price), 0);
-    console.log("💰 Extras total from old method:", total, selected);
-    return total;
-  }, [apiData, selectedOptions]);
-
-  // ✅ حساب السعر الإجمالي
-  const displayTotal = useMemo(() => {
-    const total = basePrice + extrasTotal;
-    console.log("💰 Display total:", total, "= base:", basePrice, "+ extras:", extrasTotal);
-    console.log("📊 Price breakdown:", {
-      basePrice,
-      extrasTotal,
-      total,
-      flatOptions: selectedOptions.flatOptions,
-      size_total_price: selectedOptions.size_total_price
-    });
-    return total > 0 ? total : 0;
-  }, [basePrice, extrasTotal, selectedOptions]);
-
-  const currentValidation = validateOptions(selectedOptions, apiData);
-  const showMissingBadge = showValidation && hasOptions && !currentValidation.isValid;
-
   // الكمية المختارة من العميل: أي كمية أكبر من 300 تتحول لمدة الأوفست (10 - 15 يوم).
   // الكمية ممكن تكون من شرائح المقاس (size_quantity) أو من خيار منتج اسمه "الكمية"
   // وقيمته زي "10000 حبة (0.73 ريال / للحبة)".
@@ -375,6 +333,66 @@ export default function ProductPageClient() {
 
   const selectedQuantity = parseSelectedQuantity(selectedOptions);
   const largeQuantityThreshold = Number(apiData?.large_quantity_threshold ?? 300);
+
+
+  // ✅ حساب سعر الإضافات (الخيارات)
+  const extrasTotal = useMemo(() => {
+    if (!apiData) return 0;
+    
+    // ✅ إذا كان في flatOptions، استخدم flatOptionsTotal مباشرة
+    if (selectedOptions.flatOptionsTotal !== undefined && selectedOptions.flatOptionsTotal > 0) {
+      console.log("💰 Using flatOptionsTotal:", selectedOptions.flatOptionsTotal);
+      return selectedOptions.flatOptionsTotal;
+    }
+    
+    // ✅ إذا كان في flatOptions، احسب المجموع منها
+    if (selectedOptions.flatOptions && selectedOptions.flatOptions.length > 0) {
+      const total = selectedOptions.flatOptions.reduce((sum, opt) => sum + (opt.price || 0), 0);
+      console.log("💰 Extras total from flatOptions array:", total, selectedOptions.flatOptions);
+      return total;
+    }
+    
+    // ✅ غير ذلك استخدم الدالة القديمة
+    console.log("⚠️ Using old method for extras total");
+    const selected = buildSelectedOptionsWithPrice(apiData, selectedOptions);
+    const total = selected.reduce((sum, o) => sum + num(o.additional_price), 0);
+    console.log("💰 Extras total from old method:", total, selected);
+    return total;
+  }, [apiData, selectedOptions]);
+
+  // 🖨️ طباعة وجهين: +2 ريال للوحدة لما الكمية أقل من 250 (ومجاني من 250 وطالع)
+  const doubleSidedFee = useMemo(() => {
+    const texts: string[] = [];
+    (selectedOptions?.flatOptions || []).forEach((option: any) => {
+      texts.push(`${option?.name || ""} ${option?.value || ""}`);
+    });
+    Object.entries(selectedOptions?.optionGroups || {}).forEach(([name, value]) => {
+      texts.push(`${name} ${value || ""}`);
+    });
+
+    const hasDoubleSided = texts.some((text) => text.includes("وجهين"));
+    const qty = selectedQuantity;
+
+    return hasDoubleSided && qty > 0 && qty < 250 ? 2 * qty : 0;
+  }, [selectedOptions, selectedQuantity]);
+
+  // ✅ حساب السعر الإجمالي
+  const displayTotal = useMemo(() => {
+    const total = basePrice + extrasTotal + doubleSidedFee;
+    console.log("💰 Display total:", total, "= base:", basePrice, "+ extras:", extrasTotal);
+    console.log("📊 Price breakdown:", {
+      basePrice,
+      extrasTotal,
+      doubleSidedFee,
+      total,
+      flatOptions: selectedOptions.flatOptions,
+      size_total_price: selectedOptions.size_total_price
+    });
+    return total > 0 ? total : 0;
+  }, [basePrice, extrasTotal, doubleSidedFee, selectedOptions]);
+
+  const currentValidation = validateOptions(selectedOptions, apiData);
+  const showMissingBadge = showValidation && hasOptions && !currentValidation.isValid;
 
   const effectiveDeliveryTime = useMemo(() => {
     if (selectedQuantity > largeQuantityThreshold && apiData?.offset_delivery_time) {
