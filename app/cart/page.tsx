@@ -1073,6 +1073,12 @@ export default function CartPage() {
                               {item.product.name}
                             </h3>
 
+                            {(item as any).note && (
+                              <p className="text-[11px] text-slate-600 font-semibold mt-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
+                                📝 {(item as any).note}
+                              </p>
+                            )}
+
                             {hasTierQty && (
                               <p className="text-xs font-extrabold text-slate-600 mt-1">
                                 كمية المقاس: {n(item?.quantity)} قطعة

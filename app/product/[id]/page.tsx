@@ -60,6 +60,7 @@ export default function ProductPageClient() {
 
   // Design state
   const [designFile, setDesignFile] = useState<File | null>(null);
+  const [noteValue, setNoteValue] = useState("");
   const [uploadingDesign, setUploadingDesign] = useState(false);
 
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({
@@ -421,6 +422,11 @@ export default function ProductPageClient() {
       return;
     }
 
+    if ((product as any)?.notes_enabled && !noteValue.trim()) {
+      toast.error(`من فضلك اكتب ${(product as any)?.notes_label || "الملاحظات"}`);
+      return;
+    }
+
     if (!token) return toast.error("يجب تسجيل الدخول أولاً");
     if (!API_URL) return toast.error("API غير متوفر");
 
@@ -445,7 +451,7 @@ export default function ProductPageClient() {
       selected_options,
       design_service_id: null,
       is_sample: false,
-      note: "",
+      note: noteValue.trim(),
       image_design: designFile ? "pending" : null,
     };
 
@@ -495,6 +501,11 @@ export default function ProductPageClient() {
   };
 
   const toggleFavorite = async () => {
+    if ((product as any)?.notes_enabled && !noteValue.trim()) {
+      toast.error(`من فضلك اكتب ${(product as any)?.notes_label || "الملاحظات"}`);
+      return;
+    }
+
     if (!token) return toast.error("يجب تسجيل الدخول أولاً");
     if (!product) return;
 
@@ -528,6 +539,11 @@ export default function ProductPageClient() {
   };
 
   const submitReview = async () => {
+    if ((product as any)?.notes_enabled && !noteValue.trim()) {
+      toast.error(`من فضلك اكتب ${(product as any)?.notes_label || "الملاحظات"}`);
+      return;
+    }
+
     if (!token) return toast.error("يجب تسجيل الدخول أولاً");
     if (!product) return;
 
@@ -562,6 +578,11 @@ export default function ProductPageClient() {
   };
 
   const deleteReview = async (reviewId: number) => {
+    if ((product as any)?.notes_enabled && !noteValue.trim()) {
+      toast.error(`من فضلك اكتب ${(product as any)?.notes_label || "الملاحظات"}`);
+      return;
+    }
+
     if (!token) return toast.error("يجب تسجيل الدخول أولاً");
 
     try {
@@ -706,6 +727,22 @@ export default function ProductPageClient() {
                 )}
               </div>
             </div>
+
+            {(product as any)?.notes_enabled && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <label className="block text-sm font-extrabold text-slate-800 mb-2">
+                  {(product as any)?.notes_label || "ملاحظات"}{" "}
+                  <span className="text-rose-600">*</span>
+                </label>
+                <textarea
+                  value={noteValue}
+                  onChange={(e) => setNoteValue(e.target.value)}
+                  rows={3}
+                  placeholder="اكتب هنا..."
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-pro"
+                />
+              </div>
+            )}
 
             <SelectedOptionsSummary
               selectedOptions={selectedOptions}
