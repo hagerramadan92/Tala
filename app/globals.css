@@ -280,3 +280,19 @@
   transform: scaleX(-1);
 
 }
+
+/* قوائم الاختيار (dropdowns): النص أسود دائمًا للوضوح */
+select,
+select option {
+  color: #0f172a !important;
+  background-color: #ffffff;
+}
+
+[role="listbox"] [role="option"] {
+  color: #0f172a !important;
+}
+
+[role="listbox"] [role="option"][aria-selected="true"] {
+  color: #ffffff;
+  background-color: #14213d;
+}
