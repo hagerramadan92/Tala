@@ -220,6 +220,42 @@ function getPaymentIcon(iconName: string | undefined, paymentName: string) {
   return paymentIconsMap[lowerIcon] || FaCreditCard;
 }
 
+function PaymentChip({ method, fluid = false }: { method: any; fluid?: boolean }) {
+  const PaymentIcon = getPaymentIcon(method.image || method.icon, method.name);
+  const isImageComponent =
+    typeof PaymentIcon === 'function' &&
+    (PaymentIcon.toString().includes('Image') ||
+      PaymentIcon.toString().includes('img') ||
+      getPaymentImagePath(method.name) ||
+      (method.icon && method.icon.startsWith('fas ')));
+
+  const paymentLink = paymentLinksMap[method.name];
+  const Element = paymentLink ? 'a' : 'span';
+  const elementProps = paymentLink
+    ? { href: paymentLink, target: '_blank', rel: 'noreferrer' }
+    : {};
+
+  return (
+    <Element
+      className={[
+        'inline-flex items-center justify-center gap-1 md:gap-2 rounded-full bg-white/10',
+        'px-2 md:px-3 py-2 text-[10px] md:text-xs font-bold ring-1 ring-white/10',
+        'hover:bg-white/15 transition text-center leading-tight',
+        fluid ? 'w-full' : '',
+      ].join(' ')}
+      title={method.name}
+      {...elementProps}
+    >
+      {isImageComponent ? (
+        <PaymentIcon />
+      ) : (
+        <PaymentIcon className="text-sm opacity-90" />
+      )}
+      <span className="hidden md:inline">{method.name}</span>
+    </Element>
+  );
+}
+
 export default function Footer() {
   const { socialMedia, paymentMethods } = useAppContext() as any;
   const [footerPaymentMethods, setFooterPaymentMethods] = useState<PaymentMethod[] | null>(null);
@@ -298,6 +334,25 @@ export default function Footer() {
     // SBC بتتعرض جنب السجل التجاري تحت، مش في صف طرق الدفع.
     return payments.filter((p) => p?.is_active && !isSbcMethod(p));
   }, [payments]);
+
+  // صفوف الموبايل: 3 في الأول، والباقي في النص، وآخر 3 تحت.
+  const paymentRows = useMemo(() => {
+    const all = activePayments;
+    if (all.length === 0) return [] as any[][];
+    if (all.length <= 3) return [all];
+
+    const rows: any[][] = [all.slice(0, 3)];
+    const rest = all.slice(3);
+
+    if (rest.length <= 3) {
+      rows.push(rest);
+    } else {
+      rows.push(rest.slice(0, rest.length - 3));
+      rows.push(rest.slice(rest.length - 3));
+    }
+
+    return rows;
+  }, [activePayments]);
 
   const year = new Date().getFullYear();
 
@@ -440,44 +495,27 @@ export default function Footer() {
             {activePayments.length === 0 ? (
               <span className="text-white/70 text-sm">طرق الدفع غير متاحة حالياً</span>
             ) : (
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                {activePayments.map((p) => {
-                  const PaymentIcon = getPaymentIcon(p.image || p.icon, p.name);
-                  const isImageComponent = typeof PaymentIcon === 'function' && 
-                    (PaymentIcon.toString().includes('Image') || 
-                     PaymentIcon.toString().includes('img') ||
-                     getPaymentImagePath(p.name) ||
-                     (p.icon && p.icon.startsWith('fas ')));
-                  
-                  const paymentLink = paymentLinksMap[p.name];
-                  const Element = paymentLink ? 'a' : 'span';
-                  const elementProps = paymentLink ? {
-                    href: paymentLink,
-                    target: '_blank',
-                    rel: 'noreferrer',
-                  } : {};
-                  
-                  return (
-                    <div
-                      key={p.id}
-                      className="flex w-[calc(33.333%-0.34rem)] md:w-auto"
-                    >
-                      <Element
-                        className="inline-flex w-full items-center justify-center gap-1 md:gap-2 rounded-full bg-white/10 px-2 md:px-3 py-2 text-[10px] md:text-xs font-bold ring-1 ring-white/10 hover:bg-white/15 transition text-center leading-tight"
-                        title={p.name}
-                        {...elementProps}
-                      >
-                        {isImageComponent ? (
-                          <PaymentIcon />
-                        ) : (
-                          <PaymentIcon className="text-sm opacity-90" />
-                        )}
-                        <span className="hidden md:inline">{p.name}</span>
-                      </Element>
+              <>
+                {/* موبايل: 3 / 1 في النص / 3 */}
+                <div className="md:hidden space-y-2">
+                  {paymentRows.map((row, rowIndex) => (
+                    <div key={rowIndex} className="flex justify-center gap-2">
+                      {row.map((p) => (
+                        <div key={p.id} className="w-[calc(33.333%-0.34rem)]">
+                          <PaymentChip method={p} fluid />
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+
+                {/* ديسكتوب: صف مرن */}
+                <div className="hidden md:flex md:flex-wrap md:justify-start gap-2">
+                  {activePayments.map((p) => (
+                    <PaymentChip key={p.id} method={p} />
+                  ))}
+                </div>
+              </>
             )}
 
             {/* ✅ tax number panel (NOT social) */}
