@@ -10,7 +10,10 @@ import {
 	FiBriefcase,
 	FiCopy,
 	FiArrowUpRight,
+	FiMapPin,
+	FiMessageCircle,
 } from "react-icons/fi";
+import { useAppContext } from "@/src/context/AppContext";
 
 interface FormData {
 	first_name: string;
@@ -260,9 +263,23 @@ export default function ContactPageOne() {
 		[base_url, form, loading, validate]
 	);
 
-	// ===== Contact Data (edit freely) =====
-	const hotline = "15829";
-	const email = "hello@codexx.com";
+	// ===== Contact Data (from dashboard settings) =====
+	const { socialMedia } = useAppContext() as any;
+
+	const getSetting = (key: string) => {
+		const arr = Array.isArray(socialMedia) ? socialMedia : [];
+		const item = arr.find((x: any) => String(x?.key).toLowerCase() === key);
+		return String(item?.value || "").trim();
+	};
+
+	const hotline = getSetting("phone") || "0535549535";
+	const email = getSetting("email") || "info@talaaljazeera.com";
+	const whatsapp = getSetting("whatsapp");
+	const address = getSetting("address");
+	const mapHref = address
+		? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+		: "";
+	const telHref = `tel:${hotline.replace(/[^\d+]/g, "")}`;
 
 	const copyToClipboard = async (text: string, label: string) => {
 		try {
@@ -318,7 +335,7 @@ export default function ContactPageOne() {
 									<ActionPill
 										label="اتصال"
 										icon={<FiArrowUpRight />}
-										onClick={() => (window.location.href = `tel:${hotline}`)}
+										onClick={() => (window.location.href = telHref)}
 									/>
 									<ActionPill
 										label="نسخ الرقم"
@@ -348,6 +365,52 @@ export default function ContactPageOne() {
 								</>
 							}
 						/>
+
+						{whatsapp && (
+							<InfoCard
+								title="واتساب"
+								value={hotline}
+								icon={<FiMessageCircle size={22} />}
+								actions={
+									<>
+										<ActionPill
+											label="فتح واتساب"
+											icon={<FiArrowUpRight />}
+											onClick={() => window.open(whatsapp, "_blank")}
+										/>
+										<ActionPill
+											label="نسخ الرقم"
+											icon={<FiCopy />}
+											onClick={() => copyToClipboard(hotline, "الرقم")}
+										/>
+									</>
+								}
+							/>
+						)}
+
+						{address && (
+							<InfoCard
+								title="العنوان"
+								value={address}
+								icon={<FiMapPin size={22} />}
+								actions={
+									<>
+										{mapHref && (
+											<ActionPill
+												label="عرض على الخريطة"
+												icon={<FiArrowUpRight />}
+												onClick={() => window.open(mapHref, "_blank")}
+											/>
+										)}
+										<ActionPill
+											label="نسخ العنوان"
+											icon={<FiCopy />}
+											onClick={() => copyToClipboard(address, "العنوان")}
+										/>
+									</>
+								}
+							/>
+						)}
 
 						<div className=" max-md:hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 							<h3 className="text-base font-extrabold text-slate-900">
