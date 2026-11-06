@@ -63,18 +63,15 @@ function CategoryCard({ category }: { category: Category }) {
 			className="group rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-md"
 		>
 			<Link href={`/category/${category.id}`} className="block">
-				{/* Image */}
-				<div className="relative h-44 bg-slate-50">
+				{/* Image — كاملة بدون قص */}
+				<div className="relative h-48 md:h-52 bg-white">
 					<Image
 						src={category.image || "/images/noimg.png"}
 						alt={category.name}
 						fill
 						sizes="(max-width: 768px) 100vw, 25vw"
-						className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+						className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.04]"
 					/>
-
-					{/* Gradient overlay */}
-					<div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent opacity-90" />
 
 					{/* Top badge */}
 					<div className="absolute top-3 start-3">
@@ -83,22 +80,19 @@ function CategoryCard({ category }: { category: Category }) {
 							{childrenCount > 0 ? `${childrenCount} أقسام` : "قسم"}
 						</span>
 					</div>
-
-					{/* Title on image */}
-					<div className="absolute bottom-3 start-3 end-3">
-						<h3 className="text-white font-extrabold text-lg line-clamp-1 drop-shadow">
-							{category.name}
-						</h3>
-						{category.description ? (
-							<p className="text-white/85 text-sm line-clamp-1">
-								{category.description}
-							</p>
-						) : null}
-					</div>
 				</div>
 
 				{/* Body */}
 				<div className="p-4 flex flex-col gap-2 ">
+					<h3 className="text-slate-900 font-extrabold text-lg line-clamp-1">
+						{category.name}
+					</h3>
+					{category.description ? (
+						<p className="text-slate-600 text-sm line-clamp-2">
+							{category.description}
+						</p>
+					) : null}
+
 					{/* children chips */}
 					{childrenCount > 0 && (
 						<div className="flex flex-wrap gap-2">
