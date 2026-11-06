@@ -71,7 +71,7 @@ export default async function BlogsPage() {
               المدونة
             </h1>
             <p className="mt-3 text-slate-600 text-sm md:text-base max-w-2xl">
-              مقالات ونصائح عن التطريز والطباعة والتصميم—كل جديد في مكان واحد.
+              كل ما هو جديد فى عالم الطباعه والتغليف
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
