@@ -422,11 +422,6 @@ export default function ProductPageClient() {
       return;
     }
 
-    if ((product as any)?.notes_enabled && !noteValue.trim()) {
-      toast.error(`من فضلك اكتب ${(product as any)?.notes_label || "الملاحظات"}`);
-      return;
-    }
-
     if (!token) return toast.error("يجب تسجيل الدخول أولاً");
     if (!API_URL) return toast.error("API غير متوفر");
 
@@ -732,7 +727,7 @@ export default function ProductPageClient() {
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <label className="block text-sm font-extrabold text-slate-800 mb-2">
                   {(product as any)?.notes_label || "ملاحظات"}{" "}
-                  <span className="text-rose-600">*</span>
+                  <span className="text-[11px] font-bold text-slate-500">(اختياري)</span>
                 </label>
                 <textarea
                   value={noteValue}
