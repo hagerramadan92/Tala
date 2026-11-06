@@ -300,7 +300,7 @@ export default function ProductPageClient() {
     return total > 0 ? total : 0;
   }, [selectedOptions]);
 
-  // الكمية المختارة من العميل: أي كمية أكبر من 300 تتحول لمدة الأوفست (10 - 15 يوم).
+  // الكمية المختارة من العميل: أي كمية أكبر من 250 تتحول لمدة الأوفست (10 - 15 يوم).
   // الكمية ممكن تكون من شرائح المقاس (size_quantity) أو من خيار منتج اسمه "الكمية"
   // وقيمته زي "10000 حبة (0.73 ريال / للحبة)".
   const parseSelectedQuantity = (opts: SelectedOptions): number => {
@@ -333,7 +333,7 @@ export default function ProductPageClient() {
   };
 
   const selectedQuantity = parseSelectedQuantity(selectedOptions);
-  const largeQuantityThreshold = Number(apiData?.large_quantity_threshold ?? 300);
+  const largeQuantityThreshold = Number(apiData?.large_quantity_threshold ?? 250);
 
 
   // ✅ حساب سعر الإضافات (الخيارات)
