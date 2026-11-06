@@ -440,7 +440,7 @@ export default function Footer() {
             {activePayments.length === 0 ? (
               <span className="text-white/70 text-sm">طرق الدفع غير متاحة حالياً</span>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap justify-center md:justify-start gap-2">
                 {activePayments.map((p) => {
                   const PaymentIcon = getPaymentIcon(p.image || p.icon, p.name);
                   const isImageComponent = typeof PaymentIcon === 'function' && 
@@ -458,19 +458,23 @@ export default function Footer() {
                   } : {};
                   
                   return (
-                    <Element
+                    <div
                       key={p.id}
-                      className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-xs font-bold ring-1 ring-white/10 hover:bg-white/15 transition"
-                      title={p.name}
-                      {...elementProps}
+                      className="flex w-[calc(33.333%-0.34rem)] md:w-auto"
                     >
-                      {isImageComponent ? (
-                        <PaymentIcon />
-                      ) : (
-                        <PaymentIcon className="text-sm opacity-90" />
-                      )}
-                      <span>{p.name}</span>
-                    </Element>
+                      <Element
+                        className="inline-flex w-full items-center justify-center gap-1 md:gap-2 rounded-full bg-white/10 px-2 md:px-3 py-2 text-[10px] md:text-xs font-bold ring-1 ring-white/10 hover:bg-white/15 transition text-center leading-tight"
+                        title={p.name}
+                        {...elementProps}
+                      >
+                        {isImageComponent ? (
+                          <PaymentIcon />
+                        ) : (
+                          <PaymentIcon className="text-sm opacity-90" />
+                        )}
+                        <span>{p.name}</span>
+                      </Element>
+                    </div>
                   );
                 })}
               </div>
