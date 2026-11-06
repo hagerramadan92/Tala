@@ -147,7 +147,7 @@ function getPaymentIcon(iconName: string | undefined, paymentName: string) {
   const imagePath = getPaymentImagePath(paymentName);
   if (imagePath) {
     return () => (
-      <div className="relative h-5 w-8">
+      <div className="relative h-7 w-11 md:h-5 md:w-8">
         <Image
           src={imagePath}
           alt={paymentName}
@@ -166,7 +166,7 @@ function getPaymentIcon(iconName: string | undefined, paymentName: string) {
     
     if (mappedImage) {
       return () => (
-        <div className="relative h-5 w-8">
+        <div className="relative h-7 w-11 md:h-5 md:w-8">
           <Image
             src={mappedImage}
             alt={paymentName}
@@ -184,14 +184,14 @@ function getPaymentIcon(iconName: string | undefined, paymentName: string) {
     // رابط خارجي (دومين الداشبورد) → img عادي عشان Next/Image بيمنع الدومينات غير المسجلة
     if (iconName.startsWith('http')) {
       return () => (
-        <div className="relative h-5 w-8">
+        <div className="relative h-7 w-11 md:h-5 md:w-8">
           <img src={iconName} alt={paymentName} className="h-full w-full object-contain" loading="lazy" />
         </div>
       );
     }
 
     return () => (
-      <div className="relative h-5 w-8">
+      <div className="relative h-7 w-11 md:h-5 md:w-8">
         <Image
           src={iconName}
           alt={paymentName}
@@ -472,7 +472,7 @@ export default function Footer() {
                         ) : (
                           <PaymentIcon className="text-sm opacity-90" />
                         )}
-                        <span>{p.name}</span>
+                        <span className="hidden md:inline">{p.name}</span>
                       </Element>
                     </div>
                   );
