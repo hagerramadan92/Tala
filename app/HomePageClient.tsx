@@ -313,6 +313,29 @@ export default function HomePageClient({
 						</div>
 					</div>
 				</div>
+				{/* Premium Packages Banner */}
+				<div className="w-full">
+					<Link href="/packages" className="block">
+						<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-6 md:p-8 text-white shadow-md hover:opacity-95 transition">
+							<div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+							<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
+								<div className="text-center md:text-right space-y-1">
+									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs font-bold">
+										<span>🎁 جديد</span>
+									</div>
+									<h3 className="text-xl md:text-2xl font-black">باقات مميزة</h3>
+									<p className="text-white/90 text-xs md:text-sm max-w-xl">
+										باقات مختارة من أفضل منتجاتنا بكميات وأسعار جاهزة — اطلبها بضغطة واحدة.
+									</p>
+								</div>
+								<span className="shrink-0 px-6 py-3 rounded-xl bg-white text-orange-600 font-extrabold text-sm md:text-base flex items-center gap-2 shadow-lg">
+									<span>استعرض الباقات</span>
+									<span>←</span>
+								</span>
+							</div>
+						</div>
+					</Link>
+				</div>
 
 				{/* Category Sections */}
 				<div className="flex flex-col gap-5 md:gap-8">

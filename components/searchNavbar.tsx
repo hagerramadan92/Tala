@@ -75,6 +75,13 @@ export default function SearchNavbar() {
 								<span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#1e3a5f] text-white font-bold">جديد</span>
 							</Link>
 							<Link
+								href="/packages"
+								className="px-3 py-2 rounded-xl text-sm font-extrabold text-white bg-gradient-to-l from-amber-500 to-orange-600 hover:opacity-95 flex items-center gap-1.5 transition shadow-sm"
+							>
+								<span>🎁</span>
+								<span>باقات مميزة</span>
+							</Link>
+							<Link
 								href="/blogs"
 								className="px-3 py-2 rounded-xl text-sm font-extrabold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition"
 							>
@@ -224,6 +231,24 @@ export default function SearchNavbar() {
 										</div>
 									</div>
 									<div className="text-white text-lg">←</div>
+								</Link>
+								{/* Premium Packages Link */}
+								<Link
+									href="/packages"
+									onClick={closeMenu}
+									className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white flex items-center justify-between shadow-md transition active:scale-98"
+								>
+									<div className="flex items-center gap-3">
+										<div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-lg">🎁</div>
+										<div>
+											<div className="font-extrabold text-sm flex items-center gap-1.5">
+												<span>باقات مميزة</span>
+												<span className="bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+											</div>
+											<div className="text-xs text-white/85">باقات من أفضل المنتجات بأسعار جاهزة</div>
+										</div>
+									</div>
+									<span className="text-xl">←</span>
 								</Link>
 
 								{/* Support card */}
