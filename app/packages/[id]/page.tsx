@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dashboard.talaaljazeera.com/api/v1";
 
-type Tier = { id: number; quantity: number; price: number };
+type Tier = { id: number; min_quantity: number; max_quantity: number | null; price: number };
 type PkgProduct = {
   id: number;
   type: "main" | "optional";
@@ -16,7 +16,23 @@ type PkgProduct = {
   product: { id: number; name: string; image?: string | null; price: number };
   tiers: Tier[];
 };
-type Pkg = { id: number; name: string; description?: string; image?: string; background_image?: string; products: PkgProduct[] };
+type Pkg = { id: number; name: string; description?: string; image?: string; products: PkgProduct[] };
+
+function rangePrice(p: PkgProduct, qty: number): number {
+  const tiers = p.tiers || [];
+  const match =
+    tiers.find((t) => qty >= t.min_quantity && (t.max_quantity === null || qty <= t.max_quantity)) ||
+    [...tiers].filter((t) => qty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)[0];
+
+  if (p.type === "main") {
+    let total = Number(p.base_price || 0);
+    if (match && qty > p.base_quantity) total += Number(match.price || 0);
+    return total;
+  }
+
+  if (qty <= 0) return 0;
+  return match ? Number(match.price || 0) : 0;
+}
 
 export default function PackageDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -24,14 +40,23 @@ export default function PackageDetailsPage() {
   const [pkg, setPkg] = useState<Pkg | null>(null);
   const [loading, setLoading] = useState(true);
   const [orderLoading, setOrderLoading] = useState(false);
-  const [mainTiers, setMainTiers] = useState<Record<number, number | "">>({});
-  const [optionalTiers, setOptionalTiers] = useState<Record<number, number | "">>({});
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (!params?.id) return;
     fetch(`${API_URL}/packages/${params.id}`, { headers: { Accept: "application/json" }, cache: "no-store" })
       .then((r) => r.json())
-      .then((d) => setPkg(d?.data || null))
+      .then((d) => {
+        const data: Pkg | null = d?.data || null;
+        setPkg(data);
+        if (data) {
+          const initial: Record<number, number> = {};
+          (data.products || []).forEach((p) => {
+            initial[p.id] = p.type === "main" ? Math.max(1, Number(p.base_quantity || 1)) : 0;
+          });
+          setQuantities(initial);
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [params?.id]);
@@ -39,36 +64,27 @@ export default function PackageDetailsPage() {
   const total = useMemo(() => {
     if (!pkg) return 0;
     return (pkg.products || []).reduce((sum, p) => {
-      if (p.type === "main") {
-        const tierId = mainTiers[p.id];
-        const tier = p.tiers.find((t) => t.id === Number(tierId));
-        return sum + Number(p.base_price || 0) + Number(tier?.price || 0);
-      }
-      const tierId = optionalTiers[p.id];
-      const tier = p.tiers.find((t) => t.id === Number(tierId));
-      return sum + Number(tier?.price || 0);
+      const qty = Number(quantities[p.id] || 0);
+      if (p.type === "optional" && qty <= 0) return sum;
+      return sum + rangePrice(p, qty);
     }, 0);
-  }, [pkg, mainTiers, optionalTiers]);
+  }, [pkg, quantities]);
 
   const submit = async () => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      Swal.fire({ icon: "warning", title: "يجب تسجيل الدخول", text: "سجّل الدخول لإتمام طلب الباقة" })
-        .then(() => router.push("/login"));
+      Swal.fire({ icon: "warning", title: "يجب تسجيل الدخول", text: "سجّل الدخول لإتمام طلب الباقة" }).then(() =>
+        router.push("/login")
+      );
       return;
     }
 
-    const selections: any[] = [];
-    (pkg?.products || []).forEach((p) => {
-      if (p.type === "main") {
-        selections.push({ package_product_id: p.id, tier_id: mainTiers[p.id] || null });
-      } else if (optionalTiers[p.id]) {
-        selections.push({ package_product_id: p.id, tier_id: optionalTiers[p.id] });
-      }
-    });
+    const selections = (pkg?.products || [])
+      .map((p) => ({ package_product_id: p.id, quantity: Number(quantities[p.id] || 0) }))
+      .filter((s) => s.quantity > 0);
 
     if (selections.length === 0) {
-      Swal.fire({ icon: "warning", title: "اختر منتجات الباقة أولاً" });
+      Swal.fire({ icon: "warning", title: "أدخل الكمية المطلوبة" });
       return;
     }
 
@@ -97,7 +113,11 @@ export default function PackageDetailsPage() {
       <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
         <div className="flex flex-col md:flex-row gap-6 items-center">
           <div className="relative w-full md:w-64 h-56 bg-slate-50 rounded-2xl overflow-hidden shrink-0">
-            {pkg.image ? <Image src={pkg.image} alt={pkg.name} fill sizes="256px" className="object-contain p-3" /> : <div className="w-full h-full grid place-items-center text-5xl">🎁</div>}
+            {pkg.image ? (
+              <Image src={pkg.image} alt={pkg.name} fill sizes="256px" className="object-contain p-3" />
+            ) : (
+              <div className="w-full h-full grid place-items-center text-5xl">🎁</div>
+            )}
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-slate-900">{pkg.name}</h1>
@@ -109,49 +129,79 @@ export default function PackageDetailsPage() {
       <div className="mt-6 space-y-4">
         {(pkg.products || []).map((p) => {
           const isMain = p.type === "main";
+          const min = isMain ? Math.max(1, Number(p.base_quantity || 1)) : 0;
+          const qty = Number(quantities[p.id] || 0);
+
           return (
             <div key={p.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="relative w-20 h-20 rounded-xl bg-slate-50 overflow-hidden shrink-0">
-                  {p.product?.image ? <Image src={p.product.image} alt={p.product.name} fill sizes="80px" className="object-contain p-1" /> : null}
+                  {p.product?.image ? (
+                    <Image src={p.product.image} alt={p.product.name} fill sizes="80px" className="object-contain p-1" />
+                  ) : null}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-extrabold text-slate-900">{p.product?.name}</h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isMain ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600"}`}>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                        isMain ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
                       {isMain ? "منتج أساسي" : "منتج مرشح"}
                     </span>
                   </div>
 
-                  {isMain ? (
-                    <div className="mt-2 text-sm text-slate-700 font-bold">
-                      الحد الأدنى: {p.base_quantity} قطعة — السعر الأساسي: {Number(p.base_price).toFixed(2)} ريال
+                  <div className="mt-2 text-sm text-slate-700 font-bold">
+                    {isMain ? (
+                      <>
+                        الحد الأدنى: {min} قطعة — السعر الأساسي: {Number(p.base_price).toFixed(2)} ريال
+                      </>
+                    ) : (
+                      <>اختياري — لو هتضيفه اكتب الكمية (بدون حد أدنى)</>
+                    )}
+                  </div>
+
+                  {p.tiers?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {p.tiers.map((t) => (
+                        <span key={t.id} className="text-[10px] px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-bold">
+                          {t.min_quantity}
+                          {t.max_quantity ? `-${t.max_quantity}` : "+"} قطعة
+                          {isMain ? ` → +${Number(t.price).toFixed(0)} ريال` : ` → ${Number(t.price).toFixed(0)} ريال`}
+                        </span>
+                      ))}
                     </div>
-                  ) : (
-                    <div className="mt-2 text-sm text-slate-600">اختياري — اختر الكمية إذا رغبت.</div>
                   )}
 
-                  <div className="mt-3 max-w-sm">
+                  <div className="mt-3 max-w-xs">
                     <label className="block text-xs font-bold text-slate-600 mb-1">
-                      {isMain ? "إضافة كمية (تُضاف على الحد الأدنى)" : "الكمية"}
+                      {isMain ? `الكمية (لازم ${min} أو أكثر)` : "الكمية (اختياري)"}
                     </label>
-                    <select
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                      value={isMain ? mainTiers[p.id] ?? "" : optionalTiers[p.id] ?? ""}
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={isMain ? min : 0}
+                      value={qty || ""}
+                      placeholder={isMain ? String(min) : "0"}
                       onChange={(e) => {
-                        const v = e.target.value ? Number(e.target.value) : "";
-                        if (isMain) setMainTiers((s) => ({ ...s, [p.id]: v }));
-                        else setOptionalTiers((s) => ({ ...s, [p.id]: v }));
+                        let v = parseInt(e.target.value || "0", 10);
+                        if (isNaN(v) || v < 0) v = 0;
+                        if (isMain && v < min) v = min;
+                        setQuantities((s) => ({ ...s, [p.id]: v }));
                       }}
-                    >
-                      <option value="">{isMain ? "بدون زيادة" : "بدون إضافة"}</option>
-                      {p.tiers.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          +{t.quantity} قطعة — {Number(t.price).toFixed(2)} ريال
-                        </option>
-                      ))}
-                    </select>
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-pro"
+                    />
+                    {isMain && qty < min && (
+                      <p className="mt-1 text-[11px] font-bold text-rose-600">الكمية لازم تكون {min} أو أكثر.</p>
+                    )}
                   </div>
+
+                  {qty > 0 && (
+                    <p className="mt-2 text-sm font-extrabold text-pro">
+                      سعر هذا المنتج: {rangePrice(p, qty).toFixed(2)} ريال
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -162,7 +212,9 @@ export default function PackageDetailsPage() {
       <div className="sticky bottom-3 mt-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-lg flex items-center justify-between gap-4">
         <div>
           <p className="text-xs text-slate-500 font-bold">الإجمالي</p>
-          <p className="text-xl font-black text-slate-900">{total.toFixed(2)} <span className="text-sm">ريال</span></p>
+          <p className="text-xl font-black text-slate-900">
+            {total.toFixed(2)} <span className="text-sm">ريال</span>
+          </p>
         </div>
         <button
           type="button"
