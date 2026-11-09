@@ -24,14 +24,14 @@ function rangePrice(p: PkgProduct, qty: number): number {
     tiers.find((t) => qty >= t.min_quantity && (t.max_quantity === null || qty <= t.max_quantity)) ||
     [...tiers].filter((t) => qty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)[0];
 
+  // سعر الشريحة = سعر القطعة الواحدة، والإجمالي = الكمية × سعر القطعة.
   if (p.type === "main") {
-    let total = Number(p.base_price || 0);
-    if (match && qty > p.base_quantity) total += Number(match.price || 0);
-    return total;
+    if (match) return qty * Number(match.price || 0);
+    return Number(p.base_price || 0);
   }
 
   if (qty <= 0) return 0;
-  return match ? Number(match.price || 0) : 0;
+  return match ? qty * Number(match.price || 0) : 0;
 }
 
 export default function PackageDetailsPage() {
@@ -170,7 +170,7 @@ export default function PackageDetailsPage() {
                   <div className="mt-2 text-sm text-slate-700 font-bold">
                     {isMain ? (
                       <>
-                        الحد الأدنى: {min} قطعة — السعر الأساسي: {Number(p.base_price).toFixed(2)} ريال
+                        الحد الأدنى: {min} قطعة — والسعر بيتحسب بسعر القطعة حسب الرينج
                       </>
                     ) : (
                       <>اختياري — لو هتضيفه اكتب الكمية (بدون حد أدنى)</>
@@ -183,7 +183,7 @@ export default function PackageDetailsPage() {
                         <span key={t.id} className="text-[10px] px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-bold">
                           {t.min_quantity}
                           {t.max_quantity ? `-${t.max_quantity}` : "+"} قطعة
-                          {isMain ? ` → +${Number(t.price).toFixed(0)} ريال` : ` → ${Number(t.price).toFixed(0)} ريال`}
+                          {" → "}{Number(t.price).toFixed(2)} ريال/قطعة
                         </span>
                       ))}
                     </div>
@@ -227,7 +227,7 @@ export default function PackageDetailsPage() {
 
                   {qty > 0 && (
                     <p className="mt-2 text-sm font-extrabold text-pro">
-                      سعر هذا المنتج: {rangePrice(p, qty).toFixed(2)} ريال
+                      سعر هذا المنتج: {rangePrice(p, qty).toFixed(2)} ريال ({qty} × سعر القطعة)
                     </p>
                   )}
                 </div>
