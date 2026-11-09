@@ -284,9 +284,10 @@ export default function HomePageClient({
 					)}
 				</div>
 
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 				{/* Stationery & Quick Printing Feature Banner */}
-				<div className="w-full">
-					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#1e3a5f] p-6 md:p-8 text-white shadow-md">
+				<div className="w-full h-full">
+					<div className="relative h-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#1e3a5f] p-6 md:p-8 text-white shadow-md">
 						<div className="absolute -left-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 						<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
 							<div className="text-center md:text-right space-y-2">
@@ -314,9 +315,9 @@ export default function HomePageClient({
 					</div>
 				</div>
 				{/* Premium Packages Banner */}
-				<div className="w-full">
-					<Link href="/packages" className="block">
-						<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-6 md:p-8 text-white shadow-md hover:opacity-95 transition">
+				<div className="w-full h-full">
+					<Link href="/packages" className="block h-full">
+						<div className="relative h-full overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-6 md:p-8 text-white shadow-md hover:opacity-95 transition">
 							<div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 							<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
 								<div className="text-center md:text-right space-y-1">
@@ -335,6 +336,7 @@ export default function HomePageClient({
 							</div>
 						</div>
 					</Link>
+				</div>
 				</div>
 
 				{/* Category Sections */}
