@@ -177,18 +177,6 @@ export default function PackageDetailsPage() {
                     )}
                   </div>
 
-                  {p.tiers?.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {p.tiers.map((t) => (
-                        <span key={t.id} className="text-[10px] px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-bold">
-                          {t.min_quantity}
-                          {t.max_quantity ? `-${t.max_quantity}` : "+"} قطعة
-                          {" → "}{Number(t.price).toFixed(2)} ريال/قطعة
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
                   <div className="mt-3 max-w-xs">
                     <label className="block text-xs font-bold text-slate-600 mb-1">
                       {isMain ? `الكمية (لازم ${min} أو أكثر)` : "الكمية (اختياري)"}
