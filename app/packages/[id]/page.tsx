@@ -79,6 +79,21 @@ export default function PackageDetailsPage() {
       return;
     }
 
+    const invalidProducts = (pkg?.products || []).filter((p) => {
+      const qty = Number(quantities[p.id] || 0);
+      return p.type === "main" && qty < Math.max(1, Number(p.base_quantity || 1));
+    });
+
+    if (invalidProducts.length > 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "كمية غير صحيحة",
+        text: "الكمية لازم تكون أكبر من أو تساوي الحد الأدنى للمنتجات الأساسية.",
+        confirmButtonText: "تمام",
+      });
+      return;
+    }
+
     const selections = (pkg?.products || [])
       .map((p) => ({ package_product_id: p.id, quantity: Number(quantities[p.id] || 0) }))
       .filter((s) => s.quantity > 0);
@@ -185,15 +200,28 @@ export default function PackageDetailsPage() {
                       value={qty || ""}
                       placeholder={isMain ? String(min) : "0"}
                       onChange={(e) => {
-                        let v = parseInt(e.target.value || "0", 10);
+                        const raw = e.target.value;
+                        if (raw === "") {
+                          setQuantities((s) => ({ ...s, [p.id]: 0 }));
+                          return;
+                        }
+                        let v = parseInt(raw, 10);
                         if (isNaN(v) || v < 0) v = 0;
-                        if (isMain && v < min) v = min;
                         setQuantities((s) => ({ ...s, [p.id]: v }));
                       }}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-pro"
+                      aria-invalid={isMain && qty < min}
+                      className={[
+                        "w-full rounded-xl border px-3 py-2 text-sm outline-none transition",
+                        isMain && qty < min
+                          ? "border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-200"
+                          : "border-slate-200 focus:border-pro",
+                      ].join(" ")}
                     />
                     {isMain && qty < min && (
-                      <p className="mt-1 text-[11px] font-bold text-rose-600">الكمية لازم تكون {min} أو أكثر.</p>
+                      <p className="mt-1 flex items-center gap-1 text-[11px] font-bold text-rose-600">
+                        <span>⚠️</span>
+                        <span>الكمية لازم تكون أكبر من أو تساوي الحد الأدنى ({min}).</span>
+                      </p>
                     )}
                   </div>
 
