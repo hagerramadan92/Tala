@@ -100,11 +100,11 @@ const paymentImagesMap: Record<string, string> = {
   "mada": "/images/mada_mini.png",
   "Mada": "/images/mada_mini.png",
   "مدى": "/images/mada_mini.png",
-  "apple pay": "/images/payments/applepay.svg",
-  "Apple Pay": "/images/payments/applepay.svg",
-  "applePay": "/images/payments/applepay.svg",
-  "applepay": "/images/payments/applepay.svg",
-  "ابل باي": "/images/payments/applepay.svg",
+  "apple pay": "/images/payments/apple-pay.png",
+  "Apple Pay": "/images/payments/apple-pay.png",
+  "applePay": "/images/payments/apple-pay.png",
+  "applepay": "/images/payments/apple-pay.png",
+  "ابل باي": "/images/payments/apple-pay.png",
 };
 
 // خريطة لربط طرق الدفع برابط خارجي إذا لزم الأمر
