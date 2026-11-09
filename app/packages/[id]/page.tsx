@@ -227,7 +227,7 @@ export default function PackageDetailsPage() {
 
                   {qty > 0 && (
                     <p className="mt-2 text-sm font-extrabold text-pro">
-                      سعر هذا المنتج: {rangePrice(p, qty).toFixed(2)} ريال ({qty} × سعر القطعة)
+                      السعر الإجمالي: {rangePrice(p, qty).toFixed(2)} ريال
                     </p>
                   )}
                 </div>

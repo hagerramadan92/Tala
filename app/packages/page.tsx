@@ -32,9 +32,9 @@ export default function PackagesPage() {
   return (
     <section dir="rtl" className="container py-8 md:py-12">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl md:text-4xl font-black text-slate-900">باقات مميزة</h1>
+        <h1 className="text-2xl md:text-4xl font-black text-slate-900">باكدجات</h1>
         <p className="mt-3 text-sm md:text-base text-slate-600">
-          باقات مختارة تجمع لك أفضل المنتجات بأسعار وكميات جاهزة.
+          باكدجات مختارة تجمع لك أفضل المنتجات بأسعار وكميات جاهزة.
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export default function PackagesPage() {
         </div>
       ) : packages.length === 0 ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600 font-bold">
-          لا توجد باقات متاحة حاليًا.
+          لا توجد باكدجات متاحة حاليًا.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

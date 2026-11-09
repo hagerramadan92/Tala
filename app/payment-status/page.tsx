@@ -15,8 +15,28 @@ function normalizeStatus(raw: string | null): PaymentStatus {
 export default function PaymentPage() {
 	const params = useSearchParams();
 
-	const status = useMemo(() => normalizeStatus(params.get("status")), [params]);
-	const orderId = params.get("orderId") ?? params.get("order_id") ?? "";
+	// Paymob بيرجع باراميترات مختلفة (success / pending / merchant_order_id)
+	// فبندعمها كلها جانب الباراميترات بتاعتنا.
+	const status = useMemo(() => {
+		const explicit = normalizeStatus(params.get("status"));
+		if (explicit !== "processing") return explicit;
+
+		const success = (params.get("success") ?? "").toLowerCase();
+		if (success === "true") return "success";
+		if (success === "false") {
+			const pending = (params.get("pending") ?? "").toLowerCase();
+			return pending === "true" ? "pending" : "fail";
+		}
+
+		return "processing";
+	}, [params]);
+
+	const orderId =
+		params.get("orderId") ??
+		params.get("order_id") ??
+		params.get("merchant_order_id") ??
+		params.get("reference_id") ??
+		"";
 	const message = params.get("message") ?? "";
 
 	const ui = useMemo(() => {
