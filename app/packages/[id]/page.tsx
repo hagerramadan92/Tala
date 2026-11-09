@@ -170,7 +170,7 @@ export default function PackageDetailsPage() {
                   <div className="mt-2 text-sm text-slate-700 font-bold">
                     {isMain ? (
                       <>
-                        الحد الأدنى: {min} قطعة — والسعر بيتحسب بسعر القطعة حسب الرينج
+                        الحد الأدنى: {min} قطعة
                       </>
                     ) : (
                       <>اختياري — لو هتضيفه اكتب الكمية (بدون حد أدنى)</>
