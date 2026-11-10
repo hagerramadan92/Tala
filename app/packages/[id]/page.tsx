@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
+import { BadgeCheck, Box, Layers3, Minus, Plus, ShoppingCart } from "lucide-react";
+import styles from "./details.module.css";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dashboard.talaaljazeera.com/api/v1";
 
@@ -113,134 +115,71 @@ export default function PackageDetailsPage() {
       const data = await res.json();
       if (!res.ok || data.status === false) throw new Error(data.message || "تعذر إضافة الباقة");
       router.push("/payment");
-    } catch (e: any) {
-      Swal.fire({ icon: "error", title: "خطأ", text: e?.message || "حدث خطأ" });
+    } catch (e: unknown) {
+      Swal.fire({ icon: "error", title: "خطأ", text: e instanceof Error ? e.message : "حدث خطأ" });
     } finally {
       setOrderLoading(false);
     }
   };
 
-  if (loading) return <div className="container py-16 text-center font-bold">جاري تحميل الباقة...</div>;
-  if (!pkg) return <div className="container py-16 text-center font-bold">الباقة غير متاحة.</div>;
+  if (loading) return <div className={styles.state}>جاري تحميل الباقة...</div>;
+  if (!pkg) return <div className={styles.state}>الباقة غير متاحة.</div>;
 
   return (
-    <section dir="rtl" className="container py-8 md:py-12">
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
-        <div className="flex flex-col md:flex-row gap-6 items-center">
-          <div className="relative w-full md:w-64 h-56 bg-slate-50 rounded-2xl overflow-hidden shrink-0">
+    <main dir="rtl" className={styles.page}>
+      <section className={styles.detailsContainer}>
+      <div className={styles.hero}>
+        <div className={styles.heroText}>
+            <h1>{pkg.name}</h1>
+            <span className={styles.heroLine}/>
+            <p>{pkg.description || "باقة متكاملة ومختارة بعناية لتلبية احتياجاتك الأساسية، بجودة عالية وتصميم احترافي."}</p>
+            <div className={styles.features}><span><BadgeCheck/> منتجات مختارة</span><span><Box/> جودة عالية</span><span><ShoppingCart/> مناسبة للاستخدام</span></div>
+        </div>
+          <div className={styles.heroImage}>
             {pkg.image ? (
-              <Image src={pkg.image} alt={pkg.name} fill sizes="256px" className="object-contain p-3" />
+              <Image src={pkg.image} alt={pkg.name} fill sizes="280px" className={styles.containImage} />
             ) : (
-              <div className="w-full h-full grid place-items-center text-5xl">🎁</div>
+              <div className={styles.giftBox}><span className={styles.bow}>🎀</span><span>🎁</span></div>
             )}
           </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900">{pkg.name}</h1>
-            {pkg.description ? <p className="mt-3 text-slate-600 text-sm md:text-base">{pkg.description}</p> : null}
-          </div>
-        </div>
       </div>
 
-      <div className="mt-6 space-y-4">
+      <header className={styles.contentHeading}><h2>محتويات الباقة</h2><p>تتضمن هذه الباقة المنتجات التالية بالكميات المحددة:</p></header>
+      <div className={styles.products}>
         {(pkg.products || []).map((p) => {
           const isMain = p.type === "main";
           const min = isMain ? Math.max(1, Number(p.base_quantity || 1)) : 0;
           const qty = Number(quantities[p.id] || 0);
 
           return (
-            <div key={p.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="relative w-20 h-20 rounded-xl bg-slate-50 overflow-hidden shrink-0">
+            <article key={p.id} className={styles.productCard}>
+                <div className={styles.productImage}>
                   {p.product?.image ? (
-                    <Image src={p.product.image} alt={p.product.name} fill sizes="80px" className="object-contain p-1" />
-                  ) : null}
+                    <Image src={p.product.image} alt={p.product.name} fill sizes="110px" className={styles.containImage} />
+                  ) : <Box/>}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-extrabold text-slate-900">{p.product?.name}</h3>
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                        isMain ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
+                <div className={styles.productInfo}>
+                  <div className={styles.nameRow}><h3>{p.product?.name}</h3><span className={isMain?styles.mainBadge:styles.optionalBadge}>
                       {isMain ? "منتج أساسي" : "منتج مرشح"}
-                    </span>
-                  </div>
-
-                  <div className="mt-2 text-sm text-slate-700 font-bold">
-                    {isMain ? (
-                      <>
-                        الحد الأدنى: {min} قطعة
-                      </>
-                    ) : (
-                      <>اختياري — لو هتضيفه اكتب الكمية (بدون حد أدنى)</>
-                    )}
-                  </div>
-
-                  <div className="mt-3 max-w-xs">
-                    <label className="block text-xs font-bold text-slate-600 mb-1">
-                      {isMain ? `الكمية (لازم ${min} أو أكثر)` : "الكمية (اختياري)"}
-                    </label>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={isMain ? min : 0}
-                      value={qty || ""}
-                      placeholder={isMain ? String(min) : "0"}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        if (raw === "") {
-                          setQuantities((s) => ({ ...s, [p.id]: 0 }));
-                          return;
-                        }
-                        let v = parseInt(raw, 10);
-                        if (isNaN(v) || v < 0) v = 0;
-                        setQuantities((s) => ({ ...s, [p.id]: v }));
-                      }}
-                      aria-invalid={isMain && qty < min}
-                      className={[
-                        "w-full rounded-xl border px-3 py-2 text-sm outline-none transition",
-                        isMain && qty < min
-                          ? "border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-200"
-                          : "border-slate-200 focus:border-pro",
-                      ].join(" ")}
-                    />
-                    {isMain && qty < min && (
-                      <p className="mt-1 flex items-center gap-1 text-[11px] font-bold text-rose-600">
-                        <span>⚠️</span>
-                        <span>الكمية لازم تكون أكبر من أو تساوي الحد الأدنى ({min}).</span>
-                      </p>
-                    )}
-                  </div>
-
-                  {qty > 0 && (
-                    <p className="mt-2 text-sm font-extrabold text-pro">
-                      السعر الإجمالي: {rangePrice(p, qty).toFixed(2)} ريال
-                    </p>
-                  )}
+                    </span></div>
+                  <p className={styles.productDescription}>{isMain?"منتج أساسي مختار بعناية ضمن محتويات الباقة.":"منتج اختياري يمكنك إضافته بالكمية المناسبة."}</p>
+                  <p className={styles.minimum}><Layers3/> الحد الأدنى: {min} قطعة</p>
                 </div>
-              </div>
-            </div>
+                <div className={styles.quantity}><label>الكمية</label><div><button onClick={()=>setQuantities(s=>({...s,[p.id]:Math.max(min,(s[p.id]||0)-1)}))}><Minus/></button><input type="number" min={min} value={qty} onChange={e=>setQuantities(s=>({...s,[p.id]:Math.max(0,parseInt(e.target.value,10)||0)}))}/><button onClick={()=>setQuantities(s=>({...s,[p.id]:(s[p.id]||0)+1}))}><Plus/></button></div></div>
+                <div className={styles.itemTotal}><span>السعر الإجمالي</span><strong>{rangePrice(p,qty).toFixed(2)} ريال</strong></div>
+            </article>
           );
         })}
       </div>
 
-      <div className="sticky bottom-3 mt-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-lg flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs text-slate-500 font-bold">الإجمالي</p>
-          <p className="text-xl font-black text-slate-900">
-            {total.toFixed(2)} <span className="text-sm">ريال</span>
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={submit}
-          disabled={orderLoading}
-          className="px-6 py-3 rounded-xl bg-pro text-white font-extrabold text-sm md:text-base disabled:opacity-60"
-        >
-          {orderLoading ? "جارٍ التحويل..." : "اطلب الآن"}
+      <div className={styles.checkout}>
+        <div className={styles.grandTotal}><span>الإجمالي</span><strong>{total.toFixed(2)} <small>ريال</small></strong></div>
+        <div className={styles.separator}/>
+        <button type="button" onClick={submit} disabled={orderLoading}>
+          <ShoppingCart/>{orderLoading ? "جارٍ التحويل..." : "اطلب الآن"}
         </button>
       </div>
-    </section>
+      </section>
+    </main>
   );
 }
