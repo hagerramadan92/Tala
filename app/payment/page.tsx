@@ -340,6 +340,62 @@ export default function PaymentPage() {
 		setCouponCode(normalized || codeFallback || "");
 	}, []);
 
+	// ✅ لو المستخدم جاي من الباكدج (مفيش checkout_summary_v1) → نبني الملخص من السلة
+	useEffect(() => {
+		if (!token || !base_url) return;
+
+		const hasItems = Number((checkoutSummary as any)?.items_length ?? (checkoutSummary as any)?.items_count ?? 0) > 0;
+		if (hasItems) return;
+
+		let alive = true;
+		(async () => {
+			try {
+				const res = await fetch(`${base_url}/cart`, {
+					headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+					cache: "no-store",
+				});
+				const json = await res.json();
+				const data = json?.data;
+				const items = Array.isArray(data?.items) ? data.items : [];
+				if (!alive || items.length === 0) return;
+
+				const count = items.reduce((sum: number, i: any) => sum + Number(i?.quantity || 0), 0);
+				const subtotal = Number(data?.subtotal || 0);
+				const total = Number(data?.total || subtotal);
+				const payload: any = {
+					version: "v1",
+					created_at: new Date().toISOString(),
+					items_count: count,
+					items_length: items.length,
+					is_stationery_only: false,
+					has_stationery: false,
+					has_regular_products: true,
+					subtotal,
+					total,
+					coupon_discount: 0,
+					coupon_name: null,
+					coupon_new_total: null,
+					shipping_fee: 0,
+					tax_rate: 0.15,
+					total_after_coupon: total,
+					total_with_shipping: total,
+					tax_amount: 0,
+					total_without_tax: total,
+					current_total: total,
+				};
+
+				setCheckoutSummary(payload);
+				try {
+					sessionStorage.setItem("checkout_summary_v1", JSON.stringify(payload));
+				} catch {}
+			} catch {}
+		})();
+
+		return () => {
+			alive = false;
+		};
+	}, [token, base_url, checkoutSummary]);
+
 	useEffect(() => {
 		const t = localStorage.getItem("auth_token");
 		setToken(t);
