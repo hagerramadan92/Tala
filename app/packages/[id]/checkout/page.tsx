@@ -13,6 +13,7 @@ export default function PackageCheckoutPage() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [payload, setPayload] = useState<any>(null);
+  const [hydrated, setHydrated] = useState(false);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [addressId, setAddressId] = useState<string>("");
   const [shipping, setShipping] = useState<any[]>([]);
@@ -29,13 +30,16 @@ export default function PackageCheckoutPage() {
       const raw = sessionStorage.getItem("package_checkout_v1");
       if (raw) setPayload(JSON.parse(raw));
     } catch {}
+    setHydrated(true);
   }, []);
 
+  // ما نعيدش التوجيه قبل قراءة بيانات الطلب من sessionStorage
   useEffect(() => {
+    if (!hydrated) return;
     if (!payload || String(payload.package_id) !== String(params?.id)) {
       router.replace(`/packages/${params?.id}`);
     }
-  }, [payload, params?.id, router]);
+  }, [hydrated, payload, params?.id, router]);
 
   useEffect(() => {
     if (!token) return;
