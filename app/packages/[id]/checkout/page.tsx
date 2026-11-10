@@ -49,7 +49,11 @@ export default function PackageCheckoutPage() {
       .catch(() => {});
     fetch(`${API_URL}/payment-methods?is_payment=true`, { headers: { Accept: "application/json" }, cache: "no-store" })
       .then((r) => r.json())
-      .then((d) => setMethods(Array.isArray(d?.data) ? d.data : []))
+      .then((d) => {
+        const list = Array.isArray(d?.data) ? d.data : [];
+        // الباكدجات: كاش + بطاقات/Apple Pay (بوابات تابي/تمارا تحتاج طلب منتجات)
+        setMethods(list.filter((m: any) => ["cash", "paymob", "applepay"].includes(String(m?.key || "").toLowerCase())));
+      })
       .catch(() => {});
   }, [token]);
 
@@ -111,8 +115,17 @@ export default function PackageCheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok || data.status === false) throw new Error(data?.message || "تعذر إنشاء طلب الباقة");
-      setDone(data.data);
+
       sessionStorage.removeItem("package_checkout_v1");
+
+      // الدفع الإلكتروني (Paymob / Apple Pay) → توجيه لبوابة الدفع
+      const paymentUrl = data?.payment_url || data?.shorten_url;
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+        return;
+      }
+
+      setDone(data.data);
     } catch (e: any) {
       Swal.fire({ icon: "error", title: "خطأ", text: e?.message || "حدث خطأ" });
     } finally {
