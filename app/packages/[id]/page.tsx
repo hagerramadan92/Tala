@@ -105,21 +105,21 @@ export default function PackageDetailsPage() {
       return;
     }
 
+    // طلب الباقة مستقل تمامًا عن السلة
     try {
-      setOrderLoading(true);
-      const res = await fetch(`${API_URL}/packages/${pkg?.id}/order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ selections }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.status === false) throw new Error(data.message || "تعذر إضافة الباقة");
-      router.push("/payment");
-    } catch (e: unknown) {
-      Swal.fire({ icon: "error", title: "خطأ", text: e instanceof Error ? e.message : "حدث خطأ" });
-    } finally {
-      setOrderLoading(false);
-    }
+      sessionStorage.setItem(
+        "package_checkout_v1",
+        JSON.stringify({
+          package_id: pkg?.id,
+          package_name: pkg?.name,
+          selections,
+          items_total: total,
+          created_at: new Date().toISOString(),
+        })
+      );
+    } catch {}
+
+    router.push(`/packages/${pkg?.id}/checkout`);
   };
 
   if (loading) return <div className={styles.state}>جاري تحميل الباقة...</div>;
