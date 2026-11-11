@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import BankPayment from "@/components/BankPayment";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dashboard.talaaljazeera.com/api/v1";
 
@@ -179,28 +180,44 @@ export default function PackageCheckoutPage() {
             {shipping.length === 0 ? (
               <p className="text-sm text-slate-500">لا توجد خيارات شحن متاحة لهذا العنوان حاليًا.</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {shipping.map((s, i) => (
-                  <label key={i} className={`cursor-pointer rounded-xl border p-3 text-sm flex items-center justify-between ${shippingSel === s ? "border-pro ring-2 ring-pro/20" : "border-slate-200"}`}>
-                    <span className="font-bold">{s.deliveryOptionName || s.companyName || `شركة ${i + 1}`}</span>
-                    <span className="font-extrabold text-pro">{Number(s.price ?? s.deliveryFee ?? s.total ?? 0).toFixed(2)} ريال</span>
-                    <input type="radio" name="ship" className="hidden" checked={shippingSel === s} onChange={() => setShippingSel(s)} />
-                  </label>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {shipping.map((s, i) => {
+                  const active = shippingSel === s;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setShippingSel(s)}
+                      className={`flex items-center justify-between p-4 rounded-3xl border transition-all text-right ${
+                        active ? "border-pro bg-blue-50 shadow-sm" : "border-slate-100 hover:border-slate-200 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center p-1 overflow-hidden">
+                          {s.logo ? (
+                            <img src={s.logo} alt={s.deliveryOptionName || "شركة شحن"} className="w-full h-full object-contain" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-slate-400">OTO</span>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-extrabold text-slate-900">{s.deliveryOptionName || s.companyName || `شركة ${i + 1}`}</p>
+                          <p className="text-[10px] text-slate-500 font-semibold">{s.avgDeliveryTime || "توصيل سريع"}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-pro">
+                        {Number(s.price ?? s.deliveryFee ?? s.total ?? 0).toFixed(2)} <span className="text-[10px]">ريال</span>
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5">
             <h2 className="font-extrabold mb-3">طريقة الدفع</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {methods.map((m) => (
-                <label key={m.id} className={`cursor-pointer rounded-xl border p-3 text-sm ${String(method) === String(m.id) ? "border-pro ring-2 ring-pro/20" : "border-slate-200"}`}>
-                  <input type="radio" name="pay" className="hidden" checked={String(method) === String(m.id)} onChange={() => setMethod(String(m.id))} />
-                  <span className="font-bold">{m.name}</span>
-                </label>
-              ))}
-            </div>
+            <BankPayment paymentMethods={methods} onPaymentMethodChange={(id: any) => setMethod(String(id))} />
           </div>
         </div>
 
