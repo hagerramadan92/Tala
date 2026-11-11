@@ -55,7 +55,7 @@ export default function PackageCheckoutPage() {
       .then((r) => r.json())
       .then((d) => {
         const list = Array.isArray(d?.data) ? d.data : [];
-        // الباكدجات: كاش + بطاقات/Apple Pay (بوابات تابي/تمارا تحتاج طلب منتجات)
+        // البكجات: كاش + بطاقات/Apple Pay (بوابات تابي/تمارا تحتاج طلب منتجات)
         setMethods(list.filter((m: any) => ["cash", "paymob", "applepay"].includes(String(m?.key || "").toLowerCase())));
       })
       .catch(() => {});

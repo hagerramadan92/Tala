@@ -324,13 +324,13 @@ export default function HomePageClient({
 									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs font-bold">
 										<span>🎁 جديد</span>
 									</div>
-									<h3 className="text-xl md:text-2xl font-black">باكدجات</h3>
+									<h3 className="text-xl md:text-2xl font-black">بكجات</h3>
 									<p className="hidden md:block text-white/90 text-xs md:text-sm max-w-xl">
 										باقات مختارة من أفضل منتجاتنا بكميات وأسعار جاهزة — اطلبها بضغطة واحدة.
 									</p>
 								</div>
 								<span className="shrink-0 px-6 py-3 rounded-xl bg-white text-orange-600 font-extrabold text-sm md:text-base flex items-center gap-2 shadow-lg">
-									<span>استعرض الباكدجات</span>
+									<span>استعرض البكجات</span>
 									<span>←</span>
 								</span>
 							</div>

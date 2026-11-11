@@ -79,7 +79,7 @@ export default function SearchNavbar() {
 								className="px-3 py-2 rounded-xl text-sm font-extrabold text-white bg-gradient-to-l from-amber-500 to-orange-600 hover:opacity-95 flex items-center gap-1.5 transition shadow-sm"
 							>
 								<span>🎁</span>
-								<span>باكدجات</span>
+								<span>بكجات</span>
 							</Link>
 							<Link
 								href="/blogs"
@@ -242,10 +242,10 @@ export default function SearchNavbar() {
 										<div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-lg">🎁</div>
 										<div>
 											<div className="font-extrabold text-sm flex items-center gap-1.5">
-												<span>باكدجات</span>
+												<span>بكجات</span>
 												<span className="bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
 											</div>
-											<div className="text-xs text-white/85">باكدجات من أفضل المنتجات بأسعار جاهزة</div>
+											<div className="text-xs text-white/85">بكجات من أفضل المنتجات بأسعار جاهزة</div>
 										</div>
 									</div>
 									<span className="text-xl">←</span>
