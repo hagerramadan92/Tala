@@ -2485,9 +2485,7 @@ useEffect(() => {
         optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
       const isHasDesign =
         !!designServiceValue &&
-        (String(designServiceValue).includes("لدى تصميم") ||
-          String(designServiceValue).includes("تصميم خاص") ||
-          String(designServiceValue).includes("رفع تصميم خاص"));
+        /(لدي|لدى)\s*تصميم|تصميم\s*خاص|رفع\s*تصميم/.test(String(designServiceValue));
 
       if (isHasDesign) {
         payload.has_design = true;
@@ -2625,9 +2623,12 @@ useEffect(() => {
 
   const designServiceValue =
     optionGroups?.["خدمة تصميم"] || optionGroups?.["خدمة التصميم"];
-  // أي اختيار في مجموعة خدمة التصميم معناه إن العميل محتاج يرفع ملف.
+  // قسم رفع التصميم يظهر فقط لو العميل عنده/هيرفع تصميم —
+  // أما «طلب خدمة تصميم» (إحنا اللي هنصمم) فمش محتاج يرفع ملف.
+  const designNeedsUpload =
+    /(لدي|لدى)\s*تصميم|تصميم\s*خاص|رفع\s*تصميم/.test(String(designServiceValue || ""));
   const showDesignSection =
-    !!designServiceValue && String(designServiceValue).trim() !== "اختر";
+    !!designServiceValue && String(designServiceValue).trim() !== "اختر" && designNeedsUpload;
 
   return (
     <motion.div
