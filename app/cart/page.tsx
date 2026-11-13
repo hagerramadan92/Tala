@@ -2221,11 +2221,8 @@ useEffect(() => {
       String(groupName).trim() === "خدمة التصميم"
     ) {
       const v = String(value || "");
-      if (
-        v.includes("تصميم خاص") ||
-        v.includes("رفع تصميم خاص") ||
-        v.includes("لدى تصميم")
-      ) {
+      // (لدي/لدى) تصميم أو تصميم خاص أو رفع تصميم → يحتاج رفع ملف
+      if (/(لدي|لدى)\s*تصميم|تصميم\s*خاص|رفع\s*تصميم/.test(v)) {
         setDesignSendMethod("upload");
       } else {
         setDesignFile(null);
