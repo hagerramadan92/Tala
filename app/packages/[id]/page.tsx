@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
-import { BadgeCheck, Box, Layers3, Minus, Plus, ShoppingCart } from "lucide-react";
+import { BadgeCheck, Box, Coffee, Layers3, Minus, Package, Plus, ShoppingBag, ShoppingCart } from "lucide-react";
 import styles from "./details.module.css";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dashboard.talaaljazeera.com/api/v1";
@@ -122,26 +122,69 @@ export default function PackageDetailsPage() {
     router.push(`/packages/${pkg?.id}/checkout`);
   };
 
+  const heroFeatures = (() => {
+    const names = (pkg?.products || []).map((p) => p.product?.name || "").filter(Boolean);
+    const has = (re: RegExp) => names.some((n) => re.test(n));
+
+    const items: { label: string; icon: any }[] = [];
+    if (has(/علب|بوكس|box/i)) items.push({ label: "علب طعام", icon: Layers3 });
+    if (has(/كوب|cup|أكواب|اكواب/i)) items.push({ label: "أكواب ورقية", icon: Coffee });
+    if (has(/كيس|bag|أكياس|اكياس/i)) items.push({ label: "أكياس مطاعم", icon: ShoppingBag });
+
+    // نكمل لـ 3 مميزات دايمًا (منتجات مختارة / جودة عالية / مناسبة للاستخدام)
+    const defaults = [
+      { label: "منتجات مختارة", icon: BadgeCheck },
+      { label: "جودة عالية", icon: Package },
+      { label: "مناسبة للاستخدام", icon: ShoppingCart },
+    ];
+    for (const item of defaults) {
+      if (items.length >= 3) break;
+      if (!items.some((i) => i.label === item.label)) items.push(item);
+    }
+
+    return items.slice(0, 3);
+  })();
+
   if (loading) return <div className={styles.state}>جاري تحميل الباقة...</div>;
   if (!pkg) return <div className={styles.state}>الباقة غير متاحة.</div>;
 
   return (
     <main dir="rtl" className={styles.page}>
       <section className={styles.detailsContainer}>
-      <div className={styles.hero}>
-        <div className={styles.heroText}>
-            <h1>{pkg.name}</h1>
-            <span className={styles.heroLine}/>
-            <p>{pkg.description || "باقة متكاملة ومختارة بعناية لتلبية احتياجاتك الأساسية، بجودة عالية وتصميم احترافي."}</p>
-            <div className={styles.features}><span><BadgeCheck/> منتجات مختارة</span><span><Box/> جودة عالية</span><span><ShoppingCart/> مناسبة للاستخدام</span></div>
-        </div>
-          <div className={styles.heroImage}>
-            {pkg.image ? (
-              <Image src={pkg.image} alt={pkg.name} fill sizes="280px" className={styles.containImage} />
-            ) : (
-              <div className={styles.giftBox}><span className={styles.bow}>🎀</span><span>🎁</span></div>
-            )}
+      <div className="relative rounded-[28px] bg-[linear-gradient(100deg,#fff5e9_0,#ffffff_31%,#ffffff_70%,#fff0df_100%)] shadow-[0_7px_18px_rgba(20,33,61,.10)] p-4 md:p-7 overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+          {/* صورة الباقة */}
+          <div className="relative w-full md:w-[47%] shrink-0">
+            <div className="relative h-[280px] md:h-[380px] w-full rounded-[26px] border-2 border-[#ff8a3d] bg-white overflow-hidden">
+              {pkg.image ? (
+                <Image src={pkg.image} alt={pkg.name} fill sizes="(max-width:768px) 100vw, 47vw" className="object-cover" />
+              ) : (
+                <div className="w-full h-full grid place-items-center text-6xl">🎁</div>
+              )}
+            </div>
           </div>
+
+          {/* النص والمميزات */}
+          <div className="flex-1 text-center md:text-right">
+            <h1 className="text-4xl md:text-[56px] leading-tight font-black text-[#0b2545]">{pkg.name}</h1>
+            <span className="block w-16 md:w-20 h-1.5 rounded-full bg-[#ff7a00] my-4 md:my-5 mx-auto md:mr-0" />
+            <p className="text-lg md:text-[26px] leading-relaxed font-extrabold text-[#0b2545]">
+              {pkg.description || "باقة متكاملة ومختارة بعناية لتلبية احتياجاتك الأساسية، بجودة عالية وتصميم احترافي."}
+            </p>
+
+            <div className="mt-6 flex flex-wrap md:flex-nowrap justify-center md:justify-start gap-2 md:gap-3">
+              {heroFeatures.map(({ label, icon: Icon }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#fbf3ea] px-3 md:px-4 py-3 md:py-3.5 text-[#0b2545] font-extrabold text-sm md:text-lg whitespace-nowrap"
+                >
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-[#ff7a00]" strokeWidth={2.2} />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <header className={styles.contentHeading}><h2>محتويات الباقة</h2><p>تتضمن هذه الباقة المنتجات التالية بالكميات المحددة:</p></header>
