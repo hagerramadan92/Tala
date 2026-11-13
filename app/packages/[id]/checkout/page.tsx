@@ -20,6 +20,12 @@ export default function PackageCheckoutPage() {
   const [showAddress, setShowAddress] = useState(true);
   // طريقة الاستلام: توصيل لشركة شحن أو استلام من الفرع (بدون شحن)
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
+  // المطلبات: تصميم
+  const [designType, setDesignType] = useState<"needs_design" | "has_design" | null>(null);
+  const [designPrice, setDesignPrice] = useState(0);
+  const [designFile, setDesignFile] = useState<string | null>(null);
+  const [designFileName, setDesignFileName] = useState<string>("");
+  const [uploadingDesign, setUploadingDesign] = useState(false);
   const [shipping, setShipping] = useState<any[]>([]);
   const [shippingSel, setShippingSel] = useState<any>(null);
   const [otoOrderId, setOtoOrderId] = useState<string>("");
@@ -44,6 +50,15 @@ export default function PackageCheckoutPage() {
       router.replace(`/packages/${params?.id}`);
     }
   }, [hydrated, payload, params?.id, router]);
+
+  // سعر خدمة التصميم من إعدادات الباقة في الداشبورد
+  useEffect(() => {
+    if (!params?.id) return;
+    fetch(`${API_URL}/packages/${params.id}`, { headers: { Accept: "application/json" }, cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setDesignPrice(Number(d?.data?.design_price || 0)))
+      .catch(() => {});
+  }, [params?.id]);
 
   useEffect(() => {
     if (!token) return;
@@ -89,15 +104,54 @@ export default function PackageCheckoutPage() {
       .catch(() => {});
   }, [token, selectedAddress]);
 
+  const uploadDesignFile = async (file: File) => {
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      Swal.fire({ icon: "warning", title: "الملف لازم يكون PDF" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({ icon: "warning", title: "حجم الملف أكبر من 5 ميجا" });
+      return;
+    }
+    try {
+      setUploadingDesign(true);
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API_URL}/package-orders/design-upload`, {
+        method: "POST",
+        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok || data.status === false) throw new Error(data?.message || "تعذر رفع الملف");
+      setDesignFile(data.data?.path || null);
+      setDesignFileName(file.name);
+    } catch (e: any) {
+      Swal.fire({ icon: "error", title: "خطأ", text: e?.message || "تعذر رفع الملف" });
+    } finally {
+      setUploadingDesign(false);
+    }
+  };
+
   const itemsTotal = Number(payload?.items_total || 0);
   const isPickup = deliveryType === "pickup";
   const shippingPrice = isPickup
     ? 0
     : Number(shippingSel?.price ?? shippingSel?.deliveryFee ?? shippingSel?.total ?? 0);
-  const total = itemsTotal + shippingPrice;
+  const designFee = designType === "needs_design" ? designPrice : 0;
+  const total = itemsTotal + designFee + shippingPrice;
 
   const submit = async () => {
     if (!token || !payload) return;
+    if (!designType) {
+      Swal.fire({ icon: "warning", title: "اختر المطلبات: لدي تصميم أو أحتاج تصميمات" });
+      return;
+    }
+    if (designType === "has_design" && !designFile) {
+      Swal.fire({ icon: "warning", title: "ارفع ملف التصميم (PDF) أولاً" });
+      return;
+    }
     if (!isPickup && !shippingSel) {
       Swal.fire({ icon: "warning", title: "اختر شركة الشحن أو استلام من الفرع" });
       return;
@@ -123,6 +177,8 @@ export default function PackageCheckoutPage() {
             : shippingSel?.deliveryOptionName || shippingSel?.companyName || "",
           delivery_option_id: isPickup ? "" : String(shippingSel?.deliveryOptionId || ""),
           oto_order_id: isPickup ? "" : otoOrderId,
+          design_type: designType,
+          design_file: designType === "has_design" ? designFile : null,
           payment_method: method,
         }),
       });
@@ -256,6 +312,64 @@ export default function PackageCheckoutPage() {
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5">
+            <h2 className="font-extrabold mb-1">المطلبات</h2>
+            <p className="text-xs text-slate-500 mb-3">اختر: عندك تصميم جاهز ولا محتاج تصميمات؟</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setDesignType("needs_design")}
+                className={`p-4 rounded-2xl border text-right transition ${designType === "needs_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+              >
+                <p className="font-extrabold text-slate-900">أحتاج تصميمات</p>
+                {designPrice > 0 ? (
+                  <p className="text-xs font-bold text-amber-700 mt-1">+ {designPrice.toFixed(2)} ريال</p>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-1">حسب إعدادات الباقة</p>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDesignType("has_design")}
+                className={`p-4 rounded-2xl border text-right transition ${designType === "has_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+              >
+                <p className="font-extrabold text-slate-900">لدي تصميم</p>
+                <p className="text-xs text-slate-500 mt-1">ارفع ملف PDF</p>
+              </button>
+            </div>
+
+            {designType === "has_design" && (
+              <div className="mt-4">
+                <label className="flex flex-col items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-6 text-center cursor-pointer hover:border-pro transition">
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) uploadDesignFile(f);
+                    }}
+                  />
+                  <span className="text-2xl">📄</span>
+                  <span className="text-sm font-extrabold text-slate-800">
+                    {uploadingDesign ? "جارٍ رفع الملف..." : designFileName || "اختر ملف التصميم (PDF)"}
+                  </span>
+                  <span className="text-[11px] text-slate-500">PDF فقط — بحد أقصى 5 ميجا</span>
+                </label>
+
+                {designFile && (
+                  <p className="mt-2 text-xs font-bold text-emerald-600">✅ تم رفع الملف</p>
+                )}
+
+                <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs font-bold text-amber-800">
+                  يرجى التأكد من وجود كافة التصاميم في الملف المرفق
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-5">
             <h2 className="font-extrabold mb-3">طريقة الاستلام</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -328,6 +442,9 @@ export default function PackageCheckoutPage() {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 h-fit sticky top-3">
           <h2 className="font-extrabold mb-3">ملخص الطلب</h2>
           <div className="flex justify-between text-sm py-1"><span>المنتجات</span><span>{itemsTotal.toFixed(2)}</span></div>
+          {designFee > 0 && (
+            <div className="flex justify-between text-sm py-1"><span>خدمة التصميم</span><span>{designFee.toFixed(2)}</span></div>
+          )}
           <div className="flex justify-between text-sm py-1"><span>الشحن</span><span>{shippingPrice.toFixed(2)}</span></div>
           <div className="mt-2 border-t pt-2 flex justify-between font-black"><span>الإجمالي</span><span>{total.toFixed(2)} ريال</span></div>
           <button onClick={submit} disabled={loading || (!isPickup && !shippingSel)} className="mt-4 w-full py-3 rounded-xl bg-pro text-white font-extrabold disabled:opacity-60">
