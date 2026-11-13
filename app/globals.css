@@ -296,3 +296,27 @@ select option {
   color: #ffffff;
   background-color: #14213d;
 }
+
+/* قوائم MUI (Select/Menu): خلفية بيضاء ونص غامق واضح */
+.MuiMenu-paper,
+.MuiPopover-paper {
+  background-color: #ffffff !important;
+}
+
+.MuiMenuItem-root {
+  color: #0f172a !important;
+}
+
+.MuiMenuItem-root:hover,
+.MuiMenuItem-root.Mui-focusVisible {
+  background-color: #f1f5f9 !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.MuiMenuItem-root.Mui-disabled {
+  color: #94a3b8 !important;
+}
