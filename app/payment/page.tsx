@@ -301,6 +301,8 @@ export default function PaymentPage() {
 	// 🚚 Shipping states
 	const [shippingOptions, setShippingOptions] = useState<any[]>([]);
 	const [selectedShipping, setSelectedShipping] = useState<any>(null);
+	// توصيل لشركة شحن أو استلام من الفرع (بدون شحن)
+	const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
 	const [otoOrderId, setOtoOrderId] = useState<string | null>(null);
 	const [loadingShipping, setLoadingShipping] = useState(false);
 	const [stationeryDeliveryType, setStationeryDeliveryType] = useState<"pickup" | "home_delivery">("pickup");
@@ -694,10 +696,11 @@ export default function PaymentPage() {
 				// coupon_code: normalizedCoupon || "",
 
 				// ✅ Shipping fields requested
-				deliveryOptionId: String(selectedShipping?.deliveryOptionId || ""),
-				orderId: otoOrderId || "",
-				shippingPrice: n(selectedShipping?.price),
-				deliveryOptionName: selectedShipping?.deliveryOptionName || "",
+				deliveryOptionId: deliveryType === "pickup" ? "" : String(selectedShipping?.deliveryOptionId || ""),
+				orderId: deliveryType === "pickup" ? "" : otoOrderId || "",
+				shippingPrice: deliveryType === "pickup" ? 0 : n(selectedShipping?.price),
+				deliveryOptionName: deliveryType === "pickup" ? "استلام من الفرع" : selectedShipping?.deliveryOptionName || "",
+				pickup: deliveryType === "pickup",
 				...(checkoutSummary.is_stationery_only ? {
 					stationery_delivery_type: stationeryDeliveryType,
 					stationery_delivery_area_id: stationeryDeliveryType === "home_delivery" ? selectedStationeryArea?.id : null,
@@ -871,6 +874,28 @@ export default function PaymentPage() {
 									{/* Shipping Methods */}
 									<div className="mt-6 border-t border-slate-100 pt-5">
 										<h3 className="text-lg font-extrabold text-slate-900 mb-4">خيارات التوصيل</h3>
+
+										{!checkoutSummary?.is_stationery_only && (
+											<div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+												<button
+													type="button"
+													onClick={() => setDeliveryType("delivery")}
+													className={`p-4 rounded-3xl border text-right ${deliveryType === "delivery" ? "border-pro-max bg-blue-50" : "border-slate-200 bg-white"}`}
+												>
+													<p className="font-extrabold text-slate-900">توصيل لشركة شحن</p>
+													<p className="text-xs text-slate-500 mt-1">يُحسب الشحن حسب المدينة والكمية</p>
+												</button>
+												<button
+													type="button"
+													onClick={() => setDeliveryType("pickup")}
+													className={`p-4 rounded-3xl border text-right ${deliveryType === "pickup" ? "border-pro-max bg-blue-50" : "border-slate-200 bg-white"}`}
+												>
+													<p className="font-extrabold text-slate-900">استلام من الفرع</p>
+													<p className="text-xs text-emerald-600 font-bold mt-1">بدون رسوم شحن</p>
+												</button>
+											</div>
+										)}
+
 										{checkoutSummary?.is_stationery_only ? (
 											<div className="space-y-3">
 												<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -897,6 +922,10 @@ export default function PaymentPage() {
 														</p>
 													</div>
 												)}
+											</div>
+										) : deliveryType === "pickup" ? (
+											<div className="p-4 bg-emerald-50 rounded-3xl border border-emerald-100 text-sm text-emerald-800 font-bold">
+												هتستلم الطلب من فرع تالا الجزيرة — بدون رسوم شحن، وإجمالي الطلب = قيمة المنتجات فقط.
 											</div>
 										) : loadingShipping ? (
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1064,7 +1093,7 @@ export default function PaymentPage() {
 								)}
 								<TotalOrder
 									summary={checkoutSummary}
-									selectedShipping={selectedShipping}
+									selectedShipping={deliveryType === "pickup" ? { price: 0 } : selectedShipping}
 									pointsDiscount={pointsDiscount}
 									pointsUsed={usablePoints}
 									gatewayFeePercent={gatewayFeePercent}
@@ -1075,7 +1104,7 @@ export default function PaymentPage() {
 						<div className="mt-4">
 							<Button
 								variant="contained"
-								disabled={loading || !paymentMethod || !checkoutSummary || (shippingOptions.length > 0 && !selectedShipping)}
+								disabled={loading || !paymentMethod || !checkoutSummary || (deliveryType === "delivery" && shippingOptions.length > 0 && !selectedShipping)}
 								sx={{
 									fontSize: "1.1rem",
 									backgroundColor: loading ? "#9ca3af" : "#14213d",
