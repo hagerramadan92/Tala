@@ -168,9 +168,11 @@ export default function PackageDetailsPage() {
           <div className="flex-1 text-center md:text-right">
             <h1 className="text-4xl md:text-[56px] leading-tight font-black text-[#0b2545]">{pkg.name}</h1>
             <span className="block w-16 md:w-20 h-1.5 rounded-full bg-[#ff7a00] my-4 md:my-5 mx-auto md:mr-0" />
-            <p className="text-lg md:text-[26px] leading-relaxed font-extrabold text-[#0b2545]">
-              {pkg.description || "باقة متكاملة ومختارة بعناية لتلبية احتياجاتك الأساسية، بجودة عالية وتصميم احترافي."}
-            </p>
+            {pkg.description ? (
+              <p className="text-lg md:text-[26px] leading-relaxed font-extrabold text-[#0b2545]">
+                {pkg.description}
+              </p>
+            ) : null}
 
             <div className="mt-6 flex flex-wrap md:flex-nowrap justify-center md:justify-start gap-2 md:gap-3">
               {heroFeatures.map(({ label, icon: Icon }) => (
