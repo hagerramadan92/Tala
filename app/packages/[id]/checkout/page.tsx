@@ -17,6 +17,7 @@ export default function PackageCheckoutPage() {
   const [hydrated, setHydrated] = useState(false);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [addressId, setAddressId] = useState<string>("");
+  const [showAddress, setShowAddress] = useState(true);
   const [shipping, setShipping] = useState<any[]>([]);
   const [shippingSel, setShippingSel] = useState<any>(null);
   const [otoOrderId, setOtoOrderId] = useState<string>("");
@@ -167,11 +168,83 @@ export default function PackageCheckoutPage() {
             {addresses.length === 0 ? (
               <p className="text-sm text-slate-600">أضف عنوانًا في حسابك لإتمام الطلب.</p>
             ) : (
-              <select value={addressId} onChange={(e) => setAddressId(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
-                {addresses.map((a) => (
-                  <option key={a.id} value={a.id}>{a.full_name} — {a.city} — {a.address || a.street}</option>
-                ))}
-              </select>
+              <>
+                {/* ملخص العنوان المحدد */}
+                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-slate-700 font-extrabold">
+                    التوصيل إلى:{" "}
+                    <span className="text-slate-900">
+                      {selectedAddress ? `${selectedAddress.city || ""} - ${selectedAddress.area || ""}` : "لم يتم اختيار عنوان"}
+                    </span>
+                  </p>
+
+                  {selectedAddress && (
+                    <div className="mt-2 text-sm text-slate-600 space-y-1">
+                      <p>{selectedAddress.details || selectedAddress.address || selectedAddress.street}</p>
+                      <p className="font-semibold">
+                        {selectedAddress.full_name}
+                        {selectedAddress.phone ? ` - ${selectedAddress.phone}` : ""}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddress((v) => !v)}
+                      className="text-pro font-extrabold underline underline-offset-4"
+                    >
+                      {showAddress ? "إخفاء العناوين" : "تغيير العنوان"}
+                    </button>
+
+                    {selectedAddress && (
+                      <span className="text-xs font-extrabold rounded-full bg-white border border-slate-200 px-3 py-1 text-slate-600">
+                        عنوان محدد
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* قائمة العناوين */}
+                {showAddress && (
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {addresses.map((address) => {
+                      const active = String(selectedAddress?.id) === String(address.id);
+                      return (
+                        <button
+                          key={address.id}
+                          type="button"
+                          onClick={() => setAddressId(String(address.id))}
+                          className={`text-right rounded-3xl border p-4 transition ${
+                            active ? "border-pro bg-blue-50" : "border-slate-200 bg-white hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-extrabold text-slate-900">{address.full_name}</p>
+                              <p className="text-sm text-slate-600 mt-1">
+                                {address.city} - {address.area}
+                              </p>
+                            </div>
+                            <span
+                              className={`text-xs font-extrabold rounded-full px-3 py-1 border ${
+                                active ? "bg-white border-pro text-pro" : "bg-slate-50 border-slate-200 text-slate-600"
+                              }`}
+                            >
+                              {active ? "محدد" : "اختر"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-600 mt-2">{address.details || address.address || address.street}</p>
+                          <div className="flex items-center justify-between">
+                            {address.phone && <p className="text-xs text-slate-500 mt-2">{address.phone}</p>}
+                            <p className="text-xs text-pro font-bold mt-2">حساب الشحن حسب المدينة</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
