@@ -241,7 +241,9 @@ export function OptionGroupSelector({
 
             {/* خدمة التصميم */}
             {(String(groupName).trim() === "خدمة تصميم" || String(groupName).trim() === "خدمة التصميم") &&
-             !!currentValue && currentValue !== "اختر" && (
+             !!currentValue && currentValue !== "اختر" &&
+             // لو العميل طلب خدمة تصميم مننا → مش محتاج يرفع ملف
+             !/طلب\s*(خدمة\s*)?تصميم/.test(String(currentValue)) && (
               <DesignServiceBox
                 productId={productId}
                 cartItemId={cartItemId}
