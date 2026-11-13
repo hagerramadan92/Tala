@@ -18,6 +18,8 @@ export default function PackageCheckoutPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [addressId, setAddressId] = useState<string>("");
   const [showAddress, setShowAddress] = useState(true);
+  // طريقة الاستلام: توصيل لشركة شحن أو استلام من الفرع (بدون شحن)
+  const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
   const [shipping, setShipping] = useState<any[]>([]);
   const [shippingSel, setShippingSel] = useState<any>(null);
   const [otoOrderId, setOtoOrderId] = useState<string>("");
@@ -88,13 +90,16 @@ export default function PackageCheckoutPage() {
   }, [token, selectedAddress]);
 
   const itemsTotal = Number(payload?.items_total || 0);
-  const shippingPrice = Number(shippingSel?.price ?? shippingSel?.deliveryFee ?? shippingSel?.total ?? 0);
+  const isPickup = deliveryType === "pickup";
+  const shippingPrice = isPickup
+    ? 0
+    : Number(shippingSel?.price ?? shippingSel?.deliveryFee ?? shippingSel?.total ?? 0);
   const total = itemsTotal + shippingPrice;
 
   const submit = async () => {
     if (!token || !payload) return;
-    if (!shippingSel) {
-      Swal.fire({ icon: "warning", title: "اختر شركة الشحن" });
+    if (!isPickup && !shippingSel) {
+      Swal.fire({ icon: "warning", title: "اختر شركة الشحن أو استلام من الفرع" });
       return;
     }
     try {
@@ -113,9 +118,11 @@ export default function PackageCheckoutPage() {
           customer_phone: (selectedAddress?.phone as string) || "",
           customer_email: (selectedAddress?.email as string) || "",
           shipping_price: shippingPrice,
-          delivery_option_name: shippingSel?.deliveryOptionName || shippingSel?.companyName || "",
-          delivery_option_id: String(shippingSel?.deliveryOptionId || ""),
-          oto_order_id: otoOrderId,
+          delivery_option_name: isPickup
+            ? "استلام من الفرع"
+            : shippingSel?.deliveryOptionName || shippingSel?.companyName || "",
+          delivery_option_id: isPickup ? "" : String(shippingSel?.deliveryOptionId || ""),
+          oto_order_id: isPickup ? "" : otoOrderId,
           payment_method: method,
         }),
       });
@@ -249,8 +256,32 @@ export default function PackageCheckoutPage() {
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5">
-            <h2 className="font-extrabold mb-3">شركة الشحن</h2>
-            {shipping.length === 0 ? (
+            <h2 className="font-extrabold mb-3">طريقة الاستلام</h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                onClick={() => setDeliveryType("delivery")}
+                className={`p-4 rounded-3xl border text-right transition ${deliveryType === "delivery" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+              >
+                <p className="font-extrabold text-slate-900">توصيل لشركة شحن</p>
+                <p className="text-xs text-slate-500 mt-1">يُحسب الشحن حسب المدينة والكمية</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeliveryType("pickup")}
+                className={`p-4 rounded-3xl border text-right transition ${isPickup ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+              >
+                <p className="font-extrabold text-slate-900">استلام من الفرع</p>
+                <p className="text-xs text-emerald-600 font-bold mt-1">بدون رسوم شحن</p>
+              </button>
+            </div>
+
+            {isPickup ? (
+              <div className="p-4 bg-emerald-50 rounded-3xl border border-emerald-100 text-sm text-emerald-800 font-bold">
+                هتستلم الطلب من فرع تالا الجزيرة — بدون رسوم شحن، وإجمالي الطلب = قيمة المنتجات فقط.
+              </div>
+            ) : shipping.length === 0 ? (
               <p className="text-sm text-slate-500">لا توجد خيارات شحن متاحة لهذا العنوان حاليًا.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -299,7 +330,7 @@ export default function PackageCheckoutPage() {
           <div className="flex justify-between text-sm py-1"><span>المنتجات</span><span>{itemsTotal.toFixed(2)}</span></div>
           <div className="flex justify-between text-sm py-1"><span>الشحن</span><span>{shippingPrice.toFixed(2)}</span></div>
           <div className="mt-2 border-t pt-2 flex justify-between font-black"><span>الإجمالي</span><span>{total.toFixed(2)} ريال</span></div>
-          <button onClick={submit} disabled={loading || !shippingSel} className="mt-4 w-full py-3 rounded-xl bg-pro text-white font-extrabold disabled:opacity-60">
+          <button onClick={submit} disabled={loading || (!isPickup && !shippingSel)} className="mt-4 w-full py-3 rounded-xl bg-pro text-white font-extrabold disabled:opacity-60">
             {loading ? "جارٍ إنشاء الطلب..." : "تأكيد الطلب"}
           </button>
         </div>
