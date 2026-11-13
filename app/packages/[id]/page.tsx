@@ -43,6 +43,11 @@ export default function PackageDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [orderLoading, setOrderLoading] = useState(false);
   const [quantities, setQuantities] = useState<Record<number, number>>({});
+  // المطلبات: تصميم
+  const [designType, setDesignType] = useState<"needs_design" | "has_design" | null>(null);
+  const [designFile, setDesignFile] = useState<string | null>(null);
+  const [designFileName, setDesignFileName] = useState<string>("");
+  const [uploadingDesign, setUploadingDesign] = useState(false);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -63,7 +68,7 @@ export default function PackageDetailsPage() {
       .finally(() => setLoading(false));
   }, [params?.id]);
 
-  const total = useMemo(() => {
+  const itemsTotal = useMemo(() => {
     if (!pkg) return 0;
     return (pkg.products || []).reduce((sum, p) => {
       const qty = Number(quantities[p.id] || 0);
@@ -72,12 +77,59 @@ export default function PackageDetailsPage() {
     }, 0);
   }, [pkg, quantities]);
 
+  const designPrice = Number((pkg as any)?.design_price || 0);
+  const designFee = designType === "needs_design" ? designPrice : 0;
+  const total = itemsTotal + designFee;
+
+  const uploadDesignFile = async (file: File) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      Swal.fire({ icon: "warning", title: "سجّل الدخول أولاً", text: "لازم تسجل دخول عشان ترفع ملف التصميم" }).then(() => router.push("/login"));
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      Swal.fire({ icon: "warning", title: "الملف لازم يكون PDF" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({ icon: "warning", title: "حجم الملف أكبر من 5 ميجا" });
+      return;
+    }
+    try {
+      setUploadingDesign(true);
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API_URL}/package-orders/design-upload`, {
+        method: "POST",
+        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok || data.status === false) throw new Error(data?.message || "تعذر رفع الملف");
+      setDesignFile(data.data?.path || null);
+      setDesignFileName(file.name);
+    } catch (e: any) {
+      Swal.fire({ icon: "error", title: "خطأ", text: e?.message || "تعذر رفع الملف" });
+    } finally {
+      setUploadingDesign(false);
+    }
+  };
+
   const submit = async () => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
       Swal.fire({ icon: "warning", title: "يجب تسجيل الدخول", text: "سجّل الدخول لإتمام طلب الباقة" }).then(() =>
         router.push("/login")
       );
+      return;
+    }
+
+    if (!designType) {
+      Swal.fire({ icon: "warning", title: "اختر المطلبات: لدي تصميم أو أحتاج تصميمات" });
+      return;
+    }
+    if (designType === "has_design" && !designFile) {
+      Swal.fire({ icon: "warning", title: "ارفع ملف التصميم (PDF) أولاً" });
       return;
     }
 
@@ -113,7 +165,10 @@ export default function PackageDetailsPage() {
           package_id: pkg?.id,
           package_name: pkg?.name,
           selections,
-          items_total: total,
+          items_total: itemsTotal,
+          design_type: designType,
+          design_file: designType === "has_design" ? designFile : null,
+          design_fee: designFee,
           created_at: new Date().toISOString(),
         })
       );
@@ -216,6 +271,62 @@ export default function PackageDetailsPage() {
           );
         })}
       </div>
+
+      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 md:p-6">
+        <h2 className="text-xl md:text-2xl font-black text-slate-900">المطلبات</h2>
+        <p className="mt-1 text-sm text-slate-500">اختر: عندك تصميم جاهز ولا محتاج تصميمات؟</p>
+
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setDesignType("needs_design")}
+            className={`p-4 rounded-2xl border text-right transition ${designType === "needs_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+          >
+            <p className="font-extrabold text-slate-900">أحتاج تصميمات</p>
+            {designPrice > 0 ? (
+              <p className="text-xs font-bold text-amber-700 mt-1">+ {designPrice.toFixed(2)} ريال</p>
+            ) : (
+              <p className="text-xs text-slate-500 mt-1">حسب إعدادات الباقة</p>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDesignType("has_design")}
+            className={`p-4 rounded-2xl border text-right transition ${designType === "has_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+          >
+            <p className="font-extrabold text-slate-900">لدي تصميم</p>
+            <p className="text-xs text-slate-500 mt-1">ارفع ملف PDF</p>
+          </button>
+        </div>
+
+        {designType === "has_design" && (
+          <div className="mt-4">
+            <label className="flex flex-col items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-6 text-center cursor-pointer hover:border-pro transition">
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadDesignFile(f);
+                }}
+              />
+              <span className="text-2xl">📄</span>
+              <span className="text-sm font-extrabold text-slate-800">
+                {uploadingDesign ? "جارٍ رفع الملف..." : designFileName || "اختر ملف التصميم (PDF)"}
+              </span>
+              <span className="text-[11px] text-slate-500">PDF فقط — بحد أقصى 5 ميجا</span>
+            </label>
+
+            {designFile && <p className="mt-2 text-xs font-bold text-emerald-600">✅ تم رفع الملف</p>}
+
+            <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs font-bold text-amber-800">
+              يرجى التأكد من وجود كافة التصاميم في الملف المرفق
+            </div>
+          </div>
+        )}
+      </section>
 
       <div className={styles.checkout}>
         <div className={styles.grandTotal}><span>الإجمالي</span><strong>{total.toFixed(2)} <small>ريال</small></strong></div>

@@ -38,7 +38,15 @@ export default function PackageCheckoutPage() {
     setToken(localStorage.getItem("auth_token"));
     try {
       const raw = sessionStorage.getItem("package_checkout_v1");
-      if (raw) setPayload(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setPayload(parsed);
+        if (parsed?.design_type) setDesignType(parsed.design_type);
+        if (parsed?.design_file) {
+          setDesignFile(parsed.design_file);
+          setDesignFileName("ملف التصميم المرفوع");
+        }
+      }
     } catch {}
     setHydrated(true);
   }, []);
@@ -311,6 +319,13 @@ export default function PackageCheckoutPage() {
             )}
           </div>
 
+          {payload?.design_type && (
+            <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">
+              المطلبات: {payload.design_type === "needs_design" ? "أحتاج تصميمات" : "لدي تصميم مرفوع"} ✅
+            </div>
+          )}
+
+          {!payload?.design_type && (
           <div className="rounded-3xl border border-slate-200 bg-white p-5">
             <h2 className="font-extrabold mb-1">المطلبات</h2>
             <p className="text-xs text-slate-500 mb-3">اختر: عندك تصميم جاهز ولا محتاج تصميمات؟</p>
@@ -368,6 +383,8 @@ export default function PackageCheckoutPage() {
               </div>
             )}
           </div>
+
+          )}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5">
             <h2 className="font-extrabold mb-3">طريقة الاستلام</h2>
