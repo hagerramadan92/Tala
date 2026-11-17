@@ -495,43 +495,26 @@ export default function Footer() {
               <div className="pt-4">
                 <p className="text-sm font-extrabold">بيانات قانونية</p>
 
-                <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm ring-1 ring-white/10">
-                  <span className="text-white/80">الرقم الضريبي:</span>
-                  <span className="font-extrabold tabular-nums">{String(taxNumber)}</span>
+                <div className="mt-3 inline-flex items-center gap-4 md:gap-5 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5">
+                  <img
+                    src="/images/saudi-emblem.svg"
+                    alt="شعار المملكة العربية السعودية"
+                    className="w-9 h-11 md:w-10 md:h-12 object-contain shrink-0"
+                    loading="lazy"
+                  />
 
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard?.writeText(String(taxNumber))}
-                    className="ms-2 rounded-lg bg-white/10 px-2 py-1 text-xs hover:bg-white/15 transition"
-                  >
-                    نسخ
-                  </button>
+                  <div className="text-center">
+                    <p className="text-[11px] md:text-xs text-slate-500 font-bold">السجل التجاري</p>
+                    <p className="mt-0.5 text-sm md:text-base font-extrabold text-slate-900 tabular-nums">7002362528</p>
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-[11px] md:text-xs text-slate-500 font-bold">الرقم الضريبي</p>
+                    <p className="mt-0.5 text-sm md:text-base font-extrabold text-slate-900 tabular-nums">433334345</p>
+                  </div>
+
+
                 </div>
-
-                                <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm ring-1 ring-white/10">
-                  <span className="text-white/80"> السجل التجاري:</span>
-                  <span className="font-extrabold tabular-nums">{String(7002362528)}</span>
-
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard?.writeText(String(7002362528))}
-                    className="ms-2 rounded-lg bg-white/10 px-2 py-1 text-xs hover:bg-white/15 transition"
-                  >
-                    نسخ
-                  </button>
-                </div>
-
-                {/* SBC جنب السجل التجاري */}
-                <a
-                  href={paymentLinksMap["SBC"] || "https://qr.saudibusiness.gov.sa/viewcr?nCrNumber=khRFqz0XWeB9RSyhLP7KdQ=="}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="تحقق من السجل التجاري عبر SBC"
-                  className="mt-2 ms-2 inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-3 text-sm ring-1 ring-white/10 hover:bg-white/15 transition align-middle"
-                >
-                  <img src="/images/sbc.png" alt="SBC" className="h-5 w-8 object-contain" />
-                  <span className="font-extrabold text-xs">SBC</span>
-                </a>
               </div>
             )}
           </div>
