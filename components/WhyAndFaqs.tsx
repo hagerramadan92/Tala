@@ -125,25 +125,6 @@ export default function WhyAndFaqs() {
 		}
 	};
 
-	// ✅ Why Tala (highlights)
-	const whyTala = useMemo(
-		() => [
-			{
-				title: "إرث مهني",
-				desc: "منذ انطالقتنا، تراكمت خبراتنا لتصبح الركيزة الأساسية التي نعتمد عليها في فهم احتياجاتكم فنحن لا نقدم مجرد خدمات بل نضع بين ايديكم حصيلة خبرتنا و المعرفة العميقه بمتطلبات السوق .",
-			},
-			{
-				title: "جودة راسخة",
-				desc: " نؤمن بأن الجودة ليست مجرد شعار، بل هي التزام يبدأ من انتقاء افضل المواد وصولا الي ادق تفاصيل التنفيذ  و نحرص علي تقديم معايير استثنائية تضمن لكم القيمة المستدامة التي تليق بكم .",
-			},
-			{
-				title: "رعاية دائمة",
-				desc: "ألنكم أولوية لنا، صممنا منظومة خدمة متكاملة تهدف إلى جعل رحلتكم معنا ميسرة ز ممتعة حيث نرافقكم بأهتمام بالغ في كل خطوة لنضمن لكم تجربة شراء سلسةو تواصلا فعالا يلبي تطلعاتكم .",
-			},
-		],
-		[]
-	);
-
 	const Stars = ({ value }: { value: number }) => {
 		const full = Math.max(0, Math.min(5, value));
 		return (
@@ -166,21 +147,21 @@ export default function WhyAndFaqs() {
 		<div className="flex flex-col gap-6 md:gap-8">
 			{/* ✅ Why Tala */}
 			<section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-[#14213d] via-[#1e293b] to-[#0f172a] text-white shadow-xs overflow-hidden">
-				<div className="p-5 md:p-8">
-					<div className="flex items-end justify-between gap-4 flex-wrap">
+				<div className="p-6 md:p-10">
+					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 md:gap-8">
 						<div>
 							<div className="flex items-center gap-2">
-								<h2 className="text-lg md:text-2xl font-extrabold text-white">
+								<h2 className="text-xl md:text-3xl font-black text-white">
 									لماذا تالا؟
 								</h2>
 								<span className="h-1.5 w-6 rounded-full bg-pro" />
 							</div>
-							<p className="mt-1.5 text-white/85 text-xs md:text-sm max-w-2xl">
+							<p className="mt-2 text-white/85 text-sm md:text-base leading-relaxed max-w-3xl">
 								بخبرة ممتدة لعقدان من التميز جعلتنا نعتني بأدق التفاصيل اللتي تهمكم و نبتكر لكم تجربة شراء استثنائية تليق بكم.
 							</p>
 						</div>
 
-						<div className="flex gap-2">
+						<div className="flex gap-2 md:gap-3 shrink-0">
 							<Link
 								href="/category"
 								className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-xs md:text-sm font-extrabold bg-pro text-white hover:bg-pro-hover transition shadow-xs"
@@ -196,29 +177,13 @@ export default function WhyAndFaqs() {
 						</div>
 					</div>
 
-					<div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-						{whyTala.map((x, idx) => (
-							<div
-								key={idx}
-								className="rounded-xl border border-white/15 bg-white/[0.07] backdrop-blur-sm p-4 md:p-5 hover:border-pro/50 transition duration-200"
-							>
-								<div className="text-xs font-extrabold text-pro">
-									0{idx + 1}
-								</div>
-								<h3 className="mt-1.5 text-base font-extrabold text-white">{x.title}</h3>
-								<p className="mt-1.5 text-xs md:text-sm text-white/80 leading-relaxed">
-									{x.desc}
-								</p>
-							</div>
-						))}
-					</div>
 				</div>
 			</section>
 
 			{/* ✅ FAQS */}
 			<section className="rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
-				<div className="p-5 md:p-8">
-					<div className="flex items-end justify-between gap-4 flex-wrap">
+				<div className="p-6 md:p-10">
+					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 md:gap-8">
 						<div>
 							<div className="flex items-center gap-2">
 								<h2 className="text-lg md:text-2xl font-extrabold text-slate-900">
