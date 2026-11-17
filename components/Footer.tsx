@@ -571,12 +571,13 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* copyright */}
-        <p className="text-center text-white/70 text-sm pb-4">Ⓒ جميع الحقوق محفوظة {year}</p>
+        {/* أسفل الفوتر: الحقوق + طرق الدفع في سطر واحد على الديسكتوب */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-t border-white/10 pt-5 pb-8">
+        <p className="text-center md:text-right text-white/70 text-sm">Ⓒ جميع الحقوق محفوظة {year}</p>
 
         {/* طرق الدفع — في النهاية تحت */}
         {activePayments.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 pb-8">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 md:gap-2">
             {activePayments.map((p) => {
               const link = paymentLinksMap[p.name];
               const El: any = link ? "a" : "div";
@@ -600,7 +601,7 @@ export default function Footer() {
             })}
           </div>
         )}
-
+        </div>
 
       </div>
     </footer>
