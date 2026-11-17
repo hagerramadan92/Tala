@@ -490,35 +490,6 @@ export default function Footer() {
         <div className="grid max-md:w-fit max-md:mx-auto grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 py-8">
           {/* payments */}
           <div className="space-y-2 lg:col-span-3">
-            {activePayments.length === 0 ? (
-              <span className="text-white/70 text-sm">طرق الدفع غير متاحة حالياً</span>
-            ) : (
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
-                {activePayments.map((p) => {
-                  const link = paymentLinksMap[p.name];
-                  const El: any = link ? "a" : "div";
-                  // نفضّل صور الموقع المحلية (أضمن) ثم صورة الطريقة من الداشبورد
-                  const src = getPaymentImagePath(p.name) || p.image || (typeof p.icon === "string" ? p.icon : "");
-                  const PaymentIcon = getPaymentIcon(p.image || p.icon, p.name);
-
-                  return (
-                    <El
-                      key={p.id}
-                      {...(link ? { href: link, target: "_blank", rel: "noreferrer" } : {})}
-                      title={p.name}
-                      className="flex h-11 w-[86px] md:h-14 md:w-[104px] items-center justify-center rounded-xl md:rounded-2xl bg-white px-2.5 py-2 shadow-sm ring-1 ring-black/5 hover:shadow-md transition"
-                    >
-                      {src ? (
-                        <img src={src} alt={p.name} className="h-6 md:h-8 w-auto max-w-full object-contain" loading="lazy" />
-                      ) : (
-                        <PaymentIcon className="text-xl md:text-2xl text-slate-700" />
-                      )}
-                    </El>
-                  );
-                })}
-              </div>
-            )}
-
             {/* ✅ tax number panel (NOT social) */}
             {!isEmptyValue(taxNumber) && (
               <div className="pt-4">
@@ -601,7 +572,36 @@ export default function Footer() {
         </div>
 
         {/* copyright */}
-        <p className="text-center text-white/70 text-sm pb-10">Ⓒ جميع الحقوق محفوظة {year}</p>
+        <p className="text-center text-white/70 text-sm pb-4">Ⓒ جميع الحقوق محفوظة {year}</p>
+
+        {/* طرق الدفع — في النهاية تحت */}
+        {activePayments.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 pb-8">
+            {activePayments.map((p) => {
+              const link = paymentLinksMap[p.name];
+              const El: any = link ? "a" : "div";
+              const src = getPaymentImagePath(p.name) || p.image || (typeof p.icon === "string" ? p.icon : "");
+              const PaymentIcon = getPaymentIcon(p.image || p.icon, p.name);
+
+              return (
+                <El
+                  key={p.id}
+                  {...(link ? { href: link, target: "_blank", rel: "noreferrer" } : {})}
+                  title={p.name}
+                  className="flex h-8 w-[58px] md:h-9 md:w-[66px] items-center justify-center rounded-lg bg-white px-1.5 py-1 shadow-sm ring-1 ring-black/5 hover:shadow-md transition"
+                >
+                  {src ? (
+                    <img src={src} alt={p.name} className="h-4 md:h-5 w-auto max-w-full object-contain" loading="lazy" />
+                  ) : (
+                    <PaymentIcon className="text-sm md:text-base text-slate-700" />
+                  )}
+                </El>
+              );
+            })}
+          </div>
+        )}
+
+
       </div>
     </footer>
   );
