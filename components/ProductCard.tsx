@@ -333,6 +333,29 @@ export default function ProductCard({
 
 					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} reviewCount={total_reviews} />
 
+					{/* أضف للسلة */}
+					<button
+						type="button"
+						onClick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							handleAddToCart();
+						}}
+						disabled={isAdding || !inStock}
+						className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-[12px] md:text-[13px] font-extrabold transition ${
+							inStock
+								? "bg-pro text-white hover:bg-pro-hover active:scale-[0.99]"
+								: "bg-gray-100 text-gray-400 cursor-not-allowed"
+						}`}
+					>
+						{isAdding ? (
+							<span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+						) : (
+							<BsCart3 className="w-4 h-4" />
+						)}
+						{inStock ? "أضف للسلة" : "غير متوفر"}
+					</button>
+
 					{/* Divider */}
 					<div className="h-px bg-gray-200/70" />
 
