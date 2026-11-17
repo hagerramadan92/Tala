@@ -529,6 +529,8 @@ export default function Footer() {
               ) : (
                 socialButtons.map((social, idx) => {
                   const socialKey = normalizeSocialKey(social.key);
+                  // واتساب مش بيتعرض في أيقونات "تابعنا"
+                  if (socialKey === "whatsapp") return null;
                   const Icon = socialIcons[socialKey];
                   if (!Icon) return null;
 
