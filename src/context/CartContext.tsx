@@ -333,13 +333,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 		);
 
 		try {
-			await fetch(`${cartBase()}/items/${cartItemId}`, {
+			const res = await fetch(`${cartBase()}/items/${cartItemId}`, {
 				method: "DELETE",
-				headers: {
-					Authorization: `Bearer ${token}`,
-					Accept: "application/json",
-				},
+				headers: cartHeaders(),
 			});
+
+			if (!res.ok) {
+				await refreshCart();
+				toast.error("فشل الحذف");
+				return;
+			}
 			toast.success("تم الحذف من السلة");
 		} catch (err) {
 			await refreshCart();
@@ -348,7 +351,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const updateQuantity = async (cartItemId: number, quantity: number) => {
-		if (!token || quantity < 1) return;
+		if (quantity < 1) return;
 
 		if (quantity > 1000) {
 			toast.error("الحد الأقصى 1000 قطع فقط لهذا المنتج", { duration: 4000 });
