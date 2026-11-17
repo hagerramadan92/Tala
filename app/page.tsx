@@ -12,7 +12,7 @@ export default async function Home() {
 	try {
 		const [sliderData, homeData] = await Promise.all([
 			fetchApi("banners?type=main_slider").catch(() => []),
-			fetchApi("home?categories_limit=4&products_limit=4").catch(() => null),
+			fetchApi("home?categories_limit=50&products_limit=8").catch(() => null),
 		]);
 
 		initialMainSlider = Array.isArray(sliderData) ? sliderData : [];

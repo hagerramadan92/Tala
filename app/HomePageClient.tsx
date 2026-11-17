@@ -153,7 +153,7 @@ export default function HomePageClient({
 		const getHomeData = async () => {
 			setLoadingHome(true);
 			try {
-				const res = await fetchApi("home?categories_limit=50&products_limit=4");
+				const res = await fetchApi("home?categories_limit=50&products_limit=8");
 				const sub_categories =
 					res?.data?.sub_categories ?? res?.sub_categories ?? [];
 				const pagination =
@@ -383,7 +383,7 @@ export default function HomePageClient({
 
 							const categoryBanner = getCategoryBanner(category);
 							// نعرض أول 4 منتجات مختارة من الداشبورد لكل قسم رئيسي
-							const displayProducts = category.products.slice(0, 4);
+							const displayProducts = category.products.slice(0, 8);
 
 							return (
 								<section
@@ -421,31 +421,25 @@ export default function HomePageClient({
 										<div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent group-hover:opacity-75 transition-opacity" />
 									</Link>
 
-									{/* Products Slider */}
-									<div>
-										<InStockSlider
-											inStock={displayProducts}
-											isLoading={false}
-											title=""
-											hiddenArrow={false}
-											CardComponent={(product: any) => (
-												<ProductCard
-													{...product}
-													product={product}
-													key={product.id}
-													id={product.id}
-													name={product.name}
-													image={product.image || "/images/not.jpg"}
-													stock={product.stock}
-													average_rating={product.average_rating}
-													reviews={product.reviews}
-													className="hidden"
-													className2="hidden"
-													classNameHome=""
-													Bottom="bottom-3"
-												/>
-											)}
-										/>
+									{/* شبكة المنتجات: 8 منتجات لكل قسم */}
+									<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+										{displayProducts.map((product: any) => (
+											<ProductCard
+												{...product}
+												product={product}
+												key={product.id}
+												id={product.id}
+												name={product.name}
+												image={product.image || "/images/not.jpg"}
+												stock={product.stock}
+												average_rating={product.average_rating}
+												reviews={product.reviews}
+												className="hidden"
+												className2="hidden"
+												classNameHome=""
+												Bottom="bottom-3"
+											/>
+										))}
 									</div>
 								</section>
 							);
