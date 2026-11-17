@@ -63,7 +63,7 @@ export default function WhyAndFaqs() {
 	const [testimonialsError, setTestimonialsError] = useState<string | null>(null);
 
 	// ✅ Accordion state
-	const [openFaq, setOpenFaq] = useState<number | null>(0);
+	const [openFaq, setOpenFaq] = useState<number | null>(null);
 
 	// ✅ جلب البيانات عند تحميل المكون
 	useEffect(() => {
