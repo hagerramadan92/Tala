@@ -9,6 +9,7 @@ interface BottomBarProps {
   showMissingBadge: boolean;
   uploadingDesign: boolean;
   onAddToCart: () => void;
+  onBuyNow?: () => void;
 }
 
 export function BottomBar({ 
@@ -16,7 +17,8 @@ export function BottomBar({
   displayTotal, 
   showMissingBadge, 
   uploadingDesign, 
-  onAddToCart 
+  onAddToCart,
+  onBuyNow,
 }: BottomBarProps) {
   
   // ✅ إضافة useEffect لتتبع التغييرات
@@ -88,12 +90,29 @@ export function BottomBar({
                   </div>
                 </div>
 
-                <div className="min-w-[170px]">
-                  <ButtonComponent
-                    className="scale-[.8]"
-                    title={getButtonTitle()}
-                    onClick={onAddToCart}
-                  />
+                <div className="flex items-center gap-2 shrink-0">
+                  {onBuyNow && (
+                    <button
+                      type="button"
+                      onClick={onBuyNow}
+                      disabled={showMissingBadge || uploadingDesign}
+                      className={`h-11 md:h-12 px-4 md:px-5 rounded-xl text-[13px] md:text-sm font-extrabold transition ${
+                        showMissingBadge || uploadingDesign
+                          ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                          : "bg-pro text-white hover:opacity-95 active:scale-[0.98]"
+                      }`}
+                    >
+                      اشترِ الآن
+                    </button>
+                  )}
+
+                  <div className="min-w-[150px] md:min-w-[170px]">
+                    <ButtonComponent
+                      className="scale-[.8]"
+                      title={getButtonTitle()}
+                      onClick={onAddToCart}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

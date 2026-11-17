@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
@@ -40,6 +40,7 @@ const fadeUp: any = {
 };
 
 export default function ProductPageClient() {
+  const router = useRouter();
   const { id } = useParams();
   const productId = id as string;
 
@@ -407,7 +408,14 @@ export default function ProductPageClient() {
     apiData?.delivery_time,
   ]);
 
-  const handleAddToCart = async () => {
+  const handleBuyNow = async () => {
+    const ok = await handleAddToCart();
+    if (ok) {
+      router.push("/payment");
+    }
+  };
+
+  const handleAddToCart = async (): Promise<boolean> => {
     setShowValidation(true);
 
     const opts = await getSelectedOptions();
@@ -419,14 +427,15 @@ export default function ProductPageClient() {
 
     if (!validation.isValid && hasOptions) {
       toast.error(`يرجى اختيار: ${validation.missingOptions.join("، ")}`);
-      return;
+      return false;
     }
 
-    if (!token) return toast.error("يجب تسجيل الدخول أولاً");
-    if (!API_URL) return toast.error("API غير متوفر");
+    if (!token && designFile) { toast.error("سجّل الدخول أولاً لرفع ملف التصميم"); return false; }
+    if (!API_URL) { toast.error("API غير متوفر"); return false; }
 
     if (!product || !product.id) {
-      return toast.error("بيانات المنتج غير متوفرة");
+      toast.error("بيانات المنتج غير متوفرة");
+      return false;
     }
 
     const selected_options = buildSelectedOptionsWithPrice(apiData, opts);
@@ -489,9 +498,11 @@ export default function ProductPageClient() {
 
       setShowValidation(false);
       toast.success("تمت الإضافة إلى السلة ✅");
+      return true;
     } catch (e: any) {
       console.error("❌ Error adding to cart:", e);
       toast.error(e?.message || "حدث خطأ أثناء إضافة المنتج للسلة");
+      return false;
     }
   };
 
@@ -797,6 +808,7 @@ export default function ProductPageClient() {
         showMissingBadge={showMissingBadge}
         uploadingDesign={uploadingDesign}
         onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
       />
 
       <div className="h-16" />

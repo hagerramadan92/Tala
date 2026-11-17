@@ -125,7 +125,7 @@ export default function SpecialOrderButton() {
 					"bg-[#0C182A] border-2 border-[#F39200] text-white",
 					// Responsive bottom: match WhatsApp button on product page
 					"bottom-5",
-					isProductPage ? "max-sm:bottom-[200px] !left-3" : "",
+					isProductPage ? "hidden" : "",
 				].join(" ")}
 			>
 				{/* Magic Wand Icon in Orange Circle */}
