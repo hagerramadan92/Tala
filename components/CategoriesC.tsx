@@ -30,7 +30,7 @@ function cn(...c: (string | false | undefined | null)[]) {
 export default function CategoriesSlider({
 	categories,
 	inSlide,
-	title = "الأقسام",
+	title = "الأقسام الرئيسية",
 	subtitle = "اختر القسم اللي يناسبك",
 	 onCategoryClick,
 	layout = "slider",
