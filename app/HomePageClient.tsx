@@ -294,9 +294,9 @@ export default function HomePageClient({
 						<Link href="/stationery" className="md:hidden relative z-10 flex items-center gap-3 p-4">
 							<div className="w-12 h-12 rounded-xl bg-white/10 grid place-items-center text-2xl shrink-0">🖨️</div>
 							<div className="flex-1 min-w-0 text-right">
-								<div className="flex items-center gap-1.5 flex-wrap justify-end">
-									<span className="bg-white text-[#0f172a] text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+								<div className="flex items-center gap-1.5 flex-wrap">
 									<span className="font-extrabold text-[15px]">خدمات القرطاسية والطباعة</span>
+									<span className="bg-white text-[#0f172a] text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
 								</div>
 								<p className="text-[11px] text-white/85 mt-0.5">طباعة مستندات وصور بجميع المقاسات</p>
 							</div>
@@ -338,9 +338,9 @@ export default function HomePageClient({
 							<div className="md:hidden relative z-10 flex items-center gap-3 p-4">
 								<div className="w-12 h-12 rounded-xl bg-white/15 grid place-items-center text-2xl shrink-0">🎁</div>
 								<div className="flex-1 min-w-0 text-right">
-									<div className="flex items-center gap-1.5 flex-wrap justify-end">
-										<span className="bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+									<div className="flex items-center gap-1.5 flex-wrap">
 										<span className="font-extrabold text-[15px]">بكجات</span>
+										<span className="bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
 									</div>
 									<p className="text-[11px] text-white/85 mt-0.5">بكجات من أفضل المنتجات بأسعار جاهزة</p>
 								</div>
