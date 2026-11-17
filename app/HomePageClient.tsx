@@ -153,7 +153,7 @@ export default function HomePageClient({
 		const getHomeData = async () => {
 			setLoadingHome(true);
 			try {
-				const res = await fetchApi("home?categories_limit=4&products_limit=4");
+				const res = await fetchApi("home?categories_limit=50&products_limit=4");
 				const sub_categories =
 					res?.data?.sub_categories ?? res?.sub_categories ?? [];
 				const pagination =
@@ -452,20 +452,6 @@ export default function HomePageClient({
 						})
 					)}
 				</div>
-
-				{/* Load More Button */}
-				{hasNext && !loadingHome && (
-					<div className="my-2 flex items-center justify-center">
-						<button
-							type="button"
-							onClick={loadMore}
-							disabled={loadingMore}
-							className="rounded-xl px-6 py-2.5 text-sm md:text-base font-extrabold border border-pro bg-white text-pro hover:bg-pro hover:text-white disabled:opacity-60 disabled:cursor-not-allowed transition duration-200"
-						>
-							{loadingMore ? "جاري تحميل المزيد..." : "تحميل المزيد"}
-						</button>
-					</div>
-				)}
 
 				<WhyAndFaqs />
 			</div>
