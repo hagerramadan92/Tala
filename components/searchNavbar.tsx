@@ -120,8 +120,8 @@ export default function SearchNavbar() {
 						{/* Loyalty points */}
 						{fullName && <HeaderPoints />}
 
-						{/* Cart */}
-						<div className={`cursor-pointer ${!fullName && "hidden"}`}>
+						{/* Cart — ظاهر للزوار وللمسجلين */}
+						<div className="cursor-pointer">
 							<CartSidebar />
 						</div>
 
