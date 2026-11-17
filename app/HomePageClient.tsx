@@ -291,13 +291,13 @@ export default function HomePageClient({
 						<div className="absolute -left-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
 						{/* موبايل: شريط مضغوط زي السايد بار */}
-						<Link href="/stationery" className="md:hidden relative z-10 flex items-center gap-3 p-4">
-							<div className="w-12 h-12 rounded-xl bg-white/10 grid place-items-center text-2xl shrink-0">🖨️</div>
+						<Link href="/stationery" className="md:hidden relative z-10 flex items-center gap-2.5 p-3 min-[380px]:gap-3 min-[380px]:p-4">
+							<div className="w-11 h-11 min-[380px]:w-12 min-[380px]:h-12 rounded-xl bg-white/10 grid place-items-center text-xl min-[380px]:text-2xl shrink-0">🖨️</div>
 							<div className="flex-1 min-w-0 text-right">
-								<div className="flex items-center gap-1.5 flex-wrap">
-									<span className="font-extrabold text-[15px]">خدمات القرطاسية والطباعة</span>
-									<span className="bg-white text-[#0f172a] text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
-								</div>
+								<p className="font-extrabold text-[13px] min-[380px]:text-[14px] md:text-[15px] leading-snug">
+									خدمات القرطاسية والطباعة{" "}
+									<span className="inline-block align-middle bg-white text-[#0f172a] text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+								</p>
 								<p className="text-[11px] text-white/85 mt-0.5">طباعة مستندات وصور بجميع المقاسات</p>
 							</div>
 							<span className="text-xl shrink-0">←</span>
@@ -335,13 +335,13 @@ export default function HomePageClient({
 							<div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
 							{/* موبايل: شريط مضغوط زي السايد بار */}
-							<div className="md:hidden relative z-10 flex items-center gap-3 p-4">
-								<div className="w-12 h-12 rounded-xl bg-white/15 grid place-items-center text-2xl shrink-0">🎁</div>
+							<div className="md:hidden relative z-10 flex items-center gap-2.5 p-3 min-[380px]:gap-3 min-[380px]:p-4">
+								<div className="w-11 h-11 min-[380px]:w-12 min-[380px]:h-12 rounded-xl bg-white/15 grid place-items-center text-xl min-[380px]:text-2xl shrink-0">🎁</div>
 								<div className="flex-1 min-w-0 text-right">
-									<div className="flex items-center gap-1.5 flex-wrap">
-										<span className="font-extrabold text-[15px]">بكجات</span>
-										<span className="bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
-									</div>
+									<p className="font-extrabold text-[13px] min-[380px]:text-[14px] md:text-[15px] leading-snug">
+										بكجات{" "}
+										<span className="inline-block align-middle bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+									</p>
 									<p className="text-[11px] text-white/85 mt-0.5">بكجات من أفضل المنتجات بأسعار جاهزة</p>
 								</div>
 								<span className="text-xl shrink-0">←</span>
