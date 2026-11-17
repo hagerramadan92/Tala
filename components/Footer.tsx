@@ -497,9 +497,9 @@ export default function Footer() {
 
                 <div className="mt-3 inline-flex items-center gap-4 md:gap-5 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5">
                   <img
-                    src="/images/saudi-emblem.svg"
+                    src="/images/saudi-emblem.png"
                     alt="شعار المملكة العربية السعودية"
-                    className="w-9 h-11 md:w-10 md:h-12 object-contain shrink-0"
+                    className="w-10 h-10 md:w-11 md:h-11 object-contain shrink-0"
                     loading="lazy"
                   />
 
