@@ -399,12 +399,38 @@ export default function HomePageClient({
 											</h2>
 										</div>
 
-										<Link
-											href={`/category/${category.slug || category.id}`}
-											className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1"
-										>
-											الكل <span>←</span>
-										</Link>
+										<div className="flex items-center gap-2">
+											<Link
+												href={`/category/${category.slug || category.id}`}
+												className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1"
+											>
+												الكل <span>←</span>
+											</Link>
+
+											{/* أسهم تقليب منتجات القسم */}
+											<button
+												type="button"
+												aria-label="التالي"
+												onClick={(e) => {
+													const btns = e.currentTarget.closest("section")?.querySelectorAll<HTMLButtonElement>('button[aria-label="التالي"]');
+													btns?.[btns.length - 1]?.click();
+												}}
+												className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
+											>
+												‹
+											</button>
+											<button
+												type="button"
+												aria-label="السابق"
+												onClick={(e) => {
+													const btns = e.currentTarget.closest("section")?.querySelectorAll<HTMLButtonElement>('button[aria-label="السابق"]');
+													btns?.[btns.length - 1]?.click();
+												}}
+												className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
+											>
+												›
+											</button>
+										</div>
 									</div>
 
 									{/* Category Banner */}
@@ -421,25 +447,31 @@ export default function HomePageClient({
 										<div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent group-hover:opacity-75 transition-opacity" />
 									</Link>
 
-									{/* شبكة المنتجات: 8 منتجات لكل قسم */}
-									<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-										{displayProducts.map((product: any) => (
-											<ProductCard
-												{...product}
-												product={product}
-												key={product.id}
-												id={product.id}
-												name={product.name}
-												image={product.image || "/images/not.jpg"}
-												stock={product.stock}
-												average_rating={product.average_rating}
-												reviews={product.reviews}
-												className="hidden"
-												className2="hidden"
-												classNameHome=""
-												Bottom="bottom-3"
-											/>
-										))}
+									{/* سلايدر المنتجات مع أسهم للتقليب — 8 منتجات لكل قسم */}
+									<div>
+										<InStockSlider
+											inStock={displayProducts}
+											isLoading={false}
+											title=""
+											hiddenArrow={true}
+											CardComponent={(product: any) => (
+												<ProductCard
+													{...product}
+													product={product}
+													key={product.id}
+													id={product.id}
+													name={product.name}
+													image={product.image || "/images/not.jpg"}
+													stock={product.stock}
+													average_rating={product.average_rating}
+													reviews={product.reviews}
+													className="hidden"
+													className2="hidden"
+													classNameHome=""
+													Bottom="bottom-3"
+												/>
+											)}
+										/>
 									</div>
 								</section>
 							);
