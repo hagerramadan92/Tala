@@ -20,8 +20,10 @@ const fieldBad = "border-rose-300 focus:border-rose-500 focus:ring-rose-100";
 
 export default function PhoneOtpAuthForm({
   mode = "login",
+  onSuccess,
 }: {
   mode?: "login" | "signup";
+  onSuccess?: (data: any) => void;
 }) {
   const router = useRouter();
   const { login: loginContext } = useAuth();
@@ -61,6 +63,12 @@ export default function PhoneOtpAuthForm({
     }
 
     loginContext(token, user.name, user.email, user.image, user.name);
+
+    // داخل بوب اب (مثلاً عند إتمام الطلب): نكمل من غير تحويل لصفحة تانية
+    if (onSuccess) {
+      onSuccess(data);
+      return;
+    }
 
     const isNewUser = Boolean(data?.data?.is_new_user);
 

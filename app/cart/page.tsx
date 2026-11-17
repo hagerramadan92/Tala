@@ -19,6 +19,7 @@ import {
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import { useCart } from "@/src/context/CartContext";
+import LoginModal from "@/components/LoginModal";
 import CoBon from "@/components/cobon";
 import Button from "@mui/material/Button";
 import CartSkeleton from "@/components/skeletons/CartSkeleton";
@@ -635,6 +636,7 @@ export default function CartPage() {
     subtotal,
     total,
   } = useCart();
+  const [loginOpen, setLoginOpen] = useState(false);
   const [code, setCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
   const [couponNewTotal, setCouponNewTotal] = useState<number | null>(null);
@@ -893,6 +895,13 @@ export default function CartPage() {
     }
 
     // ✅ ensure saved before leaving
+    const authToken = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (!authToken) {
+      persistCheckoutSummary();
+      setLoginOpen(true);
+      return;
+    }
+
     persistCheckoutSummary();
     router.push("/payment");
   };
@@ -924,6 +933,14 @@ export default function CartPage() {
 
   return (
     <div className="container pb-8 !pt-5" dir="rtl">
+      <LoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSuccess={() => {
+          setLoginOpen(false);
+          router.push("/payment");
+        }}
+      />
       <div className="flex items-center gap-2 text-sm mb-2">
         <Link
           href="/"

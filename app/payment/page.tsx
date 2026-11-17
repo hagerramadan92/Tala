@@ -33,6 +33,7 @@ import Button from "@mui/material/Button";
 import { useRouter } from "next/navigation";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import Swal from "sweetalert2";
+import LoginModal from "@/components/LoginModal";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { useAppContext } from "../../src/context/AppContext";
 import LoadingOverlay from "../../components/LoadingOverlay";
@@ -301,6 +302,7 @@ export default function PaymentPage() {
 	// 🚚 Shipping states
 	const [shippingOptions, setShippingOptions] = useState<any[]>([]);
 	const [selectedShipping, setSelectedShipping] = useState<any>(null);
+	const [loginOpen, setLoginOpen] = useState(false);
 	// توصيل لشركة شحن أو استلام من الفرع (بدون شحن)
 	const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
 	const [otoOrderId, setOtoOrderId] = useState<string | null>(null);
@@ -403,8 +405,7 @@ export default function PaymentPage() {
 		setToken(t);
 
 		if (!t) {
-			Swal.fire("تنبيه", "يرجى تسجيل الدخول لإتمام الدفع", "warning");
-			router.push("/login");
+			setLoginOpen(true);
 		}
 	}, [router]);
 
@@ -643,8 +644,7 @@ export default function PaymentPage() {
 		}
 
 		if (!token) {
-			Swal.fire("تنبيه", "يرجى تسجيل الدخول", "warning");
-			router.push("/login");
+			setLoginOpen(true);
 			return;
 		}
 
@@ -759,6 +759,15 @@ export default function PaymentPage() {
 
 	return (
 		<div className="container pb-10 pt-6">
+			<LoginModal
+				open={loginOpen}
+				onClose={() => setLoginOpen(false)}
+				onSuccess={() => {
+					setLoginOpen(false);
+					const t = localStorage.getItem("auth_token");
+					setToken(t);
+				}}
+			/>
 			{/* Breadcrumb / Header */}
 			<div className="flex items-center gap-2 text-sm mb-4">
 				<button onClick={() => router.back()} className="cursor-pointer text-pro-max font-bold flex items-center gap-1">
