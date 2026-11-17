@@ -186,7 +186,7 @@ export default function CategoriesPage() {
 					<div className="flex items-start md:items-center justify-between gap-4 flex-col md:flex-row">
 						<div>
 							<h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">
-								الأقسام
+								الأقسام الرئيسية
 							</h1>
 							<p className="mt-2 text-slate-600">
 								ابحث بسرعة أو استعرض الأقسام الرئيسية والفرعية بسهولة.
