@@ -287,9 +287,23 @@ export default function HomePageClient({
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 				{/* Stationery & Quick Printing Feature Banner */}
 				<div className="w-full h-full">
-					<div className="relative h-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#1e3a5f] p-6 md:p-8 text-white shadow-md">
+					<div className="relative h-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#1e3a5f] p-0 md:p-8 text-white shadow-md">
 						<div className="absolute -left-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-						<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+
+						{/* موبايل: شريط مضغوط زي السايد بار */}
+						<Link href="/stationery" className="md:hidden relative z-10 flex items-center gap-3 p-4">
+							<div className="w-12 h-12 rounded-xl bg-white/10 grid place-items-center text-2xl shrink-0">🖨️</div>
+							<div className="flex-1 min-w-0 text-right">
+								<div className="flex items-center gap-1.5 flex-wrap justify-end">
+									<span className="bg-white text-[#0f172a] text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+									<span className="font-extrabold text-[15px]">خدمات القرطاسية والطباعة</span>
+								</div>
+								<p className="text-[11px] text-white/85 mt-0.5">طباعة مستندات وصور بجميع المقاسات</p>
+							</div>
+							<span className="text-xl shrink-0">←</span>
+						</Link>
+
+						<div className="hidden md:flex relative z-10 flex-row items-center justify-between gap-6">
 							<div className="text-center md:text-right space-y-2">
 								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-bold">
 									<span>🖨️ خدمة جديدة وحصرية</span>
@@ -317,9 +331,23 @@ export default function HomePageClient({
 				{/* Premium Packages Banner */}
 				<div className="w-full h-full">
 					<Link href="/packages" className="block h-full">
-						<div className="relative h-full overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-6 md:p-8 text-white shadow-md hover:opacity-95 transition">
+						<div className="relative h-full overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-0 md:p-8 text-white shadow-md hover:opacity-95 transition">
 							<div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-							<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
+
+							{/* موبايل: شريط مضغوط زي السايد بار */}
+							<div className="md:hidden relative z-10 flex items-center gap-3 p-4">
+								<div className="w-12 h-12 rounded-xl bg-white/15 grid place-items-center text-2xl shrink-0">🎁</div>
+								<div className="flex-1 min-w-0 text-right">
+									<div className="flex items-center gap-1.5 flex-wrap justify-end">
+										<span className="bg-white text-orange-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">جديد</span>
+										<span className="font-extrabold text-[15px]">بكجات</span>
+									</div>
+									<p className="text-[11px] text-white/85 mt-0.5">بكجات من أفضل المنتجات بأسعار جاهزة</p>
+								</div>
+								<span className="text-xl shrink-0">←</span>
+							</div>
+
+							<div className="hidden md:flex relative z-10 flex-row items-center justify-between gap-5">
 								<div className="text-center md:text-right space-y-1">
 									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs font-bold">
 										<span>🎁 جديد</span>
