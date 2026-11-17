@@ -280,7 +280,7 @@ export default function HomePageClient({
 					{loadingCategories ? (
 						<CategoriesSliderSkeleton />
 					) : (
-						<CategoriesSlider categories={parentCategories} />
+						<CategoriesSlider categories={parentCategories} layout="grid" />
 					)}
 				</div>
 

@@ -20,6 +20,7 @@ interface CategoriesSliderProps {
 	subtitle?: string;
 	inSlide ?: any;
 	  onCategoryClick?: () => void; 
+	layout?: "slider" | "grid";
 }
 
 function cn(...c: (string | false | undefined | null)[]) {
@@ -31,7 +32,8 @@ export default function CategoriesSlider({
 	inSlide,
 	title = "الأقسام",
 	subtitle = "اختر القسم اللي يناسبك",
-	 onCategoryClick
+	 onCategoryClick,
+	layout = "slider",
 }: CategoriesSliderProps) {
 	const prevRef = useRef<HTMLButtonElement | null>(null);
 	const nextRef = useRef<HTMLButtonElement | null>(null);
@@ -43,6 +45,47 @@ export default function CategoriesSlider({
 	const items = useMemo(() => categories ?? [], [categories]);
 	const hasSlides = items.length > 0;
 	if (!hasSlides) return null;
+
+	const CategoryCard = (cat: CategoryI) => (
+		<Link
+			href={`/category/${cat.slug || cat.id}`}
+			onClick={onCategoryClick}
+			aria-label={`Go to ${cat.name}`}
+			className="block h-full"
+		>
+			<div className="group flex flex-col items-center gap-1.5 py-1">
+				<div className="relative w-14 h-14 md:w-[84px] md:h-[84px] rounded-lg md:rounded-xl overflow-hidden bg-orange-50/60 ring-2 ring-slate-200 transition duration-300 group-hover:ring-pro group-hover:scale-[1.05] shadow-xs">
+					<Image
+						src={cat.image || "/images/cat1.png"}
+						alt={cat.name}
+						fill
+						sizes="(max-width: 768px) 56px, 84px"
+						className="object-cover"
+					/>
+				</div>
+				<p className="text-[10.5px] md:text-[13px] font-extrabold text-slate-800 text-center leading-tight group-hover:text-pro transition truncate max-w-[75px] md:max-w-[105px]">
+					{cat.name}
+				</p>
+			</div>
+		</Link>
+	);
+
+	// عرض شبكي: 6 أقسام في الصف (صفّين لو العدد 12)
+	if (layout === "grid") {
+		return (
+			<section className="relative w-full py-1 md:py-2">
+				<div className="mb-3 flex items-center gap-2">
+					<span className="w-1.5 md:w-2 h-5 md:h-6 rounded-full bg-pro" />
+					<h2 className="text-base md:text-xl font-extrabold text-slate-900">{title}</h2>
+				</div>
+				<div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-x-2 gap-y-4 md:gap-y-5">
+					{items.map((cat) => (
+						<div key={cat.id}>{CategoryCard(cat)}</div>
+					))}
+				</div>
+			</section>
+		);
+	}
 
 	return (
 		<section className="relative w-full py-1 md:py-2">
