@@ -563,6 +563,19 @@ export default function Footer() {
         {/* طرق الدفع — في النهاية تحت */}
         {activePayments.length > 0 && (
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 md:gap-2">
+            {/* بوابة دفع إضافية */}
+            <div
+              title="بوابة دفع"
+              className="flex h-8 w-[58px] md:h-9 md:w-[66px] items-center justify-center rounded-lg bg-white px-1.5 py-1 shadow-sm ring-1 ring-black/5"
+            >
+              <img
+                src="/images/payments/extra-gateway.png"
+                alt="بوابة دفع"
+                className="h-4 md:h-5 w-auto max-w-full object-contain"
+                loading="lazy"
+              />
+            </div>
+
             {activePayments.map((p) => {
               const link = paymentLinksMap[p.name];
               const El: any = link ? "a" : "div";
@@ -584,6 +597,7 @@ export default function Footer() {
                 </El>
               );
             })}
+
           </div>
         )}
         </div>
