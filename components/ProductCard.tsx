@@ -158,10 +158,7 @@ export default function ProductCard({
 	const { addToCart } = useCart();
 
 	const handleAddToCart = async () => {
-		if (!token) {
-			toast.error('يجب تسجيل الدخول أولاً');
-			return;
-		}
+		// الزوار مسموح لهم بالإضافة — تسجيل الدخول مطلوب عند إتمام الطلب فقط
 		if (isAdding || !inStock) return;
 
 		setIsAdding(true);

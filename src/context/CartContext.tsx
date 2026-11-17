@@ -113,21 +113,31 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 		}
 	};
 
-	const fetchCart = async () => {
-		if (!token) {
-			setCart([]);
-			setLoading(false);
-			return;
-		}
 
+	// ✅ سلة الزوار: معرّف جلسة ثابت في المتصفح
+	const getGuestSessionId = () => {
+		if (typeof window === "undefined") return "";
+		let sid = localStorage.getItem("guest_session_id");
+		if (!sid) {
+			sid = (crypto?.randomUUID?.() || `g-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+			localStorage.setItem("guest_session_id", sid);
+		}
+		return sid;
+	};
+
+	const cartBase = () => (token ? `${API_URL}/cart` : `${API_URL}/guest-cart`);
+
+	const cartHeaders = (json = false): Record<string, string> => ({
+		Accept: "application/json",
+		...(json ? { "Content-Type": "application/json" } : {}),
+		"X-Session-Id": getGuestSessionId(),
+		...(token ? { Authorization: `Bearer ${token}` } : {}),
+	});
+
+	const fetchCart = async () => {
 		try {
 			setLoading(true);
-			const res = await fetch(`${API_URL}/cart`, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					Accept: "application/json",
-				},
-			});
+			const res = await fetch(`${cartBase()}`, { headers: cartHeaders() });
  
 			if (res.status === 401) {
  				localStorage.removeItem("auth_token");
@@ -191,12 +201,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 		if (!token) return null;
 
 		try {
-			const res = await fetch(`${API_URL}/cart`, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					Accept: "application/json",
-				},
-			});
+			const res = await fetch(`${cartBase()}`, { headers: cartHeaders() });
 
 			const data = await res.json();
 
@@ -274,11 +279,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 		productId: number,
 		options: Partial<Omit<AddToCartPayload, "product_id">> = {}
 	): Promise<boolean> => {
-		if (!token) {
-			toast.error("يجب تسجيل الدخول أولاً");
-			return false;
-		}
-
 		if (!productId || productId <= 0) {
 			toast.error("معرف المنتج غير صحيح");
 			return false;
@@ -302,12 +302,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 		};
 
 		try {
-			const res = await fetch(`${API_URL}/cart/add`, {
+			const res = await fetch(`${cartBase()}/add`, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
+				headers: cartHeaders(true),
 				body: JSON.stringify(payload),
 			});
 
@@ -329,14 +326,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const removeFromCart = async (cartItemId: number) => {
-		if (!token) return;
+		if (!token && !getGuestSessionId()) return;
 
 		setCart((prevCart) =>
 			prevCart.filter((item) => item.cart_item_id !== cartItemId)
 		);
 
 		try {
-			await fetch(`${API_URL}/cart/items/${cartItemId}`, {
+			await fetch(`${cartBase()}/items/${cartItemId}`, {
 				method: "DELETE",
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -361,13 +358,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 		updateLocalQuantity(cartItemId, quantity);
 
 		try {
-			const response = await fetch(`${API_URL}/cart/items/${cartItemId}`, {
+			const response = await fetch(`${cartBase()}/items/${cartItemId}`, {
 				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-					Accept: "application/json",
-				},
+				headers: cartHeaders(true),
 				body: JSON.stringify({ quantity }),
 			});
 
@@ -408,13 +401,9 @@ const updateCartItem = async (
             updates.selected_options = [updates.selected_options];
         }
         
-        const response = await fetch(`${API_URL}/cart/items/${cartItemId}`, {
+        const response = await fetch(`${cartBase()}/items/${cartItemId}`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json",
-            },
+            headers: cartHeaders(true),
             body: JSON.stringify(updates),
         });
 
@@ -480,13 +469,9 @@ const updateCartItem = async (
 				{ option_name: optionName, option_value: optionValue },
 			];
 
-			const response = await fetch(`${API_URL}/cart/items/${cartItemId}`, {
+			const response = await fetch(`${cartBase()}/items/${cartItemId}`, {
 				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-					Accept: "application/json",
-				},
+				headers: cartHeaders(true),
 				body: JSON.stringify({ selected_options: updatedOptions }),
 			});
 
@@ -509,17 +494,14 @@ const updateCartItem = async (
 	};
 
 	const clearCart = async () => {
-		if (!token || cart.length === 0) return;
+		if (cart.length === 0) return;
 
 		setCart([]);
 
 		try {
-			await fetch(`${API_URL}/cart/clear`, {
+			await fetch(`${cartBase()}/clear`, {
 				method: "DELETE",
-				headers: {
-					Authorization: `Bearer ${token}`,
-					Accept: "application/json",
-				},
+				headers: cartHeaders(),
 			});
 			toast.success("تم تفريغ السلة");
 		} catch (err) {
