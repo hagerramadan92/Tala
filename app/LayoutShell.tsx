@@ -1,6 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import LoginModal from "@/components/LoginModal";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingWhatsAppButton from "../components/WhatsappButton";
@@ -13,6 +15,15 @@ export default function LayoutShell({
 	children: React.ReactNode;
 }) {
 	const pathname = usePathname();
+	const router = useRouter();
+	const [loginOpen, setLoginOpen] = useState(false);
+
+	// أي مكان في الموقع يفتح بوب اب الدخول عبر هذا الحدث
+	useEffect(() => {
+		const open = () => setLoginOpen(true);
+		window.addEventListener("open-login-modal", open as EventListener);
+		return () => window.removeEventListener("open-login-modal", open as EventListener);
+	}, []);
 
 	const hideLayout = ["/login", "/signup", "/login/forgetPassword", "/login/resetpassword"].includes(
 		pathname
@@ -28,6 +39,15 @@ export default function LayoutShell({
 			</div>
 
 			{!hideLayout && <Footer />}
+
+			<LoginModal
+				open={loginOpen}
+				onClose={() => setLoginOpen(false)}
+				onSuccess={() => {
+					setLoginOpen(false);
+					router.refresh();
+				}}
+			/>
 			<FloatingWhatsAppButton />
 			<SpecialOrderButton />
 		</div>

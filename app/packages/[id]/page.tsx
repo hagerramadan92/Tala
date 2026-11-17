@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
+import { openLoginModal } from "@/lib/openLogin";
 import { BadgeCheck, Box, Coffee, Layers3, Minus, Package, Plus, ShoppingBag, ShoppingCart } from "lucide-react";
 import styles from "./details.module.css";
 
@@ -84,7 +85,7 @@ export default function PackageDetailsPage() {
   const uploadDesignFile = async (file: File) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      Swal.fire({ icon: "warning", title: "سجّل الدخول أولاً", text: "لازم تسجل دخول عشان ترفع ملف التصميم" }).then(() => router.push("/login"));
+      Swal.fire({ icon: "warning", title: "سجّل الدخول أولاً", text: "لازم تسجل دخول عشان ترفع ملف التصميم" }).then(() => openLoginModal());
       return;
     }
     if (!file.name.toLowerCase().endsWith(".pdf")) {
@@ -119,7 +120,7 @@ export default function PackageDetailsPage() {
     const token = localStorage.getItem("auth_token");
     if (!token) {
       Swal.fire({ icon: "warning", title: "يجب تسجيل الدخول", text: "سجّل الدخول لإتمام طلب الباقة" }).then(() =>
-        router.push("/login")
+        openLoginModal()
       );
       return;
     }

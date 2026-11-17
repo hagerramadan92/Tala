@@ -5,6 +5,7 @@ import ChangePassword from "./ChangePassword";
 import PointsCard from "./PointsCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { openLoginModal } from "@/lib/openLogin";
 import Swal from "sweetalert2";
 import {
 	HiOutlineShieldCheck,
@@ -63,7 +64,7 @@ export default function MangeAccount() {
 		const token = localStorage.getItem("auth_token");
 		if (!token) {
 			Swal.fire({ icon: "warning", title: "يجب تسجيل الدخول", text: "فضلاً قم بتسجيل الدخول أولاً" });
-			router.push("/login");
+			openLoginModal();
 			return;
 		}
 
@@ -119,7 +120,7 @@ export default function MangeAccount() {
 				title: "يجب تسجيل الدخول",
 				text: "فضلاً قم بتسجيل الدخول أولاً",
 			});
-			router.push("/login");
+			openLoginModal();
 			return;
 		}
 

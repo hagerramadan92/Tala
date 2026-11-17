@@ -127,13 +127,18 @@ export default function SearchNavbar() {
 
 						{/* Auth */}
 						{!fullName ? (
-							<Link
-								href="/login"
+							<button
+								type="button"
+								onClick={() => {
+									if (typeof window !== "undefined") {
+										window.dispatchEvent(new Event("open-login-modal"));
+									}
+								}}
 								className="inline-flex items-center gap-2 rounded-xl bg-pro text-white px-4 py-2.5 max-md:text-xs text-sm font-extrabold shadow-sm hover:opacity-95 active:scale-[0.99] transition"
 							>
 								<FaRegUser className="max-md:hidden" size={15} />
 								تسجيل دخول
-							</Link>
+							</button>
 						) : (
 							<DropdownUser />
 						)}
