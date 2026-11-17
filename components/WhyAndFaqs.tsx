@@ -94,7 +94,7 @@ export default function WhyAndFaqs() {
 			if (!mounted) return;
 
 			setFaqs(list);
-			setOpenFaq(list.length > 0 ? 0 : null);
+			setOpenFaq(null); // كل الأسئلة مقفولة افتراضيًا
 		} catch (e: any) {
 			if (!mounted) return;
 			setFaqs([]);
