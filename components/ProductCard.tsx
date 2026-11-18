@@ -202,7 +202,7 @@ export default function ProductCard({
 	const showDiscountChip = Boolean(discount?.value); 
 	return (
 		<motion.div
-			className="relative group"
+			className="relative group h-full"
 			initial={{ opacity: 0, y: 8 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.25 }}
@@ -210,7 +210,7 @@ export default function ProductCard({
 			<motion.div
 				whileHover={{ y: -3 }}
 				transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-				className="relative flex flex-col rounded-lg md:rounded-3xl border border-slate-200 bg-white overflow-hidden
+				className="relative flex h-full flex-col rounded-lg md:rounded-3xl border border-slate-200 bg-white overflow-hidden
                     shadow-sm hover:border-gray-200 transition"
 			>
 				{/* Image */}
@@ -290,10 +290,10 @@ export default function ProductCard({
 				</div>
 
 				{/* Content */}
-				<div className="p-4 space-y-3">
+				<div className="p-4 flex flex-1 flex-col gap-3">
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
-							<h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 text-right leading-snug hover:text-pro transition break-words">
+							<h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.6rem] md:min-h-[3rem]">
 								{name}
 							</h3>
 						</Tooltip>
@@ -318,6 +318,7 @@ export default function ProductCard({
 						<FaStar className="text-amber-400" size={16} />
 					</div>
 
+					<div className="mt-auto" />
 					{/* أضف للسلة */}
 					<button
 						type="button"
