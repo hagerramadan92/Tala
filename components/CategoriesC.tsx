@@ -78,7 +78,7 @@ export default function CategoriesSlider({
 					<span className="w-1.5 md:w-2 h-5 md:h-6 rounded-full bg-pro" />
 					<h2 className="text-base md:text-xl font-extrabold text-slate-900">{title}</h2>
 				</div>
-				<div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-x-2 gap-y-4 md:gap-y-5">
+				<div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-x-2 gap-y-4 md:gap-y-5">
 					{items.map((cat) => (
 						<div key={cat.id}>{CategoryCard(cat)}</div>
 					))}
