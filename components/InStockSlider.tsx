@@ -64,7 +64,7 @@ export default function InStockSlider({
 					</div>}
 				</div>
 			) : (
-				hiddenArrow &&  <div className="flex items-center justify-start gap-2 mb-3">
+				hiddenArrow &&  <div className="flex items-center justify-end gap-2 mb-3">
 					{moreHref && (
 						<a
 							href={moreHref}
