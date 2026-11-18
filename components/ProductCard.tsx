@@ -14,6 +14,7 @@ import RatingStars from './RatingStars';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/src/context/AuthContext';
 import { GoEye } from 'react-icons/go';
+import { FaStar } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuickViewModal from './QuickViewModal';
 import { Tooltip } from '@mui/material';
@@ -292,7 +293,7 @@ export default function ProductCard({
 				<div className="p-4 space-y-3">
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
-							<h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 text-right leading-snug line-clamp-2 hover:text-pro transition">
+							<h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 text-right leading-snug hover:text-pro transition break-words">
 								{name}
 							</h3>
 						</Tooltip>
@@ -310,7 +311,12 @@ export default function ProductCard({
 						) : null}
 					</div> */}
 
-					<RatingStars average_ratingc={average_rating || 0} reviewsc={reviews || []} reviewCount={total_reviews} />
+					<div className="flex items-center justify-end gap-1.5" dir="rtl">
+						<span className="text-sm font-bold text-slate-500">
+							{Number(total_reviews || 0) > 0 ? total_reviews : 5}
+						</span>
+						<FaStar className="text-amber-400" size={16} />
+					</div>
 
 					{/* أضف للسلة */}
 					<button
