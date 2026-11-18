@@ -399,12 +399,6 @@ export default function HomePageClient({
 											</h2>
 										</div>
 
-										<Link
-											href={`/category/${category.slug || category.id}`}
-											className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1"
-										>
-											الكل <span>←</span>
-										</Link>
 									</div>
 
 									{/* Category Banner */}
