@@ -70,7 +70,7 @@ export default function InStockSlider({
 							href={moreHref}
 							className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1 ms-1"
 						>
-							{moreLabel} <span>←</span>
+							{moreLabel}
 						</a>
 					)}
 					<button
