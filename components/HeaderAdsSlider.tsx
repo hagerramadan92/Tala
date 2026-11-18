@@ -49,6 +49,15 @@ export default function HeaderAdsSlider() {
 	const [ads, setAds] = useState<Ad[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [activeIndex, setActiveIndex] = useState(0);
+	const [hidden, setHidden] = useState(false);
+
+	// إخفاء بار الإعلان عند النزول لتحت
+	useEffect(() => {
+		const onScroll = () => setHidden(window.scrollY > 40);
+		onScroll();
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -89,7 +98,7 @@ export default function HeaderAdsSlider() {
 	}
 
 	if (!ads.length) {
-		return <div aria-hidden="true" className="h-12 w-full bg-slate-100" />;
+		return <div aria-hidden="true" className={`w-full overflow-hidden bg-slate-100 transition-all duration-300 ${hidden ? "max-h-0 opacity-0" : "max-h-16 opacity-100"}`} />;
 	}
 
 	const activeAd = ads[activeIndex % ads.length];
@@ -105,7 +114,7 @@ export default function HeaderAdsSlider() {
 		);
 
 	return (
-		<div dir="rtl" className="w-full bg-slate-100 px-2 py-1.5">
+		<div dir="rtl" className={`w-full overflow-hidden bg-slate-100 px-2 transition-all duration-300 ${hidden ? "max-h-0 py-0 opacity-0" : "max-h-16 py-1.5 opacity-100"}`}>
 			<div className="mx-auto max-w-7xl">
 				<div className="flex h-9 items-center justify-between gap-2 rounded-lg bg-[#1f2937] px-1.5 text-white shadow-sm">
 					<button
