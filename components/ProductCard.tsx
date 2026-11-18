@@ -213,7 +213,7 @@ export default function ProductCard({
                     shadow-sm hover:border-gray-200 transition"
 			>
 				{/* Image */}
-				<div className={`relative w-full h-[150px] md:h-[240px] bg-gray-50`}>
+				<div className={`relative w-full h-[190px] md:h-[270px] bg-white`}>
 					<Link href={`/product/${slug || id}`} className="block h-full">
 						<div className="relative h-full overflow-hidden">
 							<ImageComponent image={image || '/images/not.jpg'} />
@@ -221,15 +221,32 @@ export default function ProductCard({
 						</div>
 					</Link>
 
-					{/* Top actions */}
-					<div className="absolute top-1 md:top-3 inset-x-1  md:inset-x-3 flex items-center justify-between z-10">
+					{/* أزرار المفضلة والرؤية — على الشمال */}
+					<div className="absolute top-2 left-2 md:top-3 md:left-3 z-20 flex flex-col items-center gap-2">
 						<HearComponent
 							onToggleLike={() => toggleFavorite(id)}
 							liked={computedIsFavorite}
 							ClassName="text-pro "
 							ClassNameP="!w-9 !h-9"
 						/>
-						{/* Discount / Stock */}
+
+						<motion.button
+							aria-label="quick view"
+							onClick={async (e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								await openQuickView();
+							}}
+							whileHover={{ scale: 1.08 }}
+							whileTap={{ scale: 0.92 }}
+							className="border border-slate-100 bg-white/95 backdrop-blur w-9 h-9 rounded-full flex items-center justify-center shadow ring-1 ring-black/5"
+						>
+							<GoEye className="text-gray-800" />
+						</motion.button>
+					</div>
+
+					{/* Discount / Stock — على اليمين */}
+					<div className="absolute top-2 right-2 md:top-3 md:right-3 z-10">
 						<div className="flex flex-col gap-1 items-start">
 							{product?.price_text && (<span className="md:px-3 p-1 truncate max-w-[80px] md:max-w-[140px] text-[8px] md:text-[11px] font-extrabold rounded-lg md:rounded-full bg-emerald-500 text-white ring-1 ring-black/5 shadow-sm">
 								{/* {product?.price_text?.slice(0, 10)} */}
@@ -245,19 +262,7 @@ export default function ProductCard({
 						</div>
 					</div>
 
-					<motion.button
-						aria-label="quick view"
-						onClick={async (e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							await openQuickView();
-						}}
-						whileHover={{ scale: 1.08 }}
-						whileTap={{ scale: 0.92 }}
-						className={`absolute top-[88px] md:top-[95px] right-[6px] md:start-[14px] border border-slate-100 bg-white/90 backdrop-blur w-9 h-9  rounded-full flex items-center justify-center shadow ring-1 ring-black/5 `}
-					>
-						<GoEye className="text-gray-800" />
-					</motion.button>
+
 
 					<QuickViewModal
 						open={quickViewOpen}
@@ -273,30 +278,7 @@ export default function ProductCard({
 					</AnimatePresence>
 
 
-					{/* Cart Floating Button (intentional placement) */}
-					<motion.button
-						aria-label="add to cart"
-						onClick={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							handleAddToCart();
-						}}
-						disabled={isAdding || !inStock}
-						whileHover={inStock && !isAdding ? { scale: 1.06 } : undefined}
-						whileTap={inStock && !isAdding ? { scale: 0.92 } : undefined}
-						className={`absolute right-[6px] md:right-3 top-[64px]  md:top-[72px] -translate-y-1/2 z-20 ${classNameCate}`}
-					>
-						<div
-							className={`w-9 h-9 rounded-full flex items-center justify-center shadow-lg ring-1 ring-black/5 ${inStock ? 'bg-pro text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-								}`}
-						>
-							{isAdding ? (
-								<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-							) : (
-								<BsCart3 className="w-18 max-md:!w-16 " />
-							)}
-						</div>
-					</motion.button>
+
 
 					{/* Rating on Image */}
 					{/* <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
@@ -310,7 +292,7 @@ export default function ProductCard({
 				<div className="p-4 space-y-3">
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
-							<h3 className="text-[13px] md:text-[14px] font-extrabold text-gray-900 line-clamp-1 hover:text-pro transition">
+							<h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 text-right leading-snug line-clamp-2 hover:text-pro transition">
 								{name}
 							</h3>
 						</Tooltip>
