@@ -399,38 +399,12 @@ export default function HomePageClient({
 											</h2>
 										</div>
 
-										<div className="flex items-center gap-2">
-											<Link
-												href={`/category/${category.slug || category.id}`}
-												className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1"
-											>
-												الكل <span>←</span>
-											</Link>
-
-											{/* أسهم تقليب منتجات القسم */}
-											<button
-												type="button"
-												aria-label="التالي"
-												onClick={(e) => {
-													const btns = e.currentTarget.closest("section")?.querySelectorAll<HTMLButtonElement>('button[aria-label="التالي"]');
-													btns?.[btns.length - 1]?.click();
-												}}
-												className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
-											>
-												‹
-											</button>
-											<button
-												type="button"
-												aria-label="السابق"
-												onClick={(e) => {
-													const btns = e.currentTarget.closest("section")?.querySelectorAll<HTMLButtonElement>('button[aria-label="السابق"]');
-													btns?.[btns.length - 1]?.click();
-												}}
-												className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
-											>
-												›
-											</button>
-										</div>
+										<Link
+											href={`/category/${category.slug || category.id}`}
+											className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1"
+										>
+											الكل <span>←</span>
+										</Link>
 									</div>
 
 									{/* Category Banner */}
@@ -454,6 +428,8 @@ export default function HomePageClient({
 											isLoading={false}
 											title=""
 											hiddenArrow={true}
+											moreHref={`/category/${category.slug || category.id}`}
+											moreLabel="عرض المزيد"
 											CardComponent={(product: any) => (
 												<ProductCard
 													{...product}

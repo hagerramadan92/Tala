@@ -152,7 +152,7 @@ body * {
 
 /* Disabled */
 .swiper-button-disabled {
-  opacity: 0;
+  opacity: 0.35;
   pointer-events: none;
 }
 

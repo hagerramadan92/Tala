@@ -13,6 +13,8 @@ interface InStockSliderProps {
 	CardComponent: any
 	title?: string;
 	hiddenArrow?: boolean;
+	moreHref?: string;
+	moreLabel?: string;
 	// ✅ new
 	isLoading?: boolean;
 	skeletonCount?: number;
@@ -24,7 +26,9 @@ export default function InStockSlider({
 	title = "",
 	isLoading = false,
 	skeletonCount = 8,
-	hiddenArrow = true
+	hiddenArrow = true,
+	moreHref,
+	moreLabel = "عرض المزيد",
 }: InStockSliderProps) {
 	const prevRef = useRef<HTMLButtonElement>(null);
 	const nextRef = useRef<HTMLButtonElement>(null);
@@ -60,7 +64,15 @@ export default function InStockSlider({
 					</div>}
 				</div>
 			) : (
-				hiddenArrow &&  <div className="flex justify-end gap-2 mb-3">
+				hiddenArrow &&  <div className="flex items-center justify-start gap-2 mb-3">
+					{moreHref && (
+						<a
+							href={moreHref}
+							className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1 ms-1"
+						>
+							{moreLabel} <span>←</span>
+						</a>
+					)}
 					<button
 						ref={prevRef}
 						className="w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
