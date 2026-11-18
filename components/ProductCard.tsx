@@ -311,13 +311,6 @@ export default function ProductCard({
 						) : null}
 					</div> */}
 
-					<div className="flex items-center justify-end gap-1.5" dir="rtl">
-						<span className="text-sm font-bold text-slate-500">
-							{Number(total_reviews || 0) > 0 ? total_reviews : 5}
-						</span>
-						<FaStar className="text-amber-400" size={16} />
-					</div>
-
 					<div className="mt-auto" />
 					{/* أضف للسلة */}
 					<button
