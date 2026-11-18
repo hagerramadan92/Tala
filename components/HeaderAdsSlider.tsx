@@ -35,11 +35,10 @@ function faToEmoji(icon: string) {
 /* ---------------- Skeleton ---------------- */
 function HeaderAdsSkeleton() {
 	return (
-		<div className="w-full border-b bg-gray-100 ">
-			<div className="mx-auto flex h-10 max-w-7xl items-center justify-center px-4">
-				<div className="flex w-full max-w-md items-center gap-2">
-					<div className="h-4 w-4 animate-pulse rounded bg-gray-300  " />
-					<div className="h-4 w-full animate-pulse rounded bg-gray-300  " />
+		<div className="w-full bg-slate-100 px-2 py-1.5">
+			<div className="mx-auto max-w-7xl">
+				<div className="flex h-9 items-center justify-center rounded-lg bg-[#1f2937] px-3">
+					<div className="h-3.5 w-2/3 max-w-md animate-pulse rounded bg-white/20" />
 				</div>
 			</div>
 		</div>
@@ -90,22 +89,54 @@ export default function HeaderAdsSlider() {
 	}
 
 	if (!ads.length) {
-		return <div aria-hidden="true" className="h-10 w-full border-b border-gray-200 bg-gray-100" />;
+		return <div aria-hidden="true" className="h-12 w-full bg-slate-100" />;
 	}
 
 	const activeAd = ads[activeIndex % ads.length];
 
+	const goPrev = () => setActiveIndex((c) => (c - 1 + ads.length) % ads.length);
+	const goNext = () => setActiveIndex((c) => (c + 1) % ads.length);
+
+	// تمييز النسبة (30% / ٣٠٪) بالبرتقالي
+	const highlightPercent = (text: string) =>
+		String(text || "").replace(
+			/([0-9\u0660-\u0669]+)\s*[%٪]/g,
+			(match) => `<span class="text-orange-400 font-extrabold">${match}</span>`
+		);
+
 	return (
-		<div
-			dir="rtl"
-			className="w-full border-b border-gray-200 bg-gray-100 text-gray-900 "
-		>
-			<div className="mx-auto max-w-7xl px-2 sm:px-4">
-				<div className="flex h-10 items-center">
-					<div className="mx-auto flex w-full items-center justify-center gap-2 px-2 text-center text-sm sm:text-[15px]">
-						<span className="text-base">{faToEmoji(activeAd.icon)}</span>
-						<span className="truncate">{activeAd.description}</span>
+		<div dir="rtl" className="w-full bg-slate-100 px-2 py-1.5">
+			<div className="mx-auto max-w-7xl">
+				<div className="flex h-9 items-center justify-between gap-2 rounded-lg bg-[#1f2937] px-1.5 text-white shadow-sm">
+					<button
+						type="button"
+						onClick={goPrev}
+						aria-label="السابق"
+						className="shrink-0 grid place-items-center w-7 h-7 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition"
+					>
+						<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+						</svg>
+					</button>
+
+					<div className="flex min-w-0 items-center justify-center gap-2 text-center text-[12px] sm:text-[14px] font-bold">
+						<span className="text-base text-orange-400">📢</span>
+						<span
+							className="truncate"
+							dangerouslySetInnerHTML={{ __html: highlightPercent(activeAd.description) }}
+						/>
 					</div>
+
+					<button
+						type="button"
+						onClick={goNext}
+						aria-label="التالي"
+						className="shrink-0 grid place-items-center w-7 h-7 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition"
+					>
+						<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+						</svg>
+					</button>
 				</div>
 			</div>
 		</div>
