@@ -293,7 +293,7 @@ export default function ProductCard({
 				<div className="p-4 flex flex-1 flex-col gap-3">
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
-							<h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.6rem] md:min-h-[3rem]">
+							<h3 className="text-[12.5px] md:text-[14px] font-black text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.6rem] md:min-h-[3rem]">
 								{name}
 							</h3>
 						</Tooltip>
