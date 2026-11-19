@@ -399,6 +399,42 @@ export default function HomePageClient({
 											</h2>
 										</div>
 
+										{/* عرض المزيد + أسهم التقليب */}
+										<div className="flex items-center gap-1.5 md:gap-2">
+											<Link
+												href={`/category/${category.slug || category.id}`}
+												className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition"
+											>
+												عرض المزيد
+											</Link>
+											<button
+												type="button"
+												aria-label="السابق"
+												onClick={(e) => {
+													e.currentTarget
+														.closest("section")
+														?.querySelector<HTMLButtonElement>('[data-slider-arrow="prev"]')
+														?.click();
+												}}
+												className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
+											>
+												›
+											</button>
+											<button
+												type="button"
+												aria-label="التالي"
+												onClick={(e) => {
+													e.currentTarget
+														.closest("section")
+														?.querySelector<HTMLButtonElement>('[data-slider-arrow="next"]')
+														?.click();
+												}}
+												className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
+											>
+												‹
+											</button>
+										</div>
+
 									</div>
 
 									{/* Category Banner */}
@@ -422,8 +458,8 @@ export default function HomePageClient({
 											isLoading={false}
 											title=""
 											hiddenArrow={true}
-											moreHref={`/category/${category.slug || category.id}`}
-											moreLabel="عرض المزيد"
+											hideArrowRow
+											hideMoreLink
 											CardComponent={(product: any) => (
 												<ProductCard
 													{...product}

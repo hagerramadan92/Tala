@@ -15,6 +15,8 @@ interface InStockSliderProps {
 	hiddenArrow?: boolean;
 	moreHref?: string;
 	moreLabel?: string;
+	hideArrowRow?: boolean;
+	hideMoreLink?: boolean;
 	// ✅ new
 	isLoading?: boolean;
 	skeletonCount?: number;
@@ -29,6 +31,8 @@ export default function InStockSlider({
 	hiddenArrow = true,
 	moreHref,
 	moreLabel = "عرض المزيد",
+	hideArrowRow = false,
+	hideMoreLink = false,
 }: InStockSliderProps) {
 	const prevRef = useRef<HTMLButtonElement>(null);
 	const nextRef = useRef<HTMLButtonElement>(null);
@@ -47,6 +51,7 @@ export default function InStockSlider({
 							ref={nextRef}
 							className="w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
 							aria-label="التالي"
+						data-slider-arrow="next"
 						>
 							<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -56,6 +61,7 @@ export default function InStockSlider({
 							ref={prevRef}
 							className="w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
 							aria-label="السابق"
+						data-slider-arrow="prev"
 						>
 							<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -64,8 +70,8 @@ export default function InStockSlider({
 					</div>}
 				</div>
 			) : (
-				hiddenArrow &&  <div className="flex items-center justify-end gap-2 mb-3">
-					{moreHref && (
+				hiddenArrow &&  <div className={`${hideArrowRow ? "hidden" : "flex"} items-center justify-end gap-2 mb-3`}>
+					{moreHref && !hideMoreLink && (
 						<a
 							href={moreHref}
 							className="text-xs md:text-sm font-bold text-pro hover:text-pro-hover transition flex items-center gap-1 ms-1"
@@ -77,6 +83,7 @@ export default function InStockSlider({
 						ref={prevRef}
 						className="w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
 						aria-label="السابق"
+						data-slider-arrow="prev"
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -86,6 +93,7 @@ export default function InStockSlider({
 						ref={nextRef}
 						className="w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
 						aria-label="التالي"
+						data-slider-arrow="next"
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -107,9 +115,9 @@ export default function InStockSlider({
 					// @ts-ignore
 					swiper.params.navigation.nextEl = nextRef.current;
 				}}
-				spaceBetween={14}
-				slidesPerView={2}
-				slidesPerGroup={2}
+				spaceBetween={12}
+				slidesPerView={1.5}
+				slidesPerGroup={1}
 				breakpoints={{
 					640: { slidesPerView: 2, slidesPerGroup: 2 },
 					768: { slidesPerView: 3, slidesPerGroup: 3 },
