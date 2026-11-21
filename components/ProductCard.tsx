@@ -199,20 +199,7 @@ export default function ProductCard({
 		return displayPrice !== displayFinalPrice;
 	}, [displayPrice, displayFinalPrice]);
 
-	const showDiscountChip = Boolean(discount?.value);
-
-	// وصف مختصر (أول كلمات من وصف المنتج) لتعبئة المساحة البيضاء
-	const shortDesc = useMemo(() => {
-		const raw = String((product as any)?.short_description || product?.description || "");
-		if (!raw) return "";
-		const text = raw
-			.replace(/<[^>]*>/g, " ")
-			.replace(/&nbsp;/gi, " ")
-			.replace(/&amp;/gi, "&")
-			.replace(/\s+/g, " ")
-			.trim();
-		return text.length > 45 ? `${text.slice(0, 45).trim()}…` : text;
-	}, [product?.description, (product as any)?.short_description]);
+	const showDiscountChip = Boolean(discount?.value); 
 	return (
 		<motion.div
 			className="relative group h-full"
@@ -227,7 +214,7 @@ export default function ProductCard({
                     shadow-sm hover:border-gray-200 transition"
 			>
 				{/* Image */}
-				<div className={`relative w-full flex-1 min-h-[190px] md:min-h-[270px] bg-white`}>
+				<div className={`relative w-full h-[190px] md:h-[270px] bg-white`}>
 					<Link href={`/product/${slug || id}`} className="block h-full">
 						<div className="relative h-full overflow-hidden">
 							<ImageComponent image={image || '/images/not.jpg'} />
@@ -303,22 +290,14 @@ export default function ProductCard({
 				</div>
 
 				{/* Content */}
-				<div className="p-4 flex flex-col gap-2">
-					<div>
+				<div className="p-4 flex flex-1 flex-col gap-3">
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
-							<h3 className="text-[12.5px] md:text-[14px] font-black text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.4rem] md:min-h-[2.8rem]">
+							<h3 className="text-[12.5px] md:text-[14px] font-black text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.6rem] md:min-h-[3rem]">
 								{name}
 							</h3>
 						</Tooltip>
 					</Link>
-
-					{shortDesc && (
-						<p className="text-[10.5px] md:text-[12px] leading-snug text-slate-500 font-semibold text-right line-clamp-1">
-							{shortDesc}
-						</p>
-					)}
-					</div>
 
 					{/* Price */}
 					{/* <div className={`flex items-center gap-2 max-md:!mb-1 ${classNameHome}`}>
@@ -332,6 +311,7 @@ export default function ProductCard({
 						) : null}
 					</div> */}
 
+					<div className="mt-auto" />
 					{/* أضف للسلة */}
 					<button
 						type="button"
