@@ -110,7 +110,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
   // UI state
   const [layout, setLayout] = useState<"grid" | "list">("grid");
-  const [columns, setColumns] = useState<number>(4);
+  const [columns, setColumns] = useState<number>(3);
   const [page, setPage] = usePageParam();
   const rowsPerPage = 12;
 
