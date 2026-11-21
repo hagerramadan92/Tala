@@ -2,6 +2,8 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import ButtonComponent from "@/components/ButtonComponent";
+import { LuCreditCard } from "react-icons/lu";
+import { BsCart3 } from "react-icons/bs";
 
 interface BottomBarProps {
   product: any;
@@ -34,7 +36,7 @@ export function BottomBar({
   const getButtonTitle = () => {
     if (showMissingBadge) return "اختر الخيارات أولاً";
     if (uploadingDesign) return "جاري الاضافة...";
-    return "اضافة للسلة";
+    return "أضف إلى السلة";
   };
 
   return (
@@ -91,21 +93,6 @@ export function BottomBar({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {onBuyNow && (
-                    <button
-                      type="button"
-                      onClick={onBuyNow}
-                      disabled={showMissingBadge || uploadingDesign}
-                      className={`h-11 md:h-12 px-4 md:px-5 rounded-xl text-[13px] md:text-sm font-extrabold transition ${
-                        showMissingBadge || uploadingDesign
-                          ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                          : "bg-pro text-white hover:opacity-95 active:scale-[0.98]"
-                      }`}
-                    >
-                      اشترِ الآن
-                    </button>
-                  )}
-
                   <div className="min-w-[150px] md:min-w-[170px]">
                     <ButtonComponent
                       className="scale-[.8]"
@@ -113,6 +100,22 @@ export function BottomBar({
                       onClick={onAddToCart}
                     />
                   </div>
+                  {onBuyNow && (
+                    <button
+                      type="button"
+                      onClick={onBuyNow}
+                      disabled={showMissingBadge || uploadingDesign}
+                      className={`h-11 md:h-12 px-4 md:px-5 rounded-xl text-[13px] md:text-sm font-extrabold inline-flex items-center justify-center gap-2 transition ${
+                        showMissingBadge || uploadingDesign
+                          ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                          : "bg-white text-pro border-2 border-pro hover:bg-pro hover:text-white active:scale-[0.98]"
+                      }`}
+                    >
+                      <LuCreditCard className="w-4 h-4 md:w-5 md:h-5" />
+                      اشترِ الآن
+                    </button>
+                  )}
+
                 </div>
               </div>
             </div>
