@@ -304,6 +304,7 @@ export default function ProductCard({
 
 				{/* Content */}
 				<div className="p-4 flex flex-1 flex-col gap-3">
+					<div className={shortDesc ? "" : "flex flex-1 flex-col justify-center gap-1"}>
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
 							<h3 className="text-[12.5px] md:text-[14px] font-black text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.6rem] md:min-h-[3rem]">
@@ -317,6 +318,7 @@ export default function ProductCard({
 							{shortDesc}
 						</p>
 					)}
+					</div>
 
 					{/* Price */}
 					{/* <div className={`flex items-center gap-2 max-md:!mb-1 ${classNameHome}`}>
@@ -330,7 +332,6 @@ export default function ProductCard({
 						) : null}
 					</div> */}
 
-					<div className="mt-auto" />
 					{/* أضف للسلة */}
 					<button
 						type="button"
