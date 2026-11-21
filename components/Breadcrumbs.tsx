@@ -14,14 +14,37 @@ export default function CustomSeparator({ proName }: nameProps) {
     <Link key="2" href="/product" className="mx-1">
       المنتاجات
     </Link>,
-    <Typography key="3" sx={{ color: "#000" , fontSize:"15px" , fontFamily:"cairo"}}>
+    <Typography
+      key="3"
+      sx={{
+        color: "#000",
+        fontSize: { xs: "12px", md: "15px" },
+        fontFamily: "cairo",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        maxWidth: { xs: "150px", sm: "320px", md: "none" },
+      }}
+    >
       {proName}
     </Typography>,
   ];
 
   return (
-    <Stack spacing={10}>
-      <Breadcrumbs separator="›" aria-label="breadcrumb" sx={{ color: "#000" , fontSize:"15px" , fontFamily:"cairo"}}>
+    <Stack spacing={10} sx={{ maxWidth: "100%", overflowX: "auto", overflowY: "hidden" }}>
+      <Breadcrumbs
+        separator="›"
+        aria-label="breadcrumb"
+        sx={{
+          color: "#000",
+          fontSize: { xs: "12px", md: "15px" },
+          fontFamily: "cairo",
+          flexWrap: "nowrap",
+          whiteSpace: "nowrap",
+          "& ol": { flexWrap: "nowrap", whiteSpace: "nowrap" },
+          "& li": { whiteSpace: "nowrap" },
+        }}
+      >
         {breadcrumbs}
       </Breadcrumbs>
     </Stack>
