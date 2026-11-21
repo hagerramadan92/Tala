@@ -95,7 +95,7 @@ export function BottomBar({
                 <div className="flex items-center gap-2 w-full md:w-auto md:shrink-0">
                   <div className="flex-1 min-w-0 md:flex-none md:min-w-[170px]">
                     <ButtonComponent
-                      className="scale-[.8]"
+                      className="scale-[.8] max-md:text-[12px] max-md:px-2"
                       title={getButtonTitle()}
                       onClick={onAddToCart}
                     />

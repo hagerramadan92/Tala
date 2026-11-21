@@ -117,7 +117,7 @@ export default function ButtonComponent({
           <span className="w-2 h-2 bg-white/30 rounded-full animate-bounce" />
         </div>
       ) : (
-        <span className="relative z-[1]">{title}</span>
+        <span className="relative z-[1] whitespace-nowrap">{title}</span>
       )}
     </motion.button>
   );
