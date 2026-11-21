@@ -18,7 +18,7 @@ export default function Logo({
 	return (
 		<Link
 			href={href}
-			className={`inline-flex items-center gap-2 select-none ${className}`}
+			className={`inline-flex items-center gap-1.5 md:gap-2 select-none ${className}`}
 			aria-label="Tala AlJazeera"
 		>
 			{/* Logo */}
@@ -30,7 +30,7 @@ export default function Logo({
 						alt="Tala AlJazeera Logo"
 						width={size}
 						height={size}
-						className="object-contain max-md:w-[35px] w-[44px] h-auto"
+						className="object-contain max-md:w-[30px] w-[44px] h-auto"
 						priority
 					/>
 				</div>
@@ -39,11 +39,11 @@ export default function Logo({
 			{/* Names */}
 			<div className="flex flex-col leading-tight">
 				<div className="flex flex-col items-baseline">
-					<span className="font-ar  ml-auto font-extrabold text-slate-900 max-md:text-base text-lg">
+					<span className="font-ar ml-auto font-extrabold text-slate-900 max-md:text-[13px] text-lg">
 						تالا الجزيره
 					</span>
 
-					<span className=" mt-[-3px] font-en font-bold text-slate-500 text-sm max-md:text-xs tracking-wide">
+					<span className="mt-[-3px] font-en font-bold text-slate-500 text-sm max-md:text-[10px] tracking-wide">
 						Tala AlJazeera
 					</span>
 				</div>
