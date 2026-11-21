@@ -199,7 +199,20 @@ export default function ProductCard({
 		return displayPrice !== displayFinalPrice;
 	}, [displayPrice, displayFinalPrice]);
 
-	const showDiscountChip = Boolean(discount?.value); 
+	const showDiscountChip = Boolean(discount?.value);
+
+	// وصف مختصر (أول كلمات من وصف المنتج) لتعبئة المساحة البيضاء
+	const shortDesc = useMemo(() => {
+		const raw = String((product as any)?.short_description || product?.description || "");
+		if (!raw) return "";
+		const text = raw
+			.replace(/<[^>]*>/g, " ")
+			.replace(/&nbsp;/gi, " ")
+			.replace(/&amp;/gi, "&")
+			.replace(/\s+/g, " ")
+			.trim();
+		return text.length > 110 ? `${text.slice(0, 110).trim()}…` : text;
+	}, [product?.description, (product as any)?.short_description]);
 	return (
 		<motion.div
 			className="relative group h-full"
@@ -298,6 +311,12 @@ export default function ProductCard({
 							</h3>
 						</Tooltip>
 					</Link>
+
+					{shortDesc && (
+						<p className="text-[10.5px] md:text-[12px] leading-relaxed text-slate-500 font-semibold text-right line-clamp-2">
+							{shortDesc}
+						</p>
+					)}
 
 					{/* Price */}
 					{/* <div className={`flex items-center gap-2 max-md:!mb-1 ${classNameHome}`}>
