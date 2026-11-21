@@ -407,32 +407,6 @@ export default function HomePageClient({
 											>
 												عرض المزيد
 											</Link>
-											<button
-												type="button"
-												aria-label="السابق"
-												onClick={(e) => {
-													e.currentTarget
-														.closest("section")
-														?.querySelector<HTMLButtonElement>('[data-slider-arrow="prev"]')
-														?.click();
-												}}
-												className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
-											>
-												›
-											</button>
-											<button
-												type="button"
-												aria-label="التالي"
-												onClick={(e) => {
-													e.currentTarget
-														.closest("section")
-														?.querySelector<HTMLButtonElement>('[data-slider-arrow="next"]')
-														?.click();
-												}}
-												className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-orange-50 hover:text-pro hover:border-pro flex items-center justify-center transition shadow-xs"
-											>
-												‹
-											</button>
 										</div>
 
 									</div>
