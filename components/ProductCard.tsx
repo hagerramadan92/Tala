@@ -227,7 +227,7 @@ export default function ProductCard({
                     shadow-sm hover:border-gray-200 transition"
 			>
 				{/* Image */}
-				<div className={`relative w-full h-[190px] md:h-[270px] bg-white`}>
+				<div className={`relative w-full flex-1 min-h-[190px] md:min-h-[270px] bg-white`}>
 					<Link href={`/product/${slug || id}`} className="block h-full">
 						<div className="relative h-full overflow-hidden">
 							<ImageComponent image={image || '/images/not.jpg'} />
@@ -303,8 +303,8 @@ export default function ProductCard({
 				</div>
 
 				{/* Content */}
-				<div className="p-4 flex flex-1 flex-col gap-3">
-					<div className={shortDesc ? "" : "flex flex-1 flex-col justify-center gap-1"}>
+				<div className="p-4 flex flex-col gap-3">
+					<div>
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
 							<h3 className="text-[12.5px] md:text-[14px] font-black text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.6rem] md:min-h-[3rem]">
