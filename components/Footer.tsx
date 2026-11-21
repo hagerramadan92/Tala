@@ -459,8 +459,8 @@ export default function Footer() {
             <div className="mt-5 space-y-2 text-sm text-white/85">
               {!isEmptyValue(email) && (
                 <div className="flex items-center gap-2">
-                  <FaEnvelope className="opacity-80" />
-                  <span className="break-all">{String(email)}</span>
+                  <FaEnvelope className="opacity-80 shrink-0" />
+                  <span className="whitespace-nowrap text-[11px] min-[380px]:text-[12px] md:text-sm">{String(email)}</span>
                 </div>
               )}
 
@@ -472,9 +472,9 @@ export default function Footer() {
               )}
 
               {!isEmptyValue(address) && (
-                <div className="flex items-start gap-2">
-                  <FaMapMarkerAlt className="opacity-80 mt-0.5" />
-                  <span className="leading-relaxed">{String(address)}</span>
+                <div className="flex items-center gap-2">
+                  <FaMapMarkerAlt className="opacity-80 shrink-0" />
+                  <span className="whitespace-nowrap text-[11px] min-[380px]:text-[12px] md:text-sm">{String(address)}</span>
                 </div>
               )}
 
