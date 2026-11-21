@@ -211,7 +211,7 @@ export default function ProductCard({
 			.replace(/&amp;/gi, "&")
 			.replace(/\s+/g, " ")
 			.trim();
-		return text.length > 110 ? `${text.slice(0, 110).trim()}…` : text;
+		return text.length > 45 ? `${text.slice(0, 45).trim()}…` : text;
 	}, [product?.description, (product as any)?.short_description]);
 	return (
 		<motion.div
@@ -303,18 +303,18 @@ export default function ProductCard({
 				</div>
 
 				{/* Content */}
-				<div className="p-4 flex flex-col gap-3">
+				<div className="p-4 flex flex-col gap-2">
 					<div>
 					<Link href={`/product/${slug || id}`}>
 						<Tooltip title={name} arrow placement="top">
-							<h3 className="text-[12.5px] md:text-[14px] font-black text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.6rem] md:min-h-[3rem]">
+							<h3 className="text-[12.5px] md:text-[14px] font-black text-gray-900 text-right leading-snug hover:text-pro transition break-words min-h-[2.4rem] md:min-h-[2.8rem]">
 								{name}
 							</h3>
 						</Tooltip>
 					</Link>
 
 					{shortDesc && (
-						<p className="text-[10.5px] md:text-[12px] leading-relaxed text-slate-500 font-semibold text-right line-clamp-2">
+						<p className="text-[10.5px] md:text-[12px] leading-snug text-slate-500 font-semibold text-right line-clamp-1">
 							{shortDesc}
 						</p>
 					)}
