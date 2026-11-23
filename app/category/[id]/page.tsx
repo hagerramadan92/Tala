@@ -310,6 +310,86 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
   const totalPages = pagination?.last_page ?? 1;
 
+  // قائمة الترتيب (هيدر الديسكتوب + صف التصفية للموبايل)
+  const sortSelect = (
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                  <Select
+                    value={priceOrder}
+                    onChange={(e) => handleSortChange(e.target.value as "" | "asc" | "desc" | "rating")}
+                    displayEmpty
+                    IconComponent={KeyboardArrowDownRoundedIcon}
+                    renderValue={(selected) =>
+                      sortOptions.find((o) => o.value === selected)?.label ||
+                      "الترتيب الافتراضي"
+                    }
+                    sx={{
+                      direction: "rtl",
+                      borderRadius: "14px",
+                      backgroundColor: "#fff",
+                      fontWeight: 800,
+                      fontSize: "0.9rem",
+                      boxShadow: "0 1px 2px rgba(0,0,0,.06)",
+                      fontFamily: "Cairo, Cairo Fallback",
+                      "& .MuiSelect-select": {
+                        padding: "10px 14px 10px 38px",
+                      },
+                      "& fieldset": {
+                        borderColor: "#e2e8f0",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#cbd5e1",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#94a3b8",
+                        boxShadow: "0 0 0 3px rgba(148,163,184,.25)",
+                      },
+                      "& .MuiSvgIcon-root": {
+                        left: 10,
+                        right: "auto",
+                        color: "#64748b",
+                      },
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          mt: 1,
+                          borderRadius: "14px",
+                          boxShadow: "0 12px 30px rgba(0,0,0,.12)",
+                          direction: "rtl",
+                          fontFamily: "Cairo, Cairo Fallback",
+                          "& .MuiMenuItem-root": {
+                            fontWeight: 700,
+                            fontSize: "0.9rem",
+                            borderRadius: "10px",
+                            mx: 1,
+                            my: 0.5,
+                            color: "#0f172a",
+                            "&:hover": { backgroundColor: "#f1f5f9" },
+                          },
+                          "& .MuiMenuItem-root.Mui-selected": {
+                            backgroundColor: "#0f172a !important",
+                            color: "#ffffff !important",
+                          },
+                          "& .MuiMenuItem-root.Mui-selected:hover": {
+                            backgroundColor: "#0f172a !important",
+                          },
+                          "& .MuiMenuItem-root.Mui-selected *": {
+                            color: "#ffffff !important",
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    {sortOptions.map((o) => (
+                      <MenuItem className="font-ar" key={o.value} value={o.value}>
+                        {o.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+  );
+
+
   return (
     <section className="">
       <div className="container pt-10 pb-6 md:py-12">
@@ -373,81 +453,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
               </div>
 
               {/* Sort (enhanced select) */}
-              <FormControl size="small" sx={{ minWidth: 180 }}>
-                <Select
-                  value={priceOrder}
-                  onChange={(e) => handleSortChange(e.target.value as "" | "asc" | "desc" | "rating")}
-                  displayEmpty
-                  IconComponent={KeyboardArrowDownRoundedIcon}
-                  renderValue={(selected) =>
-                    sortOptions.find((o) => o.value === selected)?.label ||
-                    "الترتيب الافتراضي"
-                  }
-                  sx={{
-                    direction: "rtl",
-                    borderRadius: "14px",
-                    backgroundColor: "#fff",
-                    fontWeight: 800,
-                    fontSize: "0.9rem",
-                    boxShadow: "0 1px 2px rgba(0,0,0,.06)",
-                    fontFamily: "Cairo, Cairo Fallback",
-                    "& .MuiSelect-select": {
-                      padding: "10px 14px 10px 38px",
-                    },
-                    "& fieldset": {
-                      borderColor: "#e2e8f0",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#cbd5e1",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#94a3b8",
-                      boxShadow: "0 0 0 3px rgba(148,163,184,.25)",
-                    },
-                    "& .MuiSvgIcon-root": {
-                      left: 10,
-                      right: "auto",
-                      color: "#64748b",
-                    },
-                  }}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        mt: 1,
-                        borderRadius: "14px",
-                        boxShadow: "0 12px 30px rgba(0,0,0,.12)",
-                        direction: "rtl",
-                        fontFamily: "Cairo, Cairo Fallback",
-                        "& .MuiMenuItem-root": {
-                          fontWeight: 700,
-                          fontSize: "0.9rem",
-                          borderRadius: "10px",
-                          mx: 1,
-                          my: 0.5,
-                          color: "#0f172a",
-                          "&:hover": { backgroundColor: "#f1f5f9" },
-                        },
-                        "& .MuiMenuItem-root.Mui-selected": {
-                          backgroundColor: "#0f172a !important",
-                          color: "#ffffff !important",
-                        },
-                        "& .MuiMenuItem-root.Mui-selected:hover": {
-                          backgroundColor: "#0f172a !important",
-                        },
-                        "& .MuiMenuItem-root.Mui-selected *": {
-                          color: "#ffffff !important",
-                        },
-                      },
-                    },
-                  }}
-                >
-                  {sortOptions.map((o) => (
-                    <MenuItem className="font-ar" key={o.value} value={o.value}>
-                      {o.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <div className="hidden lg:block">{sortSelect}</div>
             </div>
           </div>
         </motion.div>
@@ -523,14 +529,18 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
           {/* Content */}
           <div ref={productsTopRef} className="lg:col-span-9 scroll-mt-28">
 
-            {/* زرار التصفية فوق المنتجات (موبايل) */}
-            <div className="lg:hidden mb-3">
+            {/* صف التصفية + الترتيب (موبايل) */}
+            <div className="lg:hidden mb-3 flex items-center justify-between gap-2">
               <button
                 onClick={() => setShowFilter(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 text-sm font-extrabold shadow-sm hover:shadow transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 text-sm font-extrabold shadow-sm hover:shadow transition shrink-0"
               >
                 <FiFilter /> تصفية
               </button>
+
+              <div className="min-w-0 flex-1 flex justify-end [&_.MuiFormControl-root]:w-full [&_.MuiFormControl-root]:min-w-0">
+                {sortSelect}
+              </div>
             </div>
 
             {/* Products */}
