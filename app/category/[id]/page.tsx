@@ -416,10 +416,18 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
                           borderRadius: "10px",
                           mx: 1,
                           my: 0.5,
+                          color: "#0f172a",
+                          "&:hover": { backgroundColor: "#f1f5f9" },
                         },
-                        "& .Mui-selected": {
+                        "& .MuiMenuItem-root.Mui-selected": {
                           backgroundColor: "#0f172a !important",
-                          color: "#fff",
+                          color: "#ffffff !important",
+                        },
+                        "& .MuiMenuItem-root.Mui-selected:hover": {
+                          backgroundColor: "#0f172a !important",
+                        },
+                        "& .MuiMenuItem-root.Mui-selected *": {
+                          color: "#ffffff !important",
                         },
                       },
                     },
