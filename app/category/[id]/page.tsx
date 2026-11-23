@@ -430,6 +430,36 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
           </div>
         </motion.div>
 
+        {/* شارات الأقسام الفرعية — فوق البانر */}
+          {subCategories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-5"
+            >
+              <div className="flex flex-row-reverse flex-wrap gap-2">
+                <Link
+                  href={`/category/${category?.slug || ""}`}
+                  className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
+                >
+                  جميع {category?.name || "المنتجات"}
+                </Link>
+
+                {subCategories.map((sub) => (
+                  <Link
+                    key={sub.id}
+                    href={`/category/${sub.slug || sub.id}`}
+                    className="inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
+                  >
+                    {sub.name}
+                  </Link>
+                ))}
+
+
+              </div>
+            </motion.div>
+          )}
+
         {/* Banner with fallback and responsive mobile/desktop support */}
         {(category.category_banners?.[0]?.image || category.category_banners?.[0]?.mobile_image) && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
@@ -470,60 +500,6 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
           {/* Content */}
           <div ref={productsTopRef} className="lg:col-span-9 scroll-mt-28">
-            {/* شارات الأقسام الفرعية */}
-            {subCategories.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-5"
-              >
-                <div className="flex flex-row-reverse flex-wrap gap-2">
-                  <Link
-                    href={`/category/${category?.slug || ""}`}
-                    className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
-                  >
-                    جميع {category?.name || "المنتجات"}
-                  </Link>
-
-                  {subCategories.map((sub) => (
-                    <Link
-                      key={sub.id}
-                      href={`/category/${sub.slug || sub.id}`}
-                      className="inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
-                    >
-                      {sub.name}
-                    </Link>
-                  ))}
-
-                  {/* صور الأقسام الفرعية (مخفية على الموبايل) */}
-                  <div className="hidden">
-                  {subCategories.map((sub) => (
-                    <Link
-                      href={`/category/${sub.slug || sub.id}`}
-                      key={sub.id}
-                      className="min-w-fit group"
-                    >
-                      <div className="flex flex-col items-center gap-2.5">
-                        <div className="relative w-[104px] h-[104px] md:w-[136px] md:h-[136px] rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm group-hover:shadow-md group-hover:border-pro/40 transition">
-                          <ImageWithFallback
-                            src={sub.sub_image || sub.image}
-                            alt={sub.name}
-                            fill
-                            sizes="(max-width: 768px) 104px, 136px"
-                            className="object-cover group-hover:scale-[1.06] transition duration-300"
-                            fallbackSrc="/images/not.jpg"
-                          />
-                        </div>
-                        <p className="text-sm md:text-base font-extrabold text-slate-700 group-hover:text-pro transition line-clamp-1 w-[104px] md:w-[136px] text-center">
-                          {sub.name}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
 
             {/* Products */}
             {loadingProducts && products.length === 0 ? (
