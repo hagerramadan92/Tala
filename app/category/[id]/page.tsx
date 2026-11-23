@@ -398,13 +398,13 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
             <div className="flex items-center gap-2.5 md:gap-3">
               {/* أيقونة القسم */}
-              <div className="w-11 h-11 md:w-14 md:h-14 rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                 {category.image || category.sub_image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={(category.image || category.sub_image) as string}
                     alt={category.name}
-                    className="w-full h-full object-contain p-1"
+                    className="w-full h-full object-contain p-1.5"
                   />
                 ) : (
                   <span className="text-xl md:text-2xl">📦</span>
