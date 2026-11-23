@@ -21,6 +21,8 @@ type ProductFilterProps = {
 	colors?: string[];
 	categories?: Category[];
 	onFilterChange?: (filters: Filters) => void;
+	/** داخل درج الموبايل: من غير sticky ومن غير رأس مكرر */
+	embedded?: boolean;
 };
  
 
@@ -30,6 +32,7 @@ export default function ProductFilter({
 	colors = [],
 	categories = [],
 	onFilterChange = () => { },
+	embedded = false,
 }: ProductFilterProps) {
 	const [filters, setFilters] = useState<Filters>({
 		available: false,
@@ -92,20 +95,22 @@ export default function ProductFilter({
 	};
 
 	return (
-		<div className="md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4 sticky top-[150px]">
-			<div className="flex items-center justify-between gap-2">
-				<div className="flex items-center gap-2">
-					<FiFilter />
-					<p className="font-black text-[1.05rem] text-slate-900">تصفية</p>
-				</div>
+		<div className={`md:rounded-2xl rounded-lg border border-slate-200 bg-white shadow-sm p-4 ${embedded ? "" : "sticky top-[150px]"}`}>
+			{!embedded && (
+				<div className="flex items-center justify-between gap-2">
+					<div className="flex items-center gap-2">
+						<FiFilter />
+						<p className="font-black text-[1.05rem] text-slate-900">تصفية</p>
+					</div>
 
-				<button
-					onClick={clearAll}
-					className="text-xs font-extrabold text-slate-600 hover:text-slate-900 rounded-xl px-3 py-2 hover:bg-slate-50 transition"
-				>
-					مسح الكل
-				</button>
-			</div>
+					<button
+						onClick={clearAll}
+						className="text-xs font-extrabold text-slate-600 hover:text-slate-900 rounded-xl px-3 py-2 hover:bg-slate-50 transition"
+					>
+						مسح الكل
+					</button>
+				</div>
+			)}
 
 			{/* Active chips */}
 			{activeChips.length > 0 && (

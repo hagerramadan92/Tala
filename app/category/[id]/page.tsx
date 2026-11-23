@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import Discount from "@/components/Discount";
 import ProductCard from "@/components/ProductCard";
 import ProductFilter from "@/components/ProductFilter";
-import { FiFilter, FiGrid, FiList } from "react-icons/fi";
+import { FiFilter, FiGrid, FiList, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ProductI } from "@/Types/ProductsI";
@@ -15,6 +15,7 @@ import CategoryPageSkeleton, { ProductCardSkeleton } from "@/components/skeleton
 import { ChevronDown } from "lucide-react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { LayoutGrid, Grid2X2, Columns3, Columns4 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { FormControl, Select } from "@mui/material";
 import { MenuItem } from "@mui/material";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -82,6 +83,13 @@ const fadeUp = {
   hidden: { opacity: 0, y: 10 },
   show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.04 } }),
 };
+
+function Portal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return createPortal(children, document.body);
+}
 
 export default function CategoryPage() {
   const { id } = useParams();
@@ -669,41 +677,55 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
       {/* Mobile Filter Drawer */}
       <AnimatePresence>
         {showFilter && (
-          <>
+          <Portal>
             <motion.div
-              className="fixed inset-0 bg-black/40 z-40"
+              className="fixed inset-0 bg-black/40 z-[9998]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowFilter(false)}
             />
             <motion.div
-              className="fixed top-0 right-0 h-full w-[86%] max-w-[360px] bg-white z-50 shadow-2xl"
+              className="fixed top-0 right-0 h-full w-[88%] max-w-[380px] bg-white z-[9999] shadow-2xl flex flex-col rounded-l-2xl overflow-hidden"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 30 }}
             >
-              <div className="p-4 border-b flex items-center justify-between">
-                <h3 className="font-black text-lg text-slate-900">تصفية</h3>
+              {/* رأس الدرج */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
+                <h3 className="font-black text-base text-slate-900">تصفية المنتجات</h3>
                 <button
                   onClick={() => setShowFilter(false)}
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-extrabold hover:bg-slate-50 transition"
+                  aria-label="إغلاق"
+                  className="w-9 h-9 grid place-items-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition"
                 >
-                  إغلاق
+                  <FiX size={18} />
                 </button>
               </div>
 
-              <div className="p-4 overflow-y-auto h-[calc(100%-64px)]">
+              {/* المحتوى */}
+              <div className="flex-1 overflow-y-auto px-3 py-3 pb-24">
                 <ProductFilter
+                  embedded
                   materials={filterMaterials}
                   colors={filterColors}
                   categories={subCategories}
                   onFilterChange={handleFilterChange}
                 />
               </div>
+
+              {/* زر سفلي */}
+              <div className="shrink-0 border-t border-slate-100 bg-white p-3">
+                <button
+                  onClick={() => setShowFilter(false)}
+                  className="w-full rounded-xl bg-pro text-white py-2.5 text-sm font-extrabold hover:bg-pro-max transition"
+                >
+                  عرض النتائج
+                </button>
+              </div>
             </motion.div>
-          </>
+          </Portal>
         )}
       </AnimatePresence>
     </section>
