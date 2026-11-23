@@ -308,15 +308,29 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-900">{category.name}</h1>
-              <p className="max-md:hidden text-sm text-slate-500 mt-1">
-                عرض{" "}
-                <span className="font-extrabold text-slate-900">
-                  {pagination?.total ?? products.length}
-                </span>{" "}
-                منتج
-              </p>
+            <div className="flex items-center gap-2.5 md:gap-3">
+              {/* أيقونة القسم */}
+              <div className="w-11 h-11 md:w-14 md:h-14 rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
+                {category.image || category.sub_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={(category.image || category.sub_image) as string}
+                    alt={category.name}
+                    className="w-full h-full object-contain p-1"
+                  />
+                ) : (
+                  <span className="text-xl md:text-2xl">📦</span>
+                )}
+              </div>
+
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-3xl font-black text-slate-900 leading-tight">
+                  {category.name}
+                </h1>
+                <p className="text-[10.5px] md:text-sm text-slate-500 font-semibold mt-0.5 leading-snug">
+                  مجموعة متنوعة من {String(category.name).startsWith("ال") ? category.name : `ال${category.name}`} المطبوعة بجودة عالية
+                </p>
+              </div>
             </div>
 
             {/* actions */}
