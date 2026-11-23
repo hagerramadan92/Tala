@@ -470,14 +470,33 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
           {/* Content */}
           <div ref={productsTopRef} className="lg:col-span-9 scroll-mt-28">
-            {/* Sub categories row with fallback images */}
+            {/* شارات الأقسام الفرعية */}
             {subCategories.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6"
+                className="mb-5"
               >
-                <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3">
+                <div className="flex flex-row-reverse flex-wrap gap-2">
+                  <Link
+                    href={`/category/${category?.slug || ""}`}
+                    className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
+                  >
+                    جميع {category?.name || "المنتجات"}
+                  </Link>
+
+                  {subCategories.map((sub) => (
+                    <Link
+                      key={sub.id}
+                      href={`/category/${sub.slug || sub.id}`}
+                      className="inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
+                    >
+                      {sub.name}
+                    </Link>
+                  ))}
+
+                  {/* صور الأقسام الفرعية (مخفية على الموبايل) */}
+                  <div className="hidden">
                   {subCategories.map((sub) => (
                     <Link
                       href={`/category/${sub.slug || sub.id}`}
@@ -501,6 +520,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
                       </div>
                     </Link>
                   ))}
+                  </div>
                 </div>
               </motion.div>
             )}
