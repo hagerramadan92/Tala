@@ -304,7 +304,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
   return (
     <section className="">
-      <div className="container pt-6 pb-6 md:py-12">
+      <div className="container pt-10 pb-6 md:py-12">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
@@ -335,14 +335,6 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
             {/* actions */}
             <div className="flex flex-wrap items-center gap-2">
-              {/* Mobile filter */}
-              <button
-                onClick={() => setShowFilter(true)}
-                className="lg:hidden inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 text-sm font-extrabold shadow-sm hover:shadow transition"
-              >
-                <FiFilter /> تصفية
-              </button>
-
               {/* Columns (grid only) */}
               <div className="hidden lg:flex items-center gap-1 rounded-xl bg-white border border-slate-200 p-1 shadow-sm">
                 {[
@@ -451,10 +443,10 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
               animate={{ opacity: 1, y: 0 }}
               className="mb-5"
             >
-              <div className="flex flex-row-reverse flex-wrap gap-2">
+              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <Link
                   href={`/category/${category?.slug || ""}`}
-                  className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
+                  className="shrink-0 inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
                 >
                   جميع {category?.name || "المنتجات"}
                 </Link>
@@ -463,7 +455,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
                   <Link
                     key={sub.id}
                     href={`/category/${sub.slug || sub.id}`}
-                    className="inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
+                    className="shrink-0 inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
                   >
                     {sub.name}
                   </Link>
@@ -514,6 +506,16 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
           {/* Content */}
           <div ref={productsTopRef} className="lg:col-span-9 scroll-mt-28">
+
+            {/* زرار التصفية فوق المنتجات (موبايل) */}
+            <div className="lg:hidden mb-3">
+              <button
+                onClick={() => setShowFilter(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 text-sm font-extrabold shadow-sm hover:shadow transition"
+              >
+                <FiFilter /> تصفية
+              </button>
+            </div>
 
             {/* Products */}
             {loadingProducts && products.length === 0 ? (
