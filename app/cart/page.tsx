@@ -932,7 +932,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container pb-8 !pt-5" dir="rtl">
+    <div className="container pb-8 !pt-8 md:!pt-10" dir="rtl">
       <LoginModal
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
