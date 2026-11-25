@@ -430,9 +430,9 @@ export default function OrderCompletePage() {
 										</div>
 
 										<div>
-											<div className="flex items-center gap-1 text-2xl font-extrabold text-slate-900">
+											<div className="flex flex-wrap md:flex-nowrap items-center gap-1 text-lg md:text-2xl font-extrabold text-slate-900 whitespace-nowrap">
 												<span>شكرًا</span>
-												<span className="text-emerald-600">{order.customer_name}</span>
+												<span className="text-emerald-600 truncate max-w-[60vw] md:max-w-none">{order.customer_name}</span>
 												<span>!</span>
 											</div>
 											<p className="text-slate-500 font-semibold mt-1">تم استلام طلبك بنجاح 🎉</p>
