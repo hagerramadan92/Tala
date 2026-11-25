@@ -873,8 +873,8 @@ export default function StationeryPage() {
                     className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-slate-200 space-y-5 relative"
                   >
                     {/* File Header */}
-                    <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 border-b border-slate-100 pb-4">
+                      <div className="flex items-center gap-3 min-w-0 w-full md:w-auto">
                         <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-xl">
                           {file.is_image ? "🖼️" : "📄"}
                         </div>
@@ -882,7 +882,7 @@ export default function StationeryPage() {
                           <h4 className="font-extrabold text-sm md:text-base text-slate-900 truncate" title={file.file_name}>
                             {file.file_name}
                           </h4>
-                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 flex-wrap">
+                          <div className="flex items-center gap-x-2 gap-y-1 text-[11px] md:text-xs text-slate-500 mt-1 flex-wrap leading-relaxed">
                             <span className="bg-slate-100 px-2 py-0.5 rounded font-medium">
                               {file.service_type === "photo" ? "صورة" : "مستند"}
                             </span>
@@ -900,7 +900,7 @@ export default function StationeryPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto shrink-0">
                         <div className="text-left">
                           <span className="text-base font-extrabold text-[#ff7300]">
                             {fileCost.toFixed(2)} ر.س
