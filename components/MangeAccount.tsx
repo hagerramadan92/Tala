@@ -1,5 +1,6 @@
 "use client";
 
+import { isSyntheticEmail } from "@/lib/email";
 import React, { useState, useEffect } from "react";
 import ChangePassword from "./ChangePassword";
 import PointsCard from "./PointsCard";
@@ -49,7 +50,8 @@ export default function MangeAccount() {
 
 			setFirstName(nameParts[0] || "");
 			setLastName(nameParts.slice(1).join(" ") || "");
-			setEmail(data?.data?.email || "");
+			const e = data?.data?.email || "";
+			setEmail(isSyntheticEmail(e) ? "" : e);
 			setUsername(data?.data?.username || "");
 			setUsernameDraft(data?.data?.username || "");
 		} catch {
@@ -276,8 +278,8 @@ export default function MangeAccount() {
 						</AnimatePresence>
 					</div>
 
-					{/* Email row */}
-					<SettingRow
+					{/* Email row — يظهر فقط لو فيه إيميل حقيقي */}
+					{!isSyntheticEmail(email) && <SettingRow
 						icon={<HiOutlineEnvelope size={20} />}
 						title="البريد الإلكتروني"
 						description="مُستخدم لتأكيد الطلبات والإشعارات."
@@ -287,7 +289,7 @@ export default function MangeAccount() {
 								{email || "—"}
 							</div>
 						}
-					/>
+					/>}
 				</div>
 			</section>
 		</div>

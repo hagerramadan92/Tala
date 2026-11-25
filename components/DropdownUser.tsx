@@ -1,5 +1,6 @@
 "use client";
 
+import { visibleEmail } from "@/lib/email";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -167,7 +168,7 @@ export default function DropdownUser() {
                       {displayName}
                     </p>
                     <p className="text-xs text-slate-500 font-semibold truncate">
-                      {session?.user?.email || "مرحبًا بك في تالا الجزيرة"}
+                      {visibleEmail(session?.user?.email) || "مرحبًا بك في تالا الجزيرة"}
                     </p>
                   </div>
                 </div>
