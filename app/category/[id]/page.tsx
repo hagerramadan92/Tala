@@ -69,6 +69,12 @@ interface CategoryData {
   children: CategoryChild[];
   products: ProductI[];
   category_banners?: { id?: number; image?: string; mobile_image?: string; alt?: string }[];
+  parent?: {
+    id: number;
+    name: string;
+    slug: string;
+    children?: CategoryChild[];
+  } | null;
 }
 
 interface Filters {
@@ -310,6 +316,13 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
 
   const totalPages = pagination?.last_page ?? 1;
 
+  // شارات الأقسام الفرعية: أبناء القسم الحالي، أو أبناء القسم الأب لو إحنا في قسم فرعي
+  const pillCategories =
+    subCategories.length > 0 ? subCategories : ((category?.parent?.children as CategoryChild[] | undefined) ?? []);
+  const pillParent = subCategories.length > 0 ? category : (category?.parent ?? null);
+  const isPillParentActive = subCategories.length > 0 || !category?.parent;
+
+
   // قائمة الترتيب (هيدر الديسكتوب + صف التصفية للموبايل)
   const sortSelect = (
                 <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -459,7 +472,7 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
         </motion.div>
 
         {/* شارات الأقسام الفرعية — فوق البانر */}
-          {subCategories.length > 0 && (
+          {pillCategories.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -467,21 +480,32 @@ function CategoryPageContent({ categoryId }: { categoryId: string }) {
             >
               <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <Link
-                  href={`/category/${category?.slug || ""}`}
-                  className="shrink-0 inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
+                  href={`/category/${pillParent?.slug || ""}`}
+                  className={
+                    isPillParentActive
+                      ? "shrink-0 inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
+                      : "shrink-0 inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
+                  }
                 >
-                  جميع {category?.name || "المنتجات"}
+                  جميع {pillParent?.name || "المنتجات"}
                 </Link>
 
-                {subCategories.map((sub) => (
-                  <Link
-                    key={sub.id}
-                    href={`/category/${sub.slug || sub.id}`}
-                    className="shrink-0 inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
-                  >
-                    {sub.name}
-                  </Link>
-                ))}
+                {pillCategories.map((sub) => {
+                  const active = !isPillParentActive && sub.slug === category?.slug;
+                  return (
+                    <Link
+                      key={sub.id}
+                      href={`/category/${sub.slug || sub.id}`}
+                      className={
+                        active
+                          ? "shrink-0 inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-white shadow-sm bg-gradient-to-l from-[#f97316] to-[#ea580c] ring-1 ring-orange-500/30"
+                          : "shrink-0 inline-flex items-center justify-center rounded-full bg-white px-3.5 py-1.5 text-[12px] md:text-[13px] font-extrabold text-slate-700 border border-slate-200 shadow-sm hover:border-pro hover:text-pro transition"
+                      }
+                    >
+                      {sub.name}
+                    </Link>
+                  );
+                })}
 
 
               </div>
