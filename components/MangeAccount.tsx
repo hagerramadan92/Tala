@@ -21,6 +21,7 @@ export default function MangeAccount() {
 	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
 	const [username, setUsername] = useState("");
+	const [usernameDraft, setUsernameDraft] = useState("");
 	const [saving, setSaving] = useState(false);
 
 	const router = useRouter();
@@ -50,6 +51,7 @@ export default function MangeAccount() {
 			setLastName(nameParts.slice(1).join(" ") || "");
 			setEmail(data?.data?.email || "");
 			setUsername(data?.data?.username || "");
+			setUsernameDraft(data?.data?.username || "");
 		} catch {
 			Swal.fire({
 				icon: "error",
@@ -83,7 +85,11 @@ export default function MangeAccount() {
 					Accept: "application/json",
 					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify({ name: fullName, email: email.trim() || null }),
+				body: JSON.stringify({
+					name: fullName,
+					email: email.trim() || null,
+					...(usernameDraft.trim() ? { username: usernameDraft.trim() } : {}),
+				}),
 			});
 			const data = await res.json();
 
@@ -95,7 +101,10 @@ export default function MangeAccount() {
 			localStorage.setItem("userName", savedName);
 			localStorage.setItem("fullName", savedName);
 			if (data?.data?.email) localStorage.setItem("userEmail", data.data.email);
-			if (data?.data?.username) setUsername(data.data.username);
+			if (data?.data?.username) {
+				setUsername(data.data.username);
+				setUsernameDraft(data.data.username);
+			}
 
 			Swal.fire({
 				icon: "success",
@@ -173,19 +182,22 @@ export default function MangeAccount() {
 						/>
 					</form>
 
-					{username && (
-						<div className="mt-4">
-							<label className="block text-sm font-extrabold text-slate-800 mb-2">
-								اسم المستخدم
-							</label>
-							<div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-								<span className="font-bold text-slate-900" dir="ltr">
-									{username}
-								</span>
-								<span className="text-[11px] font-bold text-slate-500">ثابت</span>
-							</div>
-						</div>
-					)}
+					<div className="mt-4">
+						<label className="block text-sm font-extrabold text-slate-800 mb-2">
+							اسم المستخدم
+						</label>
+						<input
+							type="text"
+							dir="ltr"
+							value={usernameDraft}
+							onChange={(e) => setUsernameDraft(e.target.value.replace(/[^A-Za-z0-9._]/g, ""))}
+							placeholder="username"
+							className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-bold text-slate-900 outline-none focus:border-pro focus:ring-2 focus:ring-pro/15"
+						/>
+						<p className="mt-1 text-[11px] font-bold text-slate-500">
+							حروف إنجليزية وأرقام فقط — لازم يكون فريد (مش مستخدم عند حد تاني).
+						</p>
+					</div>
 
 					<div className="mt-4 md:hidden">
 						<button
