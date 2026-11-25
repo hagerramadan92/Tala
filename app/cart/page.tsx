@@ -3471,20 +3471,20 @@ function TotalOrder({
         </div>
       )}
 
-      {/* عرض الضريبة */}
-      <div className="flex items-center justify-between text-sm">
-        <p>ضريبة القيمة المضافة (15%)</p>
-        <p className="font-semibold">
-          {formattedTax}
-          <span className="text-xs me-1">ريال</span>
-        </p>
-      </div>
-
       {/* عرض الإجمالي بدون الضريبة */}
       <div className="flex items-center justify-between text-sm">
         <p>الإجمالي بدون الضريبة</p>
         <p className="font-semibold">
           {formattedTotalWithoutTax}
+          <span className="text-xs me-1">ريال</span>
+        </p>
+      </div>
+
+      {/* عرض الضريبة */}
+      <div className="flex items-center justify-between text-sm">
+        <p>ضريبة القيمة المضافة (15%)</p>
+        <p className="font-semibold">
+          {formattedTax}
           <span className="text-xs me-1">ريال</span>
         </p>
       </div>
