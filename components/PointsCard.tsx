@@ -55,9 +55,6 @@ export default function PointsCard() {
               رصيدك الحالي <strong className="text-amber-700">{summary.balance}</strong> نقطة
               ≈ <strong className="text-amber-700">{Number(summary.value || 0).toFixed(2)}</strong> ر.س
             </p>
-            <p className="mt-1 text-xs text-slate-500 font-semibold">
-              كل {summary.settings.redeem_rate} نقطة = 1 ر.س — الحد الأدنى للاستخدام {summary.settings.min_redeem_points} نقطة.
-            </p>
           </div>
         </div>
 
