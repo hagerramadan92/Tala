@@ -668,7 +668,7 @@ export default function StationeryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-32 text-slate-800 font-sans" dir="rtl">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans overflow-x-clip flex flex-col" dir="rtl">
       {/* Top Banner / Hero Header */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#14213d] to-[#1a2c50] text-white pt-8 pb-14 px-4 md:px-8 border-b border-slate-700/50">
         <div className="absolute inset-0 bg-[radial-gradient(#ff7300_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
@@ -687,7 +687,7 @@ export default function StationeryPage() {
         </div>
       </div>
 
-      <div className="container mx-auto max-w-4xl px-4 -mt-6">
+      <div className="container mx-auto max-w-4xl px-3 sm:px-4 -mt-6 pb-8 flex-1">
         {/* Main Content Card */}
         {uploadedFiles.length === 0 ? (
           /* Step 1: Initial Choice */
@@ -817,33 +817,33 @@ export default function StationeryPage() {
           /* Step 2: Print Details Screen (Matching Screenshot 3 & Specs) */
           <div className="space-y-6">
             {/* Top Navigation & Action */}
-            <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-2 bg-white rounded-2xl p-2.5 sm:p-4 shadow-sm border border-slate-200">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <button
                   type="button"
                   onClick={() => setUploadedFiles([])}
-                  className="w-9 h-9 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition"
+                  className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition"
                   title="الرجوع للبداية"
                 >
                   <FiChevronRight className="w-5 h-5" />
                 </button>
-                <div>
-                  <h3 className="font-extrabold text-base md:text-lg text-slate-900">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-extrabold text-[13px] sm:text-base md:text-lg text-slate-900 whitespace-nowrap truncate">
                     تفاصيل ومواصفات الطباعة
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-[11px] sm:text-xs text-slate-500 truncate">
                     حدد خيارات كل ملف من المقاس واللون والنسخ
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsUploadModalOpen(true)}
-                  className="px-4 py-2.5 rounded-xl bg-pro hover:bg-pro-max text-white font-bold text-xs md:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                  className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-pro hover:bg-pro-max text-white font-bold text-[11px] sm:text-xs md:text-sm inline-flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shrink-0 shadow-sm transition cursor-pointer"
                 >
-                  <FiPlus className="w-4 h-4" />
+                  <FiPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span>إضافة ملفات</span>
                 </button>
               </div>
@@ -870,39 +870,38 @@ export default function StationeryPage() {
                     key={file.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-slate-200 space-y-5 relative"
+                    className="bg-white rounded-2xl p-3.5 sm:p-5 md:p-6 shadow-sm border border-slate-200 space-y-4 sm:space-y-5 relative"
                   >
                     {/* File Header */}
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 border-b border-slate-100 pb-4">
-                      <div className="flex items-center gap-3 min-w-0 w-full md:w-auto">
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 border-b border-slate-100 pb-3.5 sm:pb-4">
+                      <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-lg sm:text-xl">
                           {file.is_image ? "🖼️" : "📄"}
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-extrabold text-sm md:text-base text-slate-900 truncate" title={file.file_name}>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-extrabold text-sm sm:text-base text-slate-900 truncate" title={file.file_name}>
                             {file.file_name}
                           </h4>
-                          <div className="flex items-center gap-x-2 gap-y-1 text-[11px] md:text-xs text-slate-500 mt-1 flex-wrap leading-relaxed">
-                            <span className="bg-slate-100 px-2 py-0.5 rounded font-medium">
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 mt-1.5">
+                            <span className="bg-slate-100 px-2 py-0.5 rounded-md font-medium whitespace-nowrap">
                               {file.service_type === "photo" ? "صورة" : "مستند"}
                             </span>
-                            <span>•</span>
-                            <span>{file.size_formatted || "ملف جاهز"}</span>
-                            <span>•</span>
-                            <span className="text-pro font-bold bg-pro/5 px-2 py-0.5 rounded">
+                            <span className="bg-slate-50 border border-slate-200/70 px-2 py-0.5 rounded-md whitespace-nowrap">
+                              {file.size_formatted || "ملف جاهز"}
+                            </span>
+                            <span className="text-pro font-bold bg-pro/5 px-2 py-0.5 rounded-md whitespace-nowrap">
                               {file.pages_count > 1 ? `ملف (${file.pages_count} صفحة)` : "ورقة مفردة (1 صفحة)"}
                             </span>
-                            <span>•</span>
-                            <span className="text-slate-500 font-medium">
+                            <span className="text-slate-500 font-medium whitespace-nowrap">
                               ({currentUnitPrice} ر.س / ورقة)
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto shrink-0">
-                        <div className="text-left">
-                          <span className="text-base font-extrabold text-[#ff7300]">
+                      <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0 pt-2.5 sm:pt-0 border-t border-slate-100 sm:border-t-0">
+                        <div className="text-right sm:text-left">
+                          <span className="text-base font-extrabold text-[#ff7300] whitespace-nowrap">
                             {fileCost.toFixed(2)} ر.س
                           </span>
                           {servicesCost > 0 && (
@@ -914,7 +913,7 @@ export default function StationeryPage() {
                         <button
                           type="button"
                           onClick={() => removeFile(file.id)}
-                          className="w-8 h-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"
+                          className="w-8 h-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0"
                           title="حذف هذا الملف"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -975,7 +974,7 @@ export default function StationeryPage() {
                       </div>
 
                       {/* Control 3: Colour preset (B&W vs Color) */}
-                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+                      <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200/70">
                         <label className="block text-xs font-bold text-slate-700 mb-2">
                           نوع الألوان (Colour Preset):
                         </label>
@@ -983,14 +982,14 @@ export default function StationeryPage() {
                           <button
                             type="button"
                             onClick={() => updateFileOption(file.id, "color_type", "bw")}
-                            className={`p-2 rounded-lg border text-xs font-bold flex flex-col items-center justify-center gap-1 transition ${
+                            className={`px-1.5 py-2 sm:p-2 rounded-lg border text-[11px] sm:text-xs font-bold flex flex-col items-center justify-center gap-1 transition ${
                               file.color_type === "bw"
                                 ? "border-[#ff7300] bg-white text-[#ff7300] shadow-xs"
                                 : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white"
                             }`}
                           >
-                            <span>⚪ أبيض وأسود</span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="whitespace-nowrap">⚪ أبيض وأسود</span>
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
                               {getPagePrice(file.service_type, file.paper_size, file.paper_type, "bw", file.side_type, file.orientation, file.pages_count).toFixed(2)} ر.س/ص
                             </span>
                           </button>
@@ -998,14 +997,14 @@ export default function StationeryPage() {
                           <button
                             type="button"
                             onClick={() => updateFileOption(file.id, "color_type", "color")}
-                            className={`p-2 rounded-lg border text-xs font-bold flex flex-col items-center justify-center gap-1 transition ${
+                            className={`px-1.5 py-2 sm:p-2 rounded-lg border text-[11px] sm:text-xs font-bold flex flex-col items-center justify-center gap-1 transition ${
                               file.color_type === "color"
                                 ? "border-[#ff7300] bg-white text-[#ff7300] shadow-xs"
                                 : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white"
                             }`}
                           >
-                            <span>🎨 ألوان ملونة</span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="whitespace-nowrap">🎨 ألوان ملونة</span>
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
                               {getPagePrice(file.service_type, file.paper_size, file.paper_type, "color", file.side_type, file.orientation, file.pages_count).toFixed(2)} ر.س/ص
                             </span>
                           </button>
@@ -1050,8 +1049,8 @@ export default function StationeryPage() {
                       </div>
 
                       {/* Control 5: Paper Size (A1 to A5) */}
-                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 md:col-span-2 lg:col-span-3">
-                        <div className="flex items-center justify-between mb-2">
+                      <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200/70 md:col-span-2 lg:col-span-3">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2">
                           <label className="text-xs font-bold text-slate-700">
                             حجم الورقة (Paper Size A1 - A5):
                           </label>
@@ -1068,7 +1067,7 @@ export default function StationeryPage() {
                                 key={size}
                                 type="button"
                                 onClick={() => changeFileSize(file.id, size)}
-                                className={`py-2 px-2.5 rounded-xl border text-center transition ${
+                                className={`py-2 px-1.5 sm:px-2.5 rounded-xl border text-center transition ${
                                   isSelected
                                     ? "border-[#ff7300] bg-white text-[#ff7300] shadow-xs ring-2 ring-[#ff7300]/10"
                                     : "border-slate-200 bg-white/70 text-slate-700 hover:bg-white"
@@ -1085,7 +1084,7 @@ export default function StationeryPage() {
                       </div>
 
                       {/* Control 6: Print Orientation */}
-                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+                      <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200/70">
                         <label className="block text-xs font-bold text-slate-700 mb-2">
                           اتجاه الطباعة (Print Orientation):
                         </label>
@@ -1093,24 +1092,26 @@ export default function StationeryPage() {
                           <button
                             type="button"
                             onClick={() => updateFileOption(file.id, "orientation", "portrait")}
-                            className={`p-2 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                            className={`px-1.5 py-2 sm:p-2 rounded-lg border text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap transition ${
                               file.orientation === "portrait"
                                 ? "border-[#ff7300] bg-white text-[#ff7300] shadow-xs"
                                 : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white"
                             }`}
                           >
-                            <span>📄 طولي (Portrait)</span>
+                            <span>📄 طولي</span>
+                            <span className="hidden sm:inline">(Portrait)</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => updateFileOption(file.id, "orientation", "landscape")}
-                            className={`p-2 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                            className={`px-1.5 py-2 sm:p-2 rounded-lg border text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap transition ${
                               file.orientation === "landscape"
                                 ? "border-[#ff7300] bg-white text-[#ff7300] shadow-xs"
                                 : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white"
                             }`}
                           >
-                            <span>📑 عرضي (Landscape)</span>
+                            <span>📑 عرضي</span>
+                            <span className="hidden sm:inline">(Landscape)</span>
                           </button>
                         </div>
                       </div>
@@ -1165,7 +1166,7 @@ export default function StationeryPage() {
                             </span>
                           )}
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-4 gap-2">
                           {servicesForSize(file.paper_size).map((service) => {
                             const active = file.services.includes(service.key);
                             return (
@@ -1333,26 +1334,26 @@ export default function StationeryPage() {
         )}
       </AnimatePresence>
 
-      {/* Sticky Bottom Summary Bar (Active when files are uploaded) */}
+      {/* Sticky Bottom Summary Bar (Active when files are uploaded — stops naturally above Footer) */}
       {uploadedFiles.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-xl py-3.5 px-4">
-          <div className="container mx-auto max-w-5xl flex items-center justify-between gap-4 flex-wrap">
+        <div className="sticky bottom-0 inset-x-0 z-50 mt-auto bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-xl py-2.5 sm:py-3.5 px-3 sm:px-4">
+          <div className="container mx-auto max-w-5xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4">
             {/* Left/Start side: Summary info */}
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="text-lg md:text-2xl font-black text-[#ff7300]">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span className="text-lg md:text-2xl font-black text-[#ff7300] whitespace-nowrap">
                   {grandTotal.toFixed(2)} ر.س
                 </span>
-                <span className="text-xs text-slate-400">شامل الضريبة</span>
+                <span className="text-[11px] sm:text-xs text-slate-400">شامل الضريبة</span>
               </div>
-              <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
-                <span>{uploadedFiles.length} مستندات</span>
+              <div className="text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
+                <span className="whitespace-nowrap">{uploadedFiles.length} مستندات</span>
                 <span>•</span>
-                <span>{totalPagesAll} صفحة / ورقة</span>
+                <span className="whitespace-nowrap">{totalPagesAll} صفحة / ورقة</span>
                 {servicesTotal > 0 && (
                   <>
                     <span>•</span>
-                    <span className="text-[#ff7300] font-bold">
+                    <span className="text-[#ff7300] font-bold whitespace-nowrap">
                       خدمات إضافية: {servicesTotal.toFixed(2)} ر.س
                     </span>
                   </>
@@ -1362,12 +1363,12 @@ export default function StationeryPage() {
             </div>
 
             {/* Right/End side: Action Button */}
-            <div className="flex items-center gap-3">
+            <div className="w-full sm:w-auto flex items-center gap-3">
               <button
                 type="button"
                 disabled={isAddingToCart}
                 onClick={handleAddToCart}
-                className="px-6 md:px-10 py-3.5 rounded-xl bg-pro hover:bg-pro-max active:scale-95 text-white font-extrabold text-sm md:text-base flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 transition cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-4 sm:px-6 md:px-10 py-3 sm:py-3.5 rounded-xl bg-pro hover:bg-pro-max active:scale-95 text-white font-extrabold text-xs sm:text-sm md:text-base flex items-center justify-center gap-2 whitespace-nowrap shadow-lg shadow-slate-900/20 transition cursor-pointer disabled:opacity-50"
               >
                 {isAddingToCart ? (
                   <>

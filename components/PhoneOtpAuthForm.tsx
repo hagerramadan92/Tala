@@ -8,6 +8,7 @@ import { FiPhone, FiMessageCircle, FiArrowRight, FiRefreshCw } from "react-icons
 import { FaWhatsapp } from "react-icons/fa";
 import ButtonComponent from "@/components/ButtonComponent";
 import { useAuth } from "@/src/context/AuthContext";
+import { visibleEmail } from "@/lib/email";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://dashboard.talaaljazeera.com/api/v1";
@@ -62,7 +63,7 @@ export default function PhoneOtpAuthForm({
       throw new Error("لم يتم استلام بيانات الدخول من الخادم");
     }
 
-    loginContext(token, user.name, user.email, user.image, user.name);
+    loginContext(token, user.name, visibleEmail(user.email) || undefined, user.image, user.name);
 
     // داخل بوب اب (مثلاً عند إتمام الطلب): نكمل من غير تحويل لصفحة تانية
     if (onSuccess) {

@@ -156,14 +156,15 @@ export default function Page() {
 					</div>
 
 					<button
+						type="button"
 						onClick={() => {
 							setEditingAddress(null);
 							setOpen(true);
 						}}
-						className="inline-flex items-center gap-2 rounded-xl bg-pro px-4 py-3 text-sm font-extrabold text-white hover:opacity-95 active:scale-[0.99] transition"
+						className="inline-flex shrink-0 whitespace-nowrap items-center gap-2 rounded-xl bg-pro px-4 py-3 text-sm font-extrabold text-white hover:opacity-95 active:scale-[0.99] transition"
 					>
-						<FiPlus size={18} />
-						إضافة عنوان
+						<FiPlus size={18} className="shrink-0" />
+						<span>إضافة عنوان</span>
 					</button>
 				</div>
 			</div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { isSyntheticEmail } from "@/lib/email";
+import { isSyntheticEmail, visibleEmail } from "@/lib/email";
 import React, { useState, useEffect } from "react";
 import ChangePassword from "./ChangePassword";
 import PointsCard from "./PointsCard";
@@ -102,7 +102,9 @@ export default function MangeAccount() {
 			const savedName = data?.data?.name || fullName;
 			localStorage.setItem("userName", savedName);
 			localStorage.setItem("fullName", savedName);
-			if (data?.data?.email) localStorage.setItem("userEmail", data.data.email);
+			const cleanEmail = visibleEmail(data?.data?.email);
+			if (cleanEmail) localStorage.setItem("userEmail", cleanEmail);
+			else localStorage.removeItem("userEmail");
 			if (data?.data?.username) {
 				setUsername(data.data.username);
 				setUsernameDraft(data.data.username);
@@ -279,7 +281,7 @@ export default function MangeAccount() {
 					</div>
 
 					{/* Email row — يظهر فقط لو فيه إيميل حقيقي */}
-					{!isSyntheticEmail(email) && <SettingRow
+					{Boolean(visibleEmail(email)) && <SettingRow
 						icon={<HiOutlineEnvelope size={20} />}
 						title="البريد الإلكتروني"
 						description="مُستخدم لتأكيد الطلبات والإشعارات."

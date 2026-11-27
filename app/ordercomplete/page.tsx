@@ -424,16 +424,16 @@ export default function OrderCompletePage() {
 							{/* Header */}
 							<div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6">
 								<div className="flex-col flex items-start md:flex-row justify-between gap-4">
-									<div className="flex items-center gap-3">
-										<div className="w-14 h-14 md:rounded-2xl rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+									<div className="flex items-center gap-3 min-w-0 flex-1">
+										<div className="w-14 h-14 shrink-0 md:rounded-2xl rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
 											<FiCheckCircle className="text-emerald-600" size={26} />
 										</div>
 
-										<div>
-											<div className="flex flex-wrap md:flex-nowrap items-center gap-1 text-lg md:text-2xl font-extrabold text-slate-900 whitespace-nowrap">
-												<span>شكرًا</span>
-												<span className="text-emerald-600 truncate max-w-[60vw] md:max-w-none">{order.customer_name}</span>
-												<span>!</span>
+										<div className="min-w-0 flex-1">
+											<div className="flex flex-nowrap items-center gap-1 text-base sm:text-lg md:text-2xl font-extrabold text-slate-900 whitespace-nowrap">
+												<span className="shrink-0">شكرًا</span>
+												<span className="text-emerald-600 whitespace-nowrap truncate">{order.customer_name}</span>
+												<span className="shrink-0">!</span>
 											</div>
 											<p className="text-slate-500 font-semibold mt-1">تم استلام طلبك بنجاح 🎉</p>
 											{order?.created_at && (

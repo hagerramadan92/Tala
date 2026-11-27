@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { visibleEmail } from "@/lib/email";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -106,7 +107,7 @@ export default function CommentsSection({
   useEffect(() => {
     try {
       const n = localStorage.getItem("userName") || "";
-      const e = localStorage.getItem("userEmail") || "";
+      const e = visibleEmail(localStorage.getItem("userEmail"));
       setName(n);
       setEmail(e);
     } catch {

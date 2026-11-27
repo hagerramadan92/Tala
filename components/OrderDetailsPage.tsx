@@ -13,6 +13,7 @@ import { FiAlertTriangle } from "react-icons/fi";
 import { CheckCircle2, Clock3, Truck, Ban, User2, Mail } from "lucide-react";
 
 import { ProductI } from "@/Types/ProductsI";
+import { visibleEmail } from "@/lib/email";
 
 interface Props {
   orderId: string;
@@ -516,7 +517,9 @@ export default function OrderDetailsPage({ orderId }: Props) {
                 </div>
                 <div>
                   <p className="font-extrabold text-slate-900">{order.user.name}</p>
-                  <p className="text-sm font-bold text-slate-600">{order.user.email}</p>
+                  {visibleEmail(order.user.email) && (
+                    <p className="text-sm font-bold text-slate-600">{visibleEmail(order.user.email)}</p>
+                  )}
                 </div>
               </div>
             </div>

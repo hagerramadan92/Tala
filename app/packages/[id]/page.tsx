@@ -5,12 +5,28 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
 import { openLoginModal } from "@/lib/openLogin";
-import { BadgeCheck, Box, Coffee, Layers3, Minus, Package, Plus, ShoppingBag, ShoppingCart } from "lucide-react";
+import { BadgeCheck, Box, Coffee, Gift, Layers3, Minus, Package, Plus, ShieldCheck, ShoppingBag, ShoppingCart, Sparkles, Tag, Truck, Utensils } from "lucide-react";
 import styles from "./details.module.css";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dashboard.talaaljazeera.com/api/v1";
 
+const FEATURE_ICON_MAP: Record<string, any> = {
+  "shopping-bag": ShoppingBag,
+  "badge-check": BadgeCheck,
+  package: Package,
+  layers: Layers3,
+  coffee: Coffee,
+  "shopping-cart": ShoppingCart,
+  truck: Truck,
+  sparkles: Sparkles,
+  "shield-check": ShieldCheck,
+  utensils: Utensils,
+  gift: Gift,
+  tag: Tag,
+};
+
 type Tier = { id: number; min_quantity: number; max_quantity: number | null; price: number };
+type PkgFeature = { icon: string; label: string };
 type PkgProduct = {
   id: number;
   type: "main" | "optional";
@@ -19,7 +35,7 @@ type PkgProduct = {
   product: { id: number; name: string; image?: string | null; price: number };
   tiers: Tier[];
 };
-type Pkg = { id: number; name: string; description?: string; image?: string; products: PkgProduct[] };
+type Pkg = { id: number; name: string; description?: string; features?: PkgFeature[]; image?: string; products: PkgProduct[] };
 
 function rangePrice(p: PkgProduct, qty: number): number {
   const tiers = p.tiers || [];
@@ -179,6 +195,19 @@ export default function PackageDetailsPage() {
   };
 
   const heroFeatures = (() => {
+    const custom = Array.isArray(pkg?.features)
+      ? pkg.features
+          .filter((f) => f && String(f.label || "").trim() !== "")
+          .map((f) => ({
+            label: String(f.label).trim(),
+            icon: FEATURE_ICON_MAP[f.icon] || BadgeCheck,
+          }))
+      : [];
+
+    if (custom.length > 0) {
+      return custom;
+    }
+
     const names = (pkg?.products || []).map((p) => p.product?.name || "").filter(Boolean);
     const has = (re: RegExp) => names.some((n) => re.test(n));
 
@@ -207,36 +236,36 @@ export default function PackageDetailsPage() {
   return (
     <main dir="rtl" className={styles.page}>
       <section className={styles.detailsContainer}>
-      <div className="relative rounded-[28px] bg-[linear-gradient(100deg,#fff5e9_0,#ffffff_31%,#ffffff_70%,#fff0df_100%)] shadow-[0_7px_18px_rgba(20,33,61,.10)] p-4 md:p-7 overflow-hidden">
-        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+      <div className="relative rounded-[20px] md:rounded-[28px] bg-[linear-gradient(100deg,#fff5e9_0,#ffffff_31%,#ffffff_70%,#fff0df_100%)] shadow-[0_7px_18px_rgba(20,33,61,.10)] p-3 sm:p-4 md:p-7 overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center gap-3.5 sm:gap-5 md:gap-10">
           {/* صورة الباقة */}
           <div className="relative w-full md:w-[47%] shrink-0">
-            <div className="relative h-[280px] md:h-[380px] w-full rounded-[26px] border-2 border-[#ff8a3d] bg-white overflow-hidden">
+            <div className="relative h-[180px] sm:h-[225px] md:h-[360px] w-full rounded-[18px] md:rounded-[26px] border-2 border-[#ff8a3d] bg-white overflow-hidden">
               {pkg.image ? (
                 <Image src={pkg.image} alt={pkg.name} fill sizes="(max-width:768px) 100vw, 47vw" className="object-cover" />
               ) : (
-                <div className="w-full h-full grid place-items-center text-6xl">🎁</div>
+                <div className="w-full h-full grid place-items-center text-5xl">🎁</div>
               )}
             </div>
           </div>
 
           {/* النص والمميزات */}
-          <div className="flex-1 text-center md:text-right">
-            <h1 className="text-4xl md:text-[56px] leading-tight font-black text-[#0b2545]">{pkg.name}</h1>
-            <span className="block w-16 md:w-20 h-1.5 rounded-full bg-[#ff7a00] my-4 md:my-5 mx-auto md:mr-0" />
+          <div className="flex-1 text-center md:text-right w-full">
+            <h1 className="text-2xl sm:text-3xl md:text-[50px] leading-tight font-black text-[#0b2545]">{pkg.name}</h1>
+            <span className="block w-12 md:w-20 h-1 md:h-1.5 rounded-full bg-[#ff7a00] my-2.5 md:my-5 mx-auto md:mr-0" />
             {pkg.description ? (
-              <p className="text-lg md:text-[26px] leading-relaxed font-extrabold text-[#0b2545]">
+              <p className="text-sm sm:text-base md:text-[22px] leading-relaxed font-bold md:font-extrabold text-[#0b2545]">
                 {pkg.description}
               </p>
             ) : null}
 
-            <div className="mt-6 flex flex-wrap md:flex-nowrap justify-center md:justify-start gap-2 md:gap-3">
-              {heroFeatures.map(({ label, icon: Icon }) => (
+            <div className="mt-3.5 md:mt-6 flex flex-wrap justify-center md:justify-start gap-1.5 md:gap-3">
+              {heroFeatures.map(({ label, icon: Icon }, idx) => (
                 <span
-                  key={label}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#fbf3ea] px-3 md:px-4 py-3 md:py-3.5 text-[#0b2545] font-extrabold text-sm md:text-lg whitespace-nowrap"
+                  key={`${label}-${idx}`}
+                  className="inline-flex items-center justify-center gap-1.5 md:gap-2 rounded-xl md:rounded-2xl bg-[#fbf3ea] px-2.5 md:px-4 py-1.5 md:py-3 text-[#0b2545] font-extrabold text-xs sm:text-sm md:text-base whitespace-nowrap"
                 >
-                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-[#ff7a00]" strokeWidth={2.2} />
+                  <Icon className="w-4 h-4 md:w-5 md:h-5 text-[#ff7a00] shrink-0" strokeWidth={2.2} />
                   {label}
                 </span>
               ))}
@@ -266,38 +295,38 @@ export default function PackageDetailsPage() {
                   <p className={styles.productDescription}>{isMain?"منتج أساسي مختار بعناية ضمن محتويات الباقة.":"منتج اختياري يمكنك إضافته بالكمية المناسبة."}</p>
                   <p className={styles.minimum}><Layers3/> الحد الأدنى: {min} قطعة</p>
                 </div>
-                <div className={styles.quantity}><label>الكمية</label><div><button onClick={()=>setQuantities(s=>({...s,[p.id]:Math.max(min,(s[p.id]||0)-1)}))}><Minus/></button><input type="number" min={min} value={qty} onChange={e=>setQuantities(s=>({...s,[p.id]:Math.max(0,parseInt(e.target.value,10)||0)}))}/><button onClick={()=>setQuantities(s=>({...s,[p.id]:(s[p.id]||0)+1}))}><Plus/></button></div></div>
+                <div className={styles.quantity}><label>الكمية</label><div><button type="button" aria-label="تقليل الكمية" onClick={()=>setQuantities(s=>({...s,[p.id]:Math.max(min,(s[p.id]||0)-1)}))}><Minus strokeWidth={2.75}/></button><input type="number" min={min} value={qty} onChange={e=>setQuantities(s=>({...s,[p.id]:Math.max(0,parseInt(e.target.value,10)||0)}))}/><button type="button" aria-label="زيادة الكمية" onClick={()=>setQuantities(s=>({...s,[p.id]:(s[p.id]||0)+1}))}><Plus strokeWidth={2.75}/></button></div></div>
                 <div className={styles.itemTotal}><span>السعر الإجمالي</span><strong>{rangePrice(p,qty).toFixed(2)} ريال</strong></div>
             </article>
           );
         })}
       </div>
 
-      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 md:p-6">
-        <h2 className="text-xl md:text-2xl font-black text-slate-900">المطلبات</h2>
-        <p className="mt-1 text-sm text-slate-500">اختر: عندك تصميم جاهز ولا محتاج تصميمات؟</p>
+      <section className="mt-4 md:mt-6 rounded-2xl md:rounded-3xl border border-slate-200 bg-white p-3.5 sm:p-5 md:p-6">
+        <h2 className="text-base sm:text-xl md:text-2xl font-black text-slate-900">المطلبات</h2>
+        <p className="mt-0.5 text-xs sm:text-sm text-slate-500">اختر: عندك تصميم جاهز ولا محتاج تصميمات؟</p>
 
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="mt-3 md:mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
           <button
             type="button"
             onClick={() => setDesignType("needs_design")}
-            className={`p-4 rounded-2xl border text-right transition ${designType === "needs_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+            className={`p-3 sm:p-4 rounded-xl md:rounded-2xl border text-right transition ${designType === "needs_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
           >
-            <p className="font-extrabold text-slate-900">أحتاج تصميمات</p>
+            <p className="text-sm sm:text-base font-extrabold text-slate-900">أحتاج تصميمات</p>
             {designPrice > 0 ? (
-              <p className="text-xs font-bold text-amber-700 mt-1">+ {designPrice.toFixed(2)} ريال</p>
+              <p className="text-[11px] sm:text-xs font-bold text-amber-700 mt-0.5">+ {designPrice.toFixed(2)} ريال</p>
             ) : (
-              <p className="text-xs text-slate-500 mt-1">حسب إعدادات الباقة</p>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">حسب إعدادات الباقة</p>
             )}
           </button>
 
           <button
             type="button"
             onClick={() => setDesignType("has_design")}
-            className={`p-4 rounded-2xl border text-right transition ${designType === "has_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
+            className={`p-3 sm:p-4 rounded-xl md:rounded-2xl border text-right transition ${designType === "has_design" ? "border-pro bg-blue-50" : "border-slate-200 bg-white"}`}
           >
-            <p className="font-extrabold text-slate-900">لدي تصميم</p>
-            <p className="text-xs text-slate-500 mt-1">ارفع ملف PDF</p>
+            <p className="text-sm sm:text-base font-extrabold text-slate-900">لدي تصميم</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">ارفع ملف PDF</p>
           </button>
         </div>
 

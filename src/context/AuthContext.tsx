@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { ProductI } from "../../Types/ProductsI";
+import { visibleEmail } from "@/lib/email";
 
 const AuthContext = createContext<any | undefined>(undefined);
 
@@ -31,7 +32,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const storedToken = localStorage.getItem("auth_token");
     const storedName = localStorage.getItem("userName");
-    const storedEmail = localStorage.getItem("userEmail");
+    const rawStoredEmail = localStorage.getItem("userEmail");
+    const storedEmail = visibleEmail(rawStoredEmail) || null;
+    if (rawStoredEmail && !storedEmail) {
+      localStorage.removeItem("userEmail");
+    }
     const storedImage = localStorage.getItem("userImage");
     const storedFullName = localStorage.getItem("fullName");
 
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Update from NextAuth session
     if (status === "authenticated" && session?.user) {
       const name = session.user.name || storedName || "مستخدم";
-      const email = session.user.email || storedEmail || null;
+      const email = visibleEmail(session.user.email) || storedEmail || null;
       const image = session.user.image || storedImage || "";
       const full = storedFullName || session.user.name || "مستخدم";
 
@@ -56,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       localStorage.setItem("userName", name);
       if (email) localStorage.setItem("userEmail", email);
+      else localStorage.removeItem("userEmail");
       if (image) localStorage.setItem("userImage", image);
       localStorage.setItem("fullName", full);
     }
@@ -120,15 +126,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     image?: string,
     fullNameParam?: string
   ) => {
+    const cleanEmail = visibleEmail(email) || null;
     setAuthToken(token);
     setUserName(name);
-    setUserEmail(email || null);
+    setUserEmail(cleanEmail);
     setUserImage(image || "");
     setFullName(fullNameParam || name);
 
     localStorage.setItem("auth_token", token);
     localStorage.setItem("userName", name);
-    if (email) localStorage.setItem("userEmail", email);
+    if (cleanEmail) localStorage.setItem("userEmail", cleanEmail);
+    else localStorage.removeItem("userEmail");
     if (image) localStorage.setItem("userImage", image);
     localStorage.setItem("fullName", fullNameParam || name);
 
